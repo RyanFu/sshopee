@@ -47,7 +47,6 @@ def shopee_add_items():
 
 @app.route('/shopee_get_items_by_id', methods = ['POST'])
 def get_shopee_items_by_id():
-    t1 = time.time()
     data = request.json["data"]
     ks = ["item_id", "parent_sku", "original_price", "current_price","model_id", "model_sku", "model_original_price", "model_current_price"]
     ks = ",".join(ks)   
@@ -68,10 +67,8 @@ def get_shopee_items_by_id():
         res_data["data"].append(con)
     cc.commit()
     cc.close()
-    t2 = time.time()
-    print(t2-t1)
     return res_data
 
 
 app.debug = True
-app.run()
+app.run(host='0.0.0.0')
