@@ -69,6 +69,3 @@ def get_shopee_items_by_id():
     cc.close()
     return res_data
 
-
-app.debug = True
-app.run(host='0.0.0.0')
