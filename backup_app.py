@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import sqlite3, json, time
 
 app = Flask(__name__)
@@ -26,6 +26,7 @@ def processSQL():
         res_data["data"].append(con)
     cc.commit()
     cc.close()
+    res_data = jsonify(res_data)
     return res_data
 
 
@@ -42,6 +43,7 @@ def shopee_add_items():
     cc.commit()
     cc.close()
     res_data = {"message": "success", "data": {}}
+    res_data = jsonify(res_data)
     return res_data
 
 
@@ -67,5 +69,6 @@ def get_shopee_items_by_id():
         res_data["data"].append(con)
     cc.commit()
     cc.close()
+    res_data = jsonify(res_data)
     return res_data
 
