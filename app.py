@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import sqlite3, json, time
 
 app = Flask(__name__)
@@ -26,6 +26,7 @@ def processSQL():
         res_data["data"].append(con)
     cc.commit()
     cc.close()
+    res_data = jsonify(res_data)
     return res_data
 
 @app.route('/shopee_add_items', methods = ['POST'])
@@ -34,13 +35,16 @@ def shopee_add_items():
     rows = request.json["rows"][1:]
     database_name = config["databasepath"]
     cc =  sqlite3.connect(database_name)
-    sql = "delete from items where account='" + account + "'"
-    cc.execute(sql)
-    sql = "insert into items values (?" + ",?" * 24 + ")"
-    cc.executemany(sql, rows)
+    if rows == []:
+        sql = "delete from items where account='" + account + "'"
+        cc.execute(sql)
+    else:
+        sql = "insert into items values (?" + ",?" * 24 + ")"
+        cc.executemany(sql, rows)
     cc.commit()
     cc.close()
     res_data = {"message": "success", "data": {}}
+    res_data = jsonify(res_data)
     return res_data
 
 @app.route('/zong_add_items', methods = ['POST'])
@@ -48,13 +52,12 @@ def zong_add_items():
     rows = request.json["rows"][1:]
     database_name = config["databasepath"]
     cc =  sqlite3.connect(database_name)
-    sql = "delete from zong"
-    cc.execute(sql)
     sql = "insert into zong values (?, ?, ?, ?, ?)"
     cc.executemany(sql, rows)
     cc.commit()
     cc.close()
     res_data = {"message": "success", "data": {}}
+    res_data = jsonify(res_data)
     return res_data
 
 @app.route('/stock_add_items', methods = ['POST'])
@@ -62,13 +65,12 @@ def stock_add_items():
     rows = request.json["rows"][1:]
     database_name = config["databasepath"]
     cc =  sqlite3.connect(database_name)
-    sql = "delete from stock"
-    cc.execute(sql)
     sql = "insert into zong values (?, ?, ?, ?)"
     cc.executemany(sql, rows)
     cc.commit()
     cc.close()
     res_data = {"message": "success", "data": {}}
+    res_data = jsonify(res_data)
     return res_data
 
 
@@ -105,7 +107,9 @@ def get_shopee_items_by_id():
         res_data["data"].append(con)
     cc.commit()
     cc.close()
+    res_data = jsonify(res_data)
     return res_data
+
 if __name__ == "__main__":
     app.debug = True
     app.run()
