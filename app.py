@@ -1,3 +1,4 @@
+#coding=utf-8 
 from flask import Flask, request, render_template, jsonify, redirect
 from os import listdir
 from pandas import read_sql

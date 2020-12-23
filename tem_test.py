@@ -1,3 +1,4 @@
+#coding=utf-8  
 import sqlite3, json, os, requests, time, threading
 from functools import wraps
 semaphore = threading.BoundedSemaphore(5)

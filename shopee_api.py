@@ -1,3 +1,4 @@
+#coding=utf-8  
 import sqlite3, json, requests, time, threading
 import selenium_chrome
 
