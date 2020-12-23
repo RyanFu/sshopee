@@ -8,7 +8,7 @@ import selenium_chrome, shopee_api
 
 app = Flask(__name__)    
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=1)
-database_name = r".\shopee.db" 
+database_name = "./shopee.db" 
 
 def dict_factory(cursor, row):
     d = {}

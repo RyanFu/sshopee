@@ -2,7 +2,7 @@
 import sqlite3, json, requests, time, threading
 import selenium_chrome
 
-database_name = r".\shopee.db" 
+database_name = "./shopee.db" 
 ua = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.62 Safari/537.36"
 
 def multiple_mission(func, args_list, interval=1):    

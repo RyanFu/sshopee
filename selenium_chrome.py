@@ -4,8 +4,8 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 
-database_name = r".\shopee.db" 
-driver_path = r'.\chromedriver.exe'
+database_name = "./shopee.db" 
+driver_path = './chromedriver.exe'
 #http://chromedriver.storage.googleapis.com/index.html
 
 def open_sellercenter(account, password, cookie_only):
