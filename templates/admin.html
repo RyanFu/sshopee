@@ -1,0 +1,131 @@
+﻿<html>
+<head>
+<meta charset="utf-8">
+<script src="static/js/jquery.min.js"></script>
+<script src="static/js/jquery.cookie.js"></script>
+<link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon"/>
+<style type="text/css">
+div {margin:10px;}
+input {margin:5px;}
+.head {height:5%;}
+.container {width: 95%; padding:5%;}
+table.gridtable {font-size:11px;border-width: 1px;border-collapse: collapse;}
+table.gridtable th {border-width: 1px;padding: 8px;border-style: solid;
+  background-color: #dedede;}
+table.gridtable td {border-width: 1px;padding: 8px;border-style: solid;}
+</style>
+
+<title>数据分析v1.0.2 控制台</title>
+</head>
+
+<body>
+<div class=container>
+<div class=head>
+</div>
+
+<div class=content>
+
+</div>
+
+<div class=foot>
+<p>说明：总表更新于 2020.12.15</p>
+</div>
+</div>
+</body>
+</html>
+
+<script>
+function array2table(data, edit=false){
+  var tb = $("<table class=gridtable>")[0]
+  let tr = $("<tr>")[0]
+  tb.append(tr)
+  data[0].map(i=>{
+    let th = $("<th>")[0]
+    th.textContent = i
+    tr.append(th)
+  })
+  data.slice(1,).map(r=>{
+    let tr = $("<tr>")[0]
+    tb.append(tr)
+    r.map(i=>{
+      let td = $("<td>")[0]
+      let bx = $("<input>")[0]
+      td.textContent = i
+      tr.append(td)
+    })
+  })
+  return tb
+}
+
+account_info()
+function account_info(){
+  var url = "/account_info"
+  $.get(url, function(res){
+    var data = res.data
+    var hd = [["account_info", "password", "cookies", "update_time", "action"]]
+    data.map(i => i.push(""))
+    data = hd.concat(data)
+    var tb = array2table(data)
+    $("div.content")[0].append(tb)
+    var rows = $("tr", tb).toArray().slice(1,)
+    rows.map(i=>{
+      let ck = i.children[2].textContent
+      i.children[2].textContent = ""
+      let ip = $("<input>")[0]
+      ip.value = ck
+      i.children[2].append(ip)
+    })
+    rows.map(i=>{
+      let b1 = $("<input type=button class=open_sellercenter value=获取cookies>")[0]
+      i.children[4].append(b1)
+      let b2 = $("<input type=button class=cookies_setup value=设置cookies>")[0]
+      i.children[4].append(b2)
+      let b3 = $("<input type=button class=list_button value=更新列表>")[0]
+      i.children[4].append(b3)
+      let b4 = $("<input type=button class=open_sellercenter value=打开后台>")[0]
+      i.children[4].append(b4)
+    })
+  })
+}
+$(".content").delegate(".open_sellercenter", "click", function(){  
+  var tr = $(this)[0].parentElement.parentElement
+  $("input", tr)[0].value = "获取中"
+  var account = tr.children[0].textContent
+  var password = tr.children[1].textContent 
+  var cookie_only = $(this)[0].value == "打开后台" ? 0 : 1
+  var url = `/open_sellercenter?account=${account}&password=${password}&cookie_only=${cookie_only}`
+  $.get(url, function(res){
+    $("input", tr)[0].value = res.data.cookies;
+  })
+})
+
+$(".content").delegate(".cookies_setup", "click", function(){
+  var ack = $.cookie()
+  for (let k in ack){$.cookie(k,null)}
+  var tr = $(this)[0].parentElement.parentElement
+  var cookies = $("input", tr)[0].value
+  cookies = JSON.parse(cookies)
+  for(let k in cookies){let v = cookies[k]; $.cookie(k, v)};
+  $(this)[0].style.color = "red"
+  console.log(cookies)
+})
+
+$(".content").delegate(".list_button", "click", function(){
+  $(this)[0].style.color = "red"
+  var tr = $(this)[0].parentElement.parentElement 
+  var account = $("td", tr)[0].textContent
+  var url = `/update_all_listing?account=${account}`
+  $.ajax({
+    type:"GET",
+    timeout: 1000 * 60 * 5,
+    url: url,
+    success: function(res){
+      var box = $("input", tr)[0]  
+      box.value = res.message
+    }
+  })
+})
+
+
+
+</script>

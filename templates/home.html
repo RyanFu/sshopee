@@ -1,0 +1,344 @@
+﻿<html>
+<head>
+<meta charset="utf-8">
+<script src="static/js/jquery.min.js"></script>
+<script src="static/js/xlsx.core.min.js"></script>
+<script src="static/js/irobotbox_api.js"></script>
+<link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon"/>
+<style type="text/css">
+div {margin:10px;}
+textarea {width: 90%; height:80%}
+
+.menubutton {margin:5px}
+.adminbutton {margin:5px}
+.description {width:98%}
+.download_link {margin: 10px}
+</style>
+
+<title>shopee数据分析v1.0.2</title>
+</head>
+
+<body>
+<div class=menubar>
+<button class=menubutton id=promotion_calculation>产品信息匹配</button>
+<button class=menubutton id=export_by_account>账号产品导出</button>
+<button class=menubutton id=wrong_stock_by_account >缺货停产调零</button>
+<button class=menubutton id=wrong_price_by_account >产品价格异常</button>
+<button class=menubutton id=wrong_sku >违禁品批量查询</button>
+<button class=menubutton id=duplicate_sku_by_account >上架前查重复</button>
+<button class=menubutton id=format_item_ids >item_id格式转换</button>
+<button class=menubutton id=mass_download_sku >刊登资料下载</button>
+<br>
+<br>
+  <label >自定义SKU:</label>
+  <input type="text" name="sku">
+  <label >虾皮账号:</label>
+  <input type="text" name="account">
+  <label >评分大于:</label>
+  <input type="number" name="rating">
+  <label >日均售出大于:</label>
+  <input type="number" name="ado">
+  <input type="checkbox" name="multi_model">
+  <label >包含多属性  </label>
+  <input type="button" class="menubutton" id="search" value="产品搜索"><br>
+  <label >ERP用户名:</label>
+  <input type="text" id="user_name">
+  <label >用户密码:</label>
+  <input type="password" id="user_password">
+<span>说明：总表更新于 2020.12.15 库存表更新于2020.12.06</span>
+</div>
+
+<div class=box>
+<textarea></textarea>
+</div>
+
+<div class=des>  
+
+</div>
+
+</body>
+</html>
+
+<script>
+  var flag = {}
+$("#promotion_calculation")[0].onclick = promotin_calculation
+$("#export_by_account")[0].onclick = export_by_account
+$("#wrong_stock_by_account")[0].onclick = wrong_stock_by_account
+$("#wrong_price_by_account")[0].onclick = wrong_price_by_account
+$("#wrong_sku")[0].onclick = wrong_sku
+$("#duplicate_sku_by_account")[0].onclick = duplicate_sku_by_account
+$("#format_item_ids")[0].onclick = format_item_ids
+$("#search")[0].onclick = shopee_search
+$("#mass_download_sku")[0].onclick = mass_download_sku
+
+//结果输出
+function show_data(data){
+    if (typeof(data[0]) == "object"){
+        for (var i = 0; i < data.length; i++) { data[i] = data[i].join("	");}
+    }
+    var con = data.join("\n")
+    $("textarea")[0].value = con
+}
+//文件下载链接
+function file_link(file_name){
+    let a = $("<a class=download_link></a>")[0]
+    a.textContent = file_name
+    a.download = file_name
+    a.href = "\\static\\" + file_name
+    //$(".des")[0].append(a)
+    a.click()
+}
+//基本信息初始化
+basic_info()
+function basic_info(){
+  $.get("/basic_info", function(res){
+    var data = res.data;
+    show_data(data)
+  })
+}
+
+//查询listingSKU详情
+function promotin_calculation(){
+    var raw = $("textarea")[0].value.split("\n").filter(i=>i.length>3).map(i=>i.split("	"))
+    raw.map(i => i.map(j => Number(j)))
+    var data = {"data":[]}
+    for (let row of raw){
+        let e = {}; e.item_id = row[0];
+        if (row.length == 1 || row[1] == ""){e.model_id = 0}else{e.model_id = row[1]}
+        data.data.push(e)
+    }
+
+    var url = "/shopee_get_items_by_id"
+    $.ajax({
+        type:"POST",
+        url: url,
+        data:JSON.stringify(data),
+        headers: {"Content-Type": "application/json"},
+        success:function(res){
+            var rows = res.data
+            show_data(rows)
+        }
+    })
+}
+
+//按账号导出LISTING全部信息
+function export_by_account(){
+  $("textarea")[0].value = "处理中"
+  var account = $("[name=account]")[0].value.trim()
+  if (account.indexOf(".") < 0){alert("账号名称错误");return;}
+  var url = "/export_by_account"
+  data = {"account": account}
+  $.ajax({
+    type:"POST",
+    url: url,
+    data:JSON.stringify(data),
+    headers: {"Content-Type": "application/json"},
+    success:function(res){
+        var file_name = res.data.file_name
+        file_link(file_name)
+        $("textarea")[0].value = "完成"
+    }
+})
+}
+
+//按账号导出库存异常LISTING
+function wrong_stock_by_account(){
+  var hd = [["et_title_product_id","et_title_product_name","et_title_variation_id",
+    "et_title_variation_name","et_title_parent_sku","et_title_variation_sku",
+    "et_title_variation_price","et_title_variation_stock","et_title_result",
+    "et_title_reason"],["sales_info","","","","","","","","",""],
+    ["Product ID","Product Name","规格编号","名称","主商品货号","商品货号","价格","库存","",""]]
+    $("textarea")[0].value = "处理中"
+  var account = $("[name=account]")[0].value.trim()
+  if (account.indexOf(".") < 0){alert("账号名称错误");return;}
+  var url = "/wrong_stock_by_account"
+  data = {"account": account}
+  $.ajax({
+    type:"POST",
+    url: url,
+    data:JSON.stringify(data),
+    headers: {"Content-Type": "application/json"},
+    success:function(res){
+        var rows = res.data.rows
+        hd = hd.concat(rows)
+        //show_data(hd)
+        resock2book(hd)
+        $("textarea")[0].value = "处理完成"        
+    }
+})
+}
+
+//按账号导出价格异常LISTING
+function wrong_price_by_account(){
+  var hd = [["item_id", "model_id", "价格", "库存", "状态", "成本", "重量", 
+  "SKU", "品名", "评价数", "0%利润价格", "15%利润价格", "利润率"]]
+  $("textarea")[0].value = "处理中"
+  var account = $("[name=account]")[0].value.trim()
+  if (account.indexOf(".") < 0){alert("账号名称错误");return;}
+  var url = "/wrong_price_by_account"
+  data = {"account": account}
+  $.ajax({
+    type:"POST",
+    url: url,
+    data:JSON.stringify(data),
+    headers: {"Content-Type": "application/json"},
+    success:function(res){
+        var rows = res.data.rows
+        var site = account.split(".")[1]
+        rows.map(i=>{i[9] = i[9] == null ? 0 : i[9]})
+        rows.map(i=>{let p1 = calculate_price(i[5], i[6], 0)[site]; i.push(p1)})
+        rows.map(i=>{let p2 = calculate_price(i[5], i[6], 0.15)[site]; i.push(p2)})
+        rows.map(i=>{let pr = Math.round((i[2] - i[10])/ i[2] *100) + "%" ;i.push(pr)})
+        hd = hd.concat(rows)
+        show_data(hd)
+    }
+})
+}
+
+//禁运品SKU查询
+function wrong_sku(){
+  var account = $("[name=account]")[0].value.trim()
+  var sku_list = $("textarea")[0].value.split("\n").map(i=>i.trim())
+  var url = "/wrong_sku"
+  data = {"sku_list": sku_list, "account":account}
+  $.ajax({
+    type:"POST",
+    url: url,
+    data:JSON.stringify(data),
+    headers: {"Content-Type": "application/json"},
+    success:function(res){
+        var rows = res.data.rows
+        show_data(rows)        
+    }
+})
+}
+
+//刊登前重复SKU查询
+function duplicate_sku_by_account(){
+  var account = $("[name=account]")[0].value.trim()
+  var sku_list = $("textarea")[0].value.split("\n").map(i=>i.trim())
+  var url = "/duplicate_sku_by_account"
+  data = {"sku_list": sku_list, "account":account}
+  $.ajax({
+    type:"POST",
+    url: url,
+    data:JSON.stringify(data),
+    headers: {"Content-Type": "application/json"},
+    success:function(res){
+        var rows = res.data.skus
+        show_data(rows)        
+    }
+})
+}
+//item_id格式转换
+function format_item_ids(){
+  var vs = []
+  var ids = new Set($("textarea")[0].value.split("\n").map(i=>i.trim()).filter(i=>i>""))
+  ids.forEach(function(i, ii, ar){ vs.push(i) })
+  $("textarea")[0].value = vs.join(",")
+}
+//搜索产品列表
+function shopee_search(){
+  var data = {}  
+  data.account = $("[name=account]")[0].value.trim()
+  data.sku = $("[name=sku]")[0].value
+  data.rating = $("[name=rating]")[0].value
+  data.ado = $("[name=ado]")[0].value
+  data.multi_model = $("[name=multi_model]")[0].checked ? 1 : 0
+  var url = "/shopee_search"
+  $.ajax({
+    type:"POST",
+    url: url,
+    data:JSON.stringify(data),
+    headers: {"Content-Type": "application/json"},
+    success:function(res){
+        var rows = res.data
+        show_data(rows)
+    }
+  })
+}
+//价格计算公式
+function calculate_price(c, w, r = 0){
+    var rmy = 1.6074
+    var rid = 0.000463
+    var rtw = 0.2343
+    var rph = 0.1389
+    var rvn = 0.00029
+    var rth = 0.2146
+    var rsg = 4.914
+    var rbr = 1.1675
+    w = Math.ceil(w/10)*10
+    var smy = w*0.015
+    var sid = w*120
+    var stw = Math.ceil(w/500)*30-15
+    var sph = Math.max(w*0.45+1, 23)
+    var svn = w*90
+    var sth = w*0.2
+    var ssg = Math.max(w*0.011 + 0.05,0.6)
+    var sbr = Math.min(Math.max(5, w * 0.14 + 0.8), w * 0.09 + 5.8)
+    var price = {}
+    var costrate = 0.06 + 0.02 + 0.02 + 0.04 + 0.02 + 0.02
+    price.my = Math.ceil((c+smy*rmy)/(1-costrate-r)/rmy *10)/10
+    price.id = Math.ceil((c+sid*rid)/(1-costrate-r)/rid /100)*100
+    price.tw = Math.ceil((c+stw*rtw)/(1-costrate-r)/rtw /1)*1
+    price.th = Math.ceil((c+sth*rth)/(1-costrate-r)/rth /1)*1
+    price.ph = Math.ceil((c+sph*rph)/(1-costrate-r)/rph /1)*1
+    price.vn = Math.ceil((c+svn*rvn)/(1-costrate-r)/rvn /100)*100
+    price.sg = Math.ceil((c+ssg*rsg)/(1-costrate-r)/rsg * 10)/10
+    price.br = Math.ceil((c+sbr*rbr)/(1-costrate-0.05-r)/rbr * 10)/10
+    return price
+}
+  function resock2book(data){
+    //console.log(data)
+        var acsi = $("[name=account]")[0].value.trim()
+        var workbook_upload = XLSX.utils.book_new();
+        var sheet = XLSX.utils.aoa_to_sheet(data)
+        var sheet_name = "sheet1"
+        XLSX.utils.book_append_sheet(workbook_upload, sheet, sheet_name)
+        workbook2blob(workbook_upload, "2restock_" + acsi);
+    }
+    // 将workbook装化成blob对象
+    function workbook2blob(workbook, fileName = "导出") {
+        var wopts = {
+            bookType: "xlsx",
+            bookSST: false,
+            type: "binary"
+        };
+        var wbout = XLSX.write(workbook, wopts);
+        function s2ab(s) {
+            var buf = new ArrayBuffer(s.length);
+            var view = new Uint8Array(buf);
+            for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xff;
+            return buf;
+        }
+        var blob = new Blob([s2ab(wbout)], {
+            type: "application/octet-stream"
+        });
+
+        blob = URL.createObjectURL(blob);
+        var aLink = document.createElement("a");
+        aLink.href = blob;
+        aLink.download = fileName + ".xlsx";
+        aLink.click();
+    }
+    //批量下载刊登资料
+    function mass_download_sku(){
+        var acsi = $("[name=account]")[0].value.trim()
+        var user_name = $("[id=user_name]")[0].value.trim()
+        var user_password = $("[id=user_password]")[0].value.trim()        
+        var sku_list = $("textarea")[0].value.split("\n").filter(i=>i.length>5).map(i=>i.trim())
+        for (let e of [acsi, user_name, user_password, sku_list]){
+          if (e == ""){alert("用户名/密码/账号/SKU输入错误");return;}
+        }
+        let step = 50
+        flag.data = []
+        flag.sku_list_count = 0
+        for (let i=0; i < sku_list.length; i += step){
+            let current_list = sku_list.slice(i, i + step)
+            mass_read_sku_info(current_list, acsi, user_name, user_password)
+            flag.sku_list_count += 1
+        }
+
+    }
+
+</script>
