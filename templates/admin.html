@@ -21,6 +21,10 @@ table.gridtable td {border-width: 1px;padding: 8px;border-style: solid;}
 <body>
 <div class=container>
 <div class=head>
+  <form action="/upload_file" method="post" enctype="multipart/form-data">
+    <input type="file" name="file">
+    <input type="submit" value="提交文件到后台根目录">
+    </form>
 </div>
 
 <div class=content>

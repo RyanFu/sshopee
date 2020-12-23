@@ -341,6 +341,14 @@ def redirect_to_erp():
     data = res.text
     return data
 
+#接收文件
+@app.route('/upload_file', methods=['POST'])
+def upload_file():
+    file = request.files.get('file')
+    file.save(file.filename)
+    print(file.filename)
+    return "success"
+
 if __name__ == "__main__":    
         app.debug = True
         app.run(port=5000)
