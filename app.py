@@ -1,6 +1,6 @@
 #coding=utf-8 
 from flask import Flask, request, render_template, jsonify, redirect
-from os import listdir
+from os import listdir, system
 from pandas import read_sql
 from datetime import timedelta
 import sqlite3, json, time, math, requests
@@ -345,6 +345,7 @@ def redirect_to_erp():
 @app.route('/upload_file', methods=['POST'])
 def upload_file():
     file = request.files.get('file')
+    system("rm " + file.filename)
     file.save(file.filename)
     print(file.filename)
     return "success"
