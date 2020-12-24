@@ -141,9 +141,16 @@ def get_single_page(account, page_num, dp=False):
         for row in row_list:
             row.append(account)
             row.append(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
-        data = {"account": account, "rows": row_list}
-        headers = {'Content-Type': 'application/json;charset=UTF-8'}
-        se.post("http://localhost:5000/shopee_add_items", json=data, headers=headers)
+
+        rows = row_list[1:]
+        sql = "insert into items values (?" + ",?" * 24 + ")"
+        rows2delete = [[i[0], i[16]] for i in rows]
+        sql2delete = "delete from items where item_id=? and model_id=?"
+        with sqlite3.connect(database_name) as cc:
+            cc.executemany(sql2delete, rows2delete)
+            cc.executemany(sql, rows)
+            cc.commit()
+        print(time.ctime(), account, "add items complete")
 
         conplete_count = page_num * 48
         if conplete_count <= total_count:
