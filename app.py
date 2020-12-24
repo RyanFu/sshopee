@@ -325,8 +325,8 @@ def update_all_listing():
     account = request.args["account"]
     shopee_api.check_cookie_jar(account)
     shopee_api.clear_listing(account)
-    # shopee_api.get_all_page(account)
-    shopee_api.get_single_page(account)
+    shopee_api.get_all_page(account)
+    #shopee_api.get_single_page(account)
     res_data = {"message": "success", "data":{}}
     res_data = jsonify(res_data)
     return res_data
@@ -349,7 +349,21 @@ def upload_file():
     print(file.filename)
     return "success"
 
+#获取后缀
+@app.route('/get_sufix', methods=['GET'])
+def get_sufix():
+    sql = "select account, name, image, description from sufix"
+    with  sqlite3.connect(database_name) as cc:
+        cu = cc.execute(sql)
+        con = cu.fetchall()
+    sufix = {}
+    for i in con:
+        sufix[i[0]] = i[1:]
+    res_data = {"message": "success", "data":sufix}
+    res_data = jsonify(res_data)
+    return res_data
+
 if __name__ == "__main__":    
         app.debug = True
-        app.run(port=5000)
+        app.run(port=5001)
 

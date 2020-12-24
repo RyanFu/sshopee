@@ -14,6 +14,7 @@ def open_sellercenter(account, password, cookie_only):
     ch_options = Options()
     if cookie_only == "1":
         ch_options.add_argument("--headless")
+        ch_options.add_argument("--no-sandbox")
         print("no head")
 
     driver = webdriver.Chrome(executable_path=driver_path, options=ch_options)

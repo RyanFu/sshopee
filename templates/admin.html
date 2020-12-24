@@ -82,8 +82,6 @@ function account_info(){
     rows.map(i=>{
       let b1 = $("<input type=button class=open_sellercenter value=获取cookies>")[0]
       i.children[4].append(b1)
-      let b2 = $("<input type=button class=cookies_setup value=设置cookies>")[0]
-      i.children[4].append(b2)
       let b3 = $("<input type=button class=list_button value=更新列表>")[0]
       i.children[4].append(b3)
       let b4 = $("<input type=button class=open_sellercenter value=打开后台>")[0]
@@ -101,17 +99,6 @@ $(".content").delegate(".open_sellercenter", "click", function(){
   $.get(url, function(res){
     $("input", tr)[0].value = res.data.cookies;
   })
-})
-
-$(".content").delegate(".cookies_setup", "click", function(){
-  var ack = $.cookie()
-  for (let k in ack){$.cookie(k,null)}
-  var tr = $(this)[0].parentElement.parentElement
-  var cookies = $("input", tr)[0].value
-  cookies = JSON.parse(cookies)
-  for(let k in cookies){let v = cookies[k]; $.cookie(k, v)};
-  $(this)[0].style.color = "red"
-  console.log(cookies)
 })
 
 $(".content").delegate(".list_button", "click", function(){

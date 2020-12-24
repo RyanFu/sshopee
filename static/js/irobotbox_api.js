@@ -39,29 +39,20 @@
                     ob_row["Cover"] = $("ImageUrl", ob_row["Cover"])[0].textContent
                     ob_row_list.push(ob_row)
                 }
-                ob_row_list.map(i => {flag.data.push(convertRow(i,acsi))})
+                $.get("/get_sufix", function(res){
+                    sufix = res.data
+                ob_row_list.map(i => {flag.data.push(convertRow(i,acsi, sufix))})
                 flag.sku_list_count -= 1
                 if (flag.sku_list_count == 0){
                     flag.data.sort((i, j)=>Number(i[0])>Number(j[0]))
                     data2book(flag.data, acsi)
-                }
+                }                    
+                })
             }})
     }
-    function convertRow(row, acsi){
+    function convertRow(row, acsi, sufix){
         var site = acsi.split(".")[1]
         var acc = acsi.split(".")[0]
-        var sufix = {"elenxs":[" ELEN",
-                      "RWxlbnhzIExpZmVzdHlsZSBTdG9yZQ==",
-                      "Welcome to Elenxs Store,Please read prodcut description before ordering,For whole sale price pelase make an offer,Oversea shipping usually takes 8-14 days,If you have any question/problem please contact us,Thank you and have a nice day"
-                     ],"choosewho":[
-                         " LovelyHome",
-                         "TG92ZWx5SG9tZQ==",
-                         "Welcome to our store^_^,There are new flash sale and voucher every week,Follow my shop to get more discount,Oversea shipping from China will take 7-15 days,Tracking status will be updated 2 days after shipping. Customer service available on work day"
-                     ],"toierwery":[
-                         " LovelyHome",
-                         "TG92ZWx5IEhvbWUgU3RvcmU=",
-                         "Welcome to Lovely Home Store,We will update our products and vouchers daily,Pls follow us to get latest products and discount,Oversea shipping from China will take 30-60 days,If any question/problem pls contact us before rating"
-                     ]}
         row.ProductDescription = row.ProductDescription.replace(new RegExp("<br />\n","gm"), "\r\n")
         row.ProductDescription = row.ProductDescription.replace(new RegExp("<br />","gm"), "\r\n")
         //row.ProductDescription = row.ProductDescription.replace(new RegExp('"',"gm"), '""')
