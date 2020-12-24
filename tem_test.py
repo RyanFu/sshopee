@@ -1,8 +1,8 @@
 #coding=utf-8  
 import sqlite3, json, os, requests, time, threading
 from functools import wraps
-semaphore = threading.BoundedSemaphore(5)
-database_name = r".\shopee.db" 
+
+database_name = "./shopee.db" 
 # with  sqlite3.connect(database_name) as cc:
 #     sql = "select * from password"
 #     cu = cc.execute(sql)
@@ -33,32 +33,11 @@ def file_process():
 #             return func(*args, **kwargs)
 #         return wrapped_function
 #     return logging_decorator
+import selenium_chrome
+account, password, cookie_only = "elenxs.sg", "elen1212", "1"
+selenium_chrome.open_sellercenter(account, password, cookie_only)
 
-def lock_decorator():
-    def inner_decorator(func):
-        @wraps(func)
-        def wrapped_function(*args, **kwargs):
-            log_string = func.__name__ + " was called"
-            print(log_string)
-            semaphore.acquire()
-            result = func(*args, **kwargs)
-            semaphore.release()
-            return result
-        return wrapped_function
-    return inner_decorator
 
-def multiple_mission(func, args_list):    
-    mission_list = []
-    for args in args_list:
-        mission = threading.Thread(target=func, args = args)
-        mission_list.append(mission)
-    for mission in mission_list:
-        mission.start()
-    for mission in mission_list:
-        mission.join()
-    while threading.active_count() != 1:
-        print(threading.active_count())
-    print('----all threads done---')
 
 
 

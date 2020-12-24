@@ -148,8 +148,6 @@ def get_single_page(account, page_num, dp=False):
         conplete_count = page_num * 48
         if conplete_count <= total_count:
             print("complete listng count ", conplete_count)
-            if dp:
-                get_single_page(account, page_num + 1)
 
 
 def get_all_page(account):
