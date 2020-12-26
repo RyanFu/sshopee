@@ -138,7 +138,7 @@ def export_by_account():
         '''.format(account=account)
         df = read_sql(sql, cc)
         t2 = time.time()
-        file_name = r"C:\Users\guoliang\Desktop\AAA\shopee\static\{account}.csv".format(account=account)
+        file_name = "./static/{account}.csv".format(account=account)
         df.to_csv(file_name)
         t3 = time.time()
         print("读", t2-t1, "写", t3-t2)
