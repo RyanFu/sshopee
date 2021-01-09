@@ -7,7 +7,6 @@
 <style type="text/css">
 div {margin:10px;}
 input {margin:5px;}
-.head {height:5%;}
 .container {width: 95%; padding:5%;}
 table.gridtable {font-size:11px;border-width: 1px;border-collapse: collapse;}
 table.gridtable th {border-width: 1px;padding: 8px;border-style: solid;
@@ -21,10 +20,13 @@ table.gridtable td {border-width: 1px;padding: 8px;border-style: solid;}
 <body>
 <div class=container>
 <div class=head>
+<input id=table_name type=text>
+<input id=table_export type=button value=导出表格>
   <form action="/upload_file" method="post" enctype="multipart/form-data">
     <input type="file" name="file">
     <input type="submit" value="提交文件到后台根目录">
     </form>
+
 </div>
 
 <div class=content>
@@ -32,7 +34,6 @@ table.gridtable td {border-width: 1px;padding: 8px;border-style: solid;}
 </div>
 
 <div class=foot>
-<p>说明：总表更新于 2020.12.15</p>
 </div>
 </div>
 </body>
@@ -101,18 +102,19 @@ $(".content").delegate(".open_sellercenter", "click", function(){
   })
 })
 
-$(".content").delegate(".list_button", "click", function(){
-  $(this)[0].style.color = "red"
-  var tr = $(this)[0].parentElement.parentElement 
-  var account = $("td", tr)[0].textContent
-  var url = `/update_all_listing?account=${account}`
+$(".container").delegate("#table_export", "click", function(){
+  var name = $("#table_name")[0].value
+  var url = `/download_table?table=${name}`
   $.ajax({
     type:"GET",
     timeout: 1000 * 60 * 5,
     url: url,
     success: function(res){
-      var box = $("input", tr)[0]  
-      box.value = res.message
+        var url = res.data
+        var ad = $("<a download>")[0]
+        ad.href = url
+        ad.value = "下载文件"
+        ad.click()
     }
   })
 })

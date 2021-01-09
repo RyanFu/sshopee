@@ -3,7 +3,7 @@ from flask import Flask, request, render_template, jsonify, redirect
 from os import listdir, system
 from pandas import read_sql
 from datetime import timedelta
-import sqlite3, json, time, math, requests
+import sqlite3, json, time, math, requests, csv
 import selenium_chrome, shopee_api
 
 app = Flask(__name__)    
@@ -227,6 +227,8 @@ def shopee_search():
             con.append("stock.ado >= {ado}".format(ado=data["ado"]))
         if not data["multi_model"]:
             con.append("items.model_sku = '' ")
+        if data["sold"]:
+            con.append("items.sold >= {sold}".format(ado=data["ado"]))
     sql += " and ".join(con)
     print(sql) 
 
@@ -345,10 +347,40 @@ def redirect_to_erp():
 @app.route('/upload_file', methods=['POST'])
 def upload_file():
     file = request.files.get('file')
-    system("rm " + file.filename)
-    file.save(file.filename)
-    print(file.filename)
+    file_path = './static/' + file.filename
+    print('files ready', time.ctime())
+    file.save(file_path)
+    msg = file.filename + ' saved.'
+    if "csv" in file_path:
+        with open(file_path, 'r', encoding='utf-8') as csvfile:
+            csvrows = csv.reader(csvfile)
+            csvrows = [i for i in csvrows][1:]
+        batch = 12000
+        tb = file.filename.split(".")[0]
+        num = len(csvrows[0])
+        ph = ','.join(['?'] * num)
+        sql = 'insert into {tb} values ( {ph} )'.format(tb=tb, ph=ph)
+        with  sqlite3.connect(database_name) as cc:
+            cc.execute("delete from {tb}".format(tb=tb))
+            cc.executemany(sql, csvrows)
+            cc.commit()
+        print("zong table update done", time.ctime())
+        msg =  'table zong updaed'
+
+
+    print(file_path)
+    print(file_path)
     return "success"
+
+@app.route('/download_table', methods=['GET'])
+def download_table():
+    tb = request.args["table"]
+    cm = 'sqlite3 -header -csv ./shopee.db "select * from {tb};" > ./static/{tb}.csv'.format(tb=tb)
+    system(cm)
+    url = '/static/{tb}.csv'.format(tb=tb)
+    res_data = {"message": "success", "data":url}
+    res_data = jsonify(res_data)
+    return res_data
 
 #获取后缀
 @app.route('/get_sufix', methods=['GET'])
