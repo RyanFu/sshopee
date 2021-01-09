@@ -210,7 +210,8 @@ def wrong_price_by_account():
 #条件搜索
 @app.route('/shopee_search', methods=['POST'])
 def shopee_search():
-    sql = '''select items.item_id,items.model_id from items 
+    sql = '''select items.item_id,items.model_id, items.account, 
+        items.sold, items.rating_star from items 
         join stock on (items.parent_sku != "" and items.parent_sku = stock.sku) 
         or (items.model_sku != "" and items.model_sku = stock.sku) where '''
     con = []
@@ -228,7 +229,7 @@ def shopee_search():
         if not data["multi_model"]:
             con.append("items.model_sku = '' ")
         if data["sold"]:
-            con.append("items.sold >= {sold}".format(ado=data["ado"]))
+            con.append("items.sold >= {sold}".format(sold=data["sold"]))
     sql += " and ".join(con)
     print(sql) 
 
