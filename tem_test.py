@@ -33,10 +33,34 @@ def file_process():
 #             return func(*args, **kwargs)
 #         return wrapped_function
 #     return logging_decorator
-import selenium_chrome
-account, password, cookie_only = "elenxs.sg", "elen1212", "1"
-selenium_chrome.open_sellercenter(account, password, cookie_only)
 
+
+flag = {}
+
+def multiple_mission(func, args_list, interval=1): 
+    flag['msg'] = [] 
+    mission_list = []
+    for args in args_list:
+        mission = threading.Thread(target=func, args = args)
+        mission_list.append(mission)
+    for mission in mission_list:
+        mission.start()
+    for mission in mission_list:
+        mission.join()
+    print(flag)
+    return
+
+def fu(i):
+    print(i, "start")
+    time.sleep(i)
+    #assert i != "8"
+    flag['msg'].append(i)
+    print(i, 'done')
+
+
+ii = [1,2,3,4,5,6,7, '8', 9,10]
+iii = [(i,) for i in ii]
+multiple_mission(fu, iii)
 
 
 

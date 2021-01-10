@@ -3,12 +3,12 @@ from flask import Flask, request, render_template, jsonify, redirect
 from os import listdir, system
 from pandas import read_sql
 from datetime import timedelta
-import sqlite3, json, time, math, requests, csv
-import selenium_chrome, shopee_api
+import sqlite3, json, time, math, requests, csv, platform
+import shopee_api
 
 app = Flask(__name__)    
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=1)
-database_name = "./shopee.db" 
+database_name = "D:/shopee.db" if platform.system() == "Windows" else "/root/shopee.db"
 
 def dict_factory(cursor, row):
     d = {}
@@ -50,14 +50,18 @@ def shopee_price(cost, weight, profit_rate = 0):
     return sale_price
 
 @app.route('/', methods = ['GET'])
-def defaultPage():
-    return redirect("/home")
+def defaultPage_a():
+    return redirect("/shopee")
 
 @app.route('/home', methods = ['GET'])
+def defaultPage_b():
+    return redirect("/shopee")
+
+@app.route('/shopee', methods = ['GET'])
 def HomePage():
     return render_template("home.html")
 
-@app.route('/admin', methods = ['GET'])
+@app.route('/shopee_console', methods = ['GET'])
 def AdminPage():
     return render_template("admin.html")
 
@@ -298,7 +302,7 @@ def duplicate_sku_by_account():
 #管理后台初始信息
 @app.route('/account_info', methods=['GET'])
 def account_info():
-    sql = '''select password.account, password.password,
+    sql = '''select password.account, password.account,
     cookies.cookies, cookies.update_time 
     from password left join cookies 
     on password.account = cookies.account 
@@ -307,17 +311,29 @@ def account_info():
     with  sqlite3.connect(database_name) as cc:
         cu = cc.execute(sql)
         con = cu.fetchall()
-        res_data = {"message": "success", "data": con}
+    res_data = {"message": "success", "data": con, "platform":platform.system()}
     res_data = jsonify(res_data)
-    return res_data 
+    return res_data
 
-# 打开后台 获取COOKIES
+#检查并更新COOKIES
+@app.route('/get_update_cookie_jar', methods=['GET'])
+def get_update_cookie_jar():
+    account = request.args["account"]
+    shopee_api.check_cookie_jar(account)
+    res_data = {"message": "success", "data":{"cookies": "success"}}
+    res_data = jsonify(res_data)
+    return res_data   
+
+# 打开后台 
 @app.route('/open_sellercenter', methods=['GET'])
 def open_sellercenter():
     account = request.args["account"]
-    password = request.args["password"]
-    cookie_only = request.args["cookie_only"]
-    cookies_text = selenium_chrome.open_sellercenter(account, password, cookie_only)
+    cookie_only = False
+    with  sqlite3.connect(database_name) as cc:
+        sql = 'select account, password from password where account=? limit 1'
+        cu = cc.execute(sql, (account,))
+        password = cu.fetchone()[1]
+    cookies_text = shopee_api.open_sellercenter(account, password, cookie_only)
     res_data = {"message": "success", "data":{"cookies": cookies_text}}
     res_data = jsonify(res_data)
     return res_data 
@@ -331,6 +347,19 @@ def update_all_listing():
     shopee_api.get_all_page(account)
     #shopee_api.get_single_page(account)
     res_data = {"message": "success", "data":{}}
+    res_data = jsonify(res_data)
+    return res_data
+
+#按账号更新全部在线产品
+@app.route('/update_shop_performance', methods=['GET'])
+def update_shop_performance():
+    account = request.args["account"]
+    shopee_api.check_cookie_jar(account)
+    values = shopee_api.get_performance(account)
+    keys = ["account", "follower_count", "item_count", "rating_star", "rating_count", "pre_sale_rate", "points", 
+    "response_rate", "non_fulfill_rate", "cancel_rate", "refund_rate", "apt", "late_shipping_rate"]
+    con = values
+    res_data = {"message": "success", "data":con}
     res_data = jsonify(res_data)
     return res_data
 
@@ -349,13 +378,14 @@ def redirect_to_erp():
 def upload_file():
     file = request.files.get('file')
     file_path = './static/' + file.filename
-    print('files ready', time.ctime())
+    print('files uploaded', time.ctime())
     file.save(file_path)
-    msg = file.filename + ' saved.'
+    msg = file.filename + ' saved'
     if "csv" in file_path:
         with open(file_path, 'r', encoding='utf-8') as csvfile:
             csvrows = csv.reader(csvfile)
             csvrows = [i for i in csvrows][1:]
+        print('csv files read')
         batch = 12000
         tb = file.filename.split(".")[0]
         num = len(csvrows[0])
@@ -365,20 +395,24 @@ def upload_file():
             cc.execute("delete from {tb}".format(tb=tb))
             cc.executemany(sql, csvrows)
             cc.commit()
-        print("zong table update done", time.ctime())
-        msg =  'table zong updaed'
-
+        print("table updated", time.ctime())
+        msg += ' as table'
 
     print(file_path)
     print(file_path)
-    return "success"
+    return msg
 
+#按名称导出文件为CSV文件
 @app.route('/download_table', methods=['GET'])
 def download_table():
-    tb = request.args["table"]
-    cm = 'sqlite3 -header -csv ./shopee.db "select * from {tb};" > ./static/{tb}.csv'.format(tb=tb)
-    system(cm)
-    url = '/static/{tb}.csv'.format(tb=tb)
+    tb, tp = request.args["table"].split('.')
+    if tp == 'table':
+        cm_output = 'sqlite3 -header -csv ./shopee.db "select * from {tb};" > ./static/{tb}.csv'.format(tb=tb)
+        cm_zip = 'zip -m -P redback12 ./static/{tb}.zip ./static/{tb}.csv'
+        system(cm_output)
+        url = '/static/{tb}.zip'.format(tb=tb)
+    else:
+        url = '/static/{tb}'.format(tb=tb)
     res_data = {"message": "success", "data":url}
     res_data = jsonify(res_data)
     return res_data

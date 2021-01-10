@@ -40,6 +40,7 @@ table.gridtable td {border-width: 1px;padding: 8px;border-style: solid;}
 </html>
 
 <script>
+  //从二级数组生成表格
 function array2table(data, edit=false){
   var tb = $("<table class=gridtable>")[0]
   let tr = $("<tr>")[0]
@@ -62,6 +63,7 @@ function array2table(data, edit=false){
   return tb
 }
 
+//获取初始信息
 account_info()
 function account_info(){
   var url = "/account_info"
@@ -81,27 +83,63 @@ function account_info(){
       i.children[2].append(ip)
     })
     rows.map(i=>{
-      let b1 = $("<input type=button class=open_sellercenter value=获取cookies>")[0]
+      let b1 = $("<input type=button class=get_update_cookie_jar value=获取cookies>")[0]
       i.children[4].append(b1)
-      let b3 = $("<input type=button class=list_button value=更新列表>")[0]
+      let b2 = $("<input type=button class=update_all_listing value=产品列表>")[0]
+      i.children[4].append(b2)
+      let b3 = $("<input type=button class=update_shop_performance value=账号表现>")[0]
       i.children[4].append(b3)
       let b4 = $("<input type=button class=open_sellercenter value=打开后台>")[0]
-      i.children[4].append(b4)
+      if (res.platform = 'Windows'){i.children[4].append(b4)}     
     })
   })
 }
-$(".content").delegate(".open_sellercenter", "click", function(){  
+
+//检查并更新cookies
+$(".content").delegate(".get_update_cookie_jar", "click", function(){  
   var tr = $(this)[0].parentElement.parentElement
   $("input", tr)[0].value = "获取中"
   var account = tr.children[0].textContent
-  var password = tr.children[1].textContent 
-  var cookie_only = $(this)[0].value == "打开后台" ? 0 : 1
-  var url = `/open_sellercenter?account=${account}&password=${password}&cookie_only=${cookie_only}`
+  var url = `/get_update_cookie_jar?account=${account}`
   $.get(url, function(res){
     $("input", tr)[0].value = res.data.cookies;
   })
 })
 
+//更新全部在线产品
+$(".content").delegate(".update_all_listing", "click", function(){  
+  var tr = $(this)[0].parentElement.parentElement
+  $("input", tr)[0].value = "获取中"
+  var account = tr.children[0].textContent
+  var url = `/update_all_listing?account=${account}`
+  $.get(url, function(res){
+    $("input", tr)[0].value = "success";
+  })
+})
+
+//更新账号表现状态
+$(".content").delegate(".update_shop_performance", "click", function(){  
+  var tr = $(this)[0].parentElement.parentElement
+  $("input", tr)[0].value = "获取中"
+  var account = tr.children[0].textContent
+  var url = `/update_shop_performance?account=${account}`
+  $.get(url, function(res){
+    $("input", tr)[0].value = res.data.join("\t");
+  })
+})
+
+//打开后台页面
+$(".content").delegate(".open_sellercenter", "click", function(){  
+  var tr = $(this)[0].parentElement.parentElement
+  $("input", tr)[0].value = "获取中"
+  var account = tr.children[0].textContent
+  var url = `/open_sellercenter?account=${account}`
+  $.get(url, function(res){
+    $("input", tr)[0].value = res.data.cookies;
+  })
+})
+
+//导出表格 导出静态文件
 $(".container").delegate("#table_export", "click", function(){
   var name = $("#table_name")[0].value
   var url = `/download_table?table=${name}`
