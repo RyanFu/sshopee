@@ -2,7 +2,7 @@
 import sqlite3, json, os, requests, time, threading
 from functools import wraps
 
-database_name = "./shopee.db" 
+database_name = "../shopee.db" 
 # with  sqlite3.connect(database_name) as cc:
 #     sql = "select * from password"
 #     cu = cc.execute(sql)
@@ -35,33 +35,29 @@ def file_process():
 #     return logging_decorator
 
 
-flag = {}
-
-def multiple_mission(func, args_list, interval=1): 
-    flag['msg'] = [] 
-    mission_list = []
-    for args in args_list:
-        mission = threading.Thread(target=func, args = args)
-        mission_list.append(mission)
-    for mission in mission_list:
+def asynic_decor(func):
+    def wrapped_function(*args, **kwargs):
+        mission = threading.Thread(target=func, args=args, kwargs=kwargs)
         mission.start()
-    for mission in mission_list:
-        mission.join()
-    print(flag)
-    return
+    return wrapped_function
 
-def fu(i):
+@asynic_decor
+def tf(i):
     print(i, "start")
     time.sleep(i)
-    #assert i != "8"
-    flag['msg'].append(i)
-    print(i, 'done')
+    print(i, "done")
 
+m = {}
+w = {"my":1,"id":2,"th":3,"ph":4,"vn":5,"sg":6,"br":7,"tw":8}
+with  sqlite3.connect(database_name) as cc:
+    sql = "select account, parent_sku, model_sku, category_id, sold from items;"
+    cu = cc.execute(sql)
+    for i in cu:
+        select account, parent_sku, model_sku, category_id, sold = i
+        sku = model_sku if model_sku else parent_sku
+        site = account.split(".")[1]
 
-ii = [1,2,3,4,5,6,7, '8', 9,10]
-iii = [(i,) for i in ii]
-multiple_mission(fu, iii)
-
+    
 
 
 
