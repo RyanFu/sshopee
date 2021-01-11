@@ -61,7 +61,7 @@
         row.ProductDescription = row.ProductDescription.replace("Package", "\r\nPackage")
 
         var sfname = sufix[acc][0]
-        row.ProductName  += sfname
+        row.ProductName  += " " + sfname
         var sfdes = "\r\n\r\n" + sufix[acc][2].split(",").join("\r\n")
         row.ProductDescription += sfdes
         var location = ["nw", "sw", "ne", "se"][Math.floor(Math.random()*4)]

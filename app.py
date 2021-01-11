@@ -51,13 +51,13 @@ def shopee_price(cost, weight, profit_rate = 0):
 
 @app.route('/', methods = ['GET'])
 def defaultPage_a():
-    return redirect("/shopee")
+    return redirect("/shopee_listing")
 
 @app.route('/home', methods = ['GET'])
 def defaultPage_b():
-    return redirect("/shopee")
+    return redirect("/shopee_listing")
 
-@app.route('/shopee', methods = ['GET'])
+@app.route('/shopee_listing', methods = ['GET'])
 def HomePage():
     return render_template("home.html")
 
@@ -68,10 +68,17 @@ def AdminPage():
 @app.route('/basic_info', methods = ['GET'])
 def basic_info():
     sql = "select account, count(distinct(item_id)), update_time from items group by account order by account asc"
+    sql2 = "select update_time from log where name = 'zong'"
+    sql3 = "select update_time from log where name = 'stock'"
     with sqlite3.connect(database_name) as cc:
         res = cc.execute(sql)
         con = [i for i in res]
-    res_data = {"message": "success", "data": con} 
+        zong_time = cc.execute(sql2).fetchone()
+        stock_time = cc.execute(sql3).fetchone()
+        zong_time = zong_time[0] if zong_time else ""
+        stock_time = stock_time[0] if stock_time else ""
+    info = [zong_time, stock_time]
+    res_data = {"message": "success", "data": con, "info": info} 
     res_data = jsonify(res_data)
     return res_data
 
@@ -391,9 +398,12 @@ def upload_file():
         num = len(csvrows[0])
         ph = ','.join(['?'] * num)
         sql = 'insert into {tb} values ( {ph} )'.format(tb=tb, ph=ph)
+        sql_up = 'insert or replace into log values(?, ?)'
+        update_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         with  sqlite3.connect(database_name) as cc:
             cc.execute("delete from {tb}".format(tb=tb))
-            cc.executemany(sql, csvrows)
+            cc.executemany(sql, csvrows)          
+            cc.execute(sql_up,(tb, update_time))
             cc.commit()
         print("table updated", time.ctime())
         msg += ' as table'

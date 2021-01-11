@@ -210,7 +210,7 @@ def get_single_page(account, cookie_jar, page_num, dp=False):
         row_list = convert_page_list(page)
         for row in row_list:
             row.append(account)
-            row.append(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
+            row.append(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
 
         rows = row_list[1:]
         sql = "insert into items values (?" + ",?" * 24 + ")"
