@@ -458,7 +458,7 @@ def download_table():
         system(cm_zip)
         url = '/static/{tb}.zip'.format(tb=tb)
     else:
-        url = '/static/{tb}'.format(tb=tb)
+        url = '/static/{tb}.{tp}'.format(tb=tb, tp=tp)
     res_data = {"message": "success", "data":url}
     res_data = jsonify(res_data)
     return res_data
