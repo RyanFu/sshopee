@@ -453,7 +453,7 @@ def download_table():
     tb, tp = request.args["table"].split('.')
     if tp == 'table':
         cm_output = 'sqlite3 -header -csv ../shopee.db "select * from {tb};" > ./static/{tb}.csv'.format(tb=tb)
-        cm_zip = 'zip -m -P redback12 ./static/{tb}.zip ./static/{tb}.csv'
+        cm_zip = 'zip -m -P redback12 ./static/{tb}.zip ./static/{tb}.csv'.format(tb=tb)
         system(cm_output)
         system(cm_zip)
         url = '/static/{tb}.zip'.format(tb=tb)
