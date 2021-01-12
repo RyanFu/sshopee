@@ -477,6 +477,42 @@ def get_sufix():
     res_data = {"message": "success", "data":sufix}
     res_data = jsonify(res_data)
     return res_data
+    
+@app.route('/listings_count', methods=['GET'])
+def listings_count():
+    day10 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() - 60*60*24*7))
+    day30 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() - 60*60*24*30))
+    day60 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() - 60*60*24*60))
+    sql = '''select account from password order by account'''
+    sqla = '''select account, count( distinct item_id) from items 
+    where create_time > ?  
+    group by account '''
+    sqlc = '''select account, count( distinct item_id) from items 
+    where create_time > ? and  create_time < ? 
+    group by account '''
+    sqld = '''select account, count( distinct item_id) from items 
+    where create_time > ? and  create_time < ? and sold >= 1 
+    group by account '''
+    with  sqlite3.connect(database_name) as cc:
+        cu0 = cc.execute(sql).fetchall()
+        cu1 = cc.execute(sqla, (day10,)).fetchall()   
+        cu2 = cc.execute(sqla, (day30,)).fetchall()
+        cu3 = cc.execute(sqlc, (day30, day60)).fetchall()
+        cu4 = cc.execute(sqlc, (day30, day60)).fetchall()
+    mp = {}
+    for i in cu0:
+        account = i[0]
+        mp[account] = [account,0,0,0,0]
+    cus = [cu0, cu1, cu2, cu3, cu4]
+    for i in range(1, 5):
+        cu = cus[i]
+        for j in cu:
+            account, num = j
+            mp[account][i] = num
+    vs = [i for i in mp.values()]
+    res_data = {"message": "success", "data":vs}
+    res_data = jsonify(res_data)
+    return res_data
 
 if __name__ == "__main__":    
         app.debug = True
