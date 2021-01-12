@@ -2,6 +2,7 @@
 from flask import Flask, request, render_template, jsonify, redirect, session
 from os import listdir, system
 from functools import wraps
+from pandas import read_sql
 from datetime import timedelta
 import sqlite3, json, time, math, requests, csv, platform
 import shopee_api
