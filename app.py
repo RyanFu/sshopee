@@ -1,14 +1,16 @@
 #coding=utf-8 
-from flask import Flask, request, render_template, jsonify, redirect
+from flask import Flask, request, render_template, jsonify, redirect, session
 from os import listdir, system
-from pandas import read_sql
+from functools import wraps
 from datetime import timedelta
 import sqlite3, json, time, math, requests, csv, platform
 import shopee_api
 
-app = Flask(__name__)    
+app = Flask(__name__)   
+app.secret_key = '9dsm8G9OSYlJy64mig9KeXJmp' 
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=1)
 database_name = "D:/shopee.db" if platform.system() == "Windows" else "/root/shopee.db"
+
 
 def dict_factory(cursor, row):
     d = {}
@@ -48,6 +50,34 @@ def shopee_price(cost, weight, profit_rate = 0):
     "br": math.ceil((cost+shipping_fee["br"]*exchange_rate["br"])/(1-cost_rate-0.05-profit_rate)/exchange_rate['br'] * 10)/10,
     }
     return sale_price
+    
+def login_required(func):
+	@wraps(func)  # 保存原来函数的所有属性,包括文件名
+	def inner(*args, **kwargs):
+		if session.get("username"):
+			ret = func(*args, **kwargs)
+			return ret
+		else:
+			return redirect("/login")
+	return inner
+    
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        print(request.form)
+        if password == "redback12":
+            session['username'] = request.form['username']       
+            return redirect('/shopee_console')
+    return '''
+        <form method="post">
+            <p><input type=text name=username>
+            <p><input type=password name=password>
+            <p><input type=submit value=Login>
+        </form>
+    '''
+
 
 @app.route('/', methods = ['GET'])
 def defaultPage_a():
@@ -61,7 +91,9 @@ def defaultPage_b():
 def HomePage():
     return render_template("home.html")
 
+
 @app.route('/shopee_console', methods = ['GET'])
+@login_required
 def AdminPage():
     return render_template("admin.html")
 
@@ -333,6 +365,7 @@ def get_update_cookie_jar():
 
 # 打开后台 
 @app.route('/open_sellercenter', methods=['GET'])
+@login_required
 def open_sellercenter():
     account = request.args["account"]
     cookie_only = False
@@ -382,6 +415,7 @@ def redirect_to_erp():
 
 #接收文件
 @app.route('/upload_file', methods=['POST'])
+@login_required
 def upload_file():
     file = request.files.get('file')
     file_path = './static/' + file.filename
@@ -414,12 +448,14 @@ def upload_file():
 
 #按名称导出文件为CSV文件
 @app.route('/download_table', methods=['GET'])
+@login_required
 def download_table():
     tb, tp = request.args["table"].split('.')
     if tp == 'table':
         cm_output = 'sqlite3 -header -csv ../shopee.db "select * from {tb};" > ./static/{tb}.csv'.format(tb=tb)
         cm_zip = 'zip -m -P redback12 ./static/{tb}.zip ./static/{tb}.csv'
         system(cm_output)
+        system(cm_zip)
         url = '/static/{tb}.zip'.format(tb=tb)
     else:
         url = '/static/{tb}'.format(tb=tb)
