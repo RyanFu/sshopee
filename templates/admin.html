@@ -136,13 +136,13 @@ $(".content").delegate(".update_shop_performance", "click", function(){
     $("input", tr)[0].value = res.data.join("\t");
   })
 })
-//更新全部账号表现
-$(".container").delegate("#update_all_accounts_performance", "click", function(){
-  var button_list = $(".update_shop_performance").toArray()
-  for (let i=0; i<button_list.length; i++){
-    setTimeout(function(){button_list(i).click()}, i * 200)
-  }
-})
+// //更新全部账号表现
+// $(".container").delegate("#update_all_accounts_performance", "click", function(){
+//   var button_list = $(".update_shop_performance").toArray()
+//   for (let i=0; i<button_list.length; i++){
+//     setTimeout(function(){button_list[i].click()}, i * 200)
+//   }
+// })
 
 //打开后台页面
 $(".content").delegate(".open_sellercenter", "click", function(){  
