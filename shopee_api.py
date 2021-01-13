@@ -1,9 +1,10 @@
 #coding=utf-8  
+#import gevent
 import sqlite3, json, requests, time, threading, platform
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
-from concurrent import futures
+from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor 
 
 db_lock = threading.Lock();
 
@@ -29,6 +30,25 @@ def multiple_mission(func, args_list, max_number=50):
         mission.start()
         print('start mission NO.', i)
     return
+
+#多任务并发, 线程版, 加线程池
+def multiple_mission_pool(func, args_list, max_workers=50):
+    num = len(args_list)
+    print('total mission number is ', num)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        #future = executor.map(get_one, [*args for args in args_list])
+        future = [executor.submit(func, *args) for args in args_list]
+        print('started missions number is', len(future))
+    print('all missions done')
+
+# #多任务并发,协程版,慢
+# def multiple_mission_gevent(func, args_list, max_workers=50):
+#     num = len(args_list)
+#     print('total mission number is ', num)
+#     jobs = [gevent.spawn(func, args) for args in args_list]
+#     gevent.wait(jobs)
+#     print('all missions done')
+#     return
 
 #使用SELENIUM控制CHORME打开账号后台
 def open_sellercenter(account, password, cookie_only):
@@ -245,7 +265,7 @@ def get_all_page(account):
         total_count = data["data"]["page_info"]["total"]
     total_page = total_count // 48 + 1
     num_list = [[account, cookie_jar, i] for i in range(1, total_page + 1)]
-    multiple_mission(get_single_page, num_list)
+    multiple_mission_pool(get_single_page, num_list)
 
 
 
