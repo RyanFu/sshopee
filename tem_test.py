@@ -47,17 +47,29 @@ def tf(i):
     time.sleep(i)
     print(i, "done")
 
-m = {}
-w = {"my":1,"id":2,"th":3,"ph":4,"vn":5,"sg":6,"br":7,"tw":8}
-with  sqlite3.connect(database_name) as cc:
-    sql = "select account, parent_sku, model_sku, category_id, sold from items;"
-    cu = cc.execute(sql)
-    for i in cu:
-        select account, parent_sku, model_sku, category_id, sold = i
-        sku = model_sku if model_sku else parent_sku
-        site = account.split(".")[1]
+import asyncio, requests, httpx
 
-    
+
+# async def myrequest(i):
+#     print(i,' start')
+#     async with httpx.AsyncClient() as client:
+#         url = 'https://www.baidu.com'
+#         status = await client.get(url) 
+#         print(i, ' end')
+#         return status
+
+# tasks = []
+# for i in range(5):
+#     task = asyncio.ensure_future(myrequest(i))
+#     tasks.append(task)
+# print('Tasks:', tasks)
+
+# loop = asyncio.get_event_loop()
+# loop.run_until_complete(asyncio.wait(tasks))
+
+# for task in tasks:
+#     print('Task Result:', task.result())
+
 
 
 

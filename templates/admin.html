@@ -22,9 +22,12 @@ table.gridtable td {border-width: 1px;padding: 8px;border-style: solid;}
 <div class=head>
 <input id=table_name type=text>
 <input id=table_export type=button value=导出表格>
+<input id=update_all_accounts_performance type=button value=更新全部账号表现>
+<input id=update_all_accounts_listings type=button value=更新全部在线产品>
+
   <form action="/upload_file" method="post" enctype="multipart/form-data">
     <input type="file" name="file">
-    <input type="submit" value="提交文件到后台根目录">
+    <input type="submit" value="提交文件到后台并更新数据">
     </form>
 
 </div>
@@ -85,7 +88,7 @@ function account_info(){
     rows.map(i=>{
       let b1 = $("<input type=button class=get_update_cookie_jar value=获取cookies>")[0]
       i.children[4].append(b1)
-      let b2 = $("<input type=button class=update_all_listing value=产品列表>")[0]
+      let b2 = $("<input type=button class=update_all_listings value=产品列表>")[0]
       i.children[4].append(b2)
       let b3 = $("<input type=button class=update_shop_performance value=账号表现>")[0]
       i.children[4].append(b3)
@@ -106,15 +109,21 @@ $(".content").delegate(".get_update_cookie_jar", "click", function(){
   })
 })
 
-//更新全部在线产品
-$(".content").delegate(".update_all_listing", "click", function(){  
+//更新账号在线产品
+$(".content").delegate(".update_all_listings", "click", function(){  
   var tr = $(this)[0].parentElement.parentElement
   $("input", tr)[0].value = "获取中"
   var account = tr.children[0].textContent
-  var url = `/update_all_listing?account=${account}`
+  var url = `/update_all_listings?account=${account}`
   $.get(url, function(res){
     $("input", tr)[0].value = "success";
   })
+})
+//更新全部在线产品
+$(".container").delegate("#update_all_accounts_listings", "click", function(){
+  if (! confirm("更新所有账号在线产品?")){return;}
+  var url = `/update_all_accounts_listings`
+  $.get(url, function(res){})
 })
 
 //更新账号表现状态
@@ -126,6 +135,13 @@ $(".content").delegate(".update_shop_performance", "click", function(){
   $.get(url, function(res){
     $("input", tr)[0].value = res.data.join("\t");
   })
+})
+//更新全部账号表现
+$(".container").delegate("#update_all_accounts_performance", "click", function(){
+  var button_list = $(".update_shop_performance").toArray()
+  for (let i=0; i<button_list.length; i++){
+    setTimeout(function(){button_list(i).click()}, i * 200)
+  }
 })
 
 //打开后台页面

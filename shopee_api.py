@@ -3,8 +3,10 @@ import sqlite3, json, requests, time, threading, platform
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
+from concurrent import futures
 
 db_lock = threading.Lock();
+
 if platform.system() == "Windows":
     database_name = "D:/shopee.db"
     driver_path = 'D:/chromedriver_win32/chromedriver.exe'
@@ -14,8 +16,8 @@ else:
 ua = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.62 Safari/537.36"
 #http://chromedriver.storage.googleapis.com/index.html
 
-#多线程任务封装
-def multiple_mission(func, args_list, max_number=5):
+#多任务并发, 线程版
+def multiple_mission(func, args_list, max_number=50):
     num = len(args_list)
     print('total mission number is ', num)
     for i in range(num):
@@ -33,7 +35,7 @@ def open_sellercenter(account, password, cookie_only):
     print(account, password)
     site = account[-2:]
     ch_options = Options()
-    if cookie_only == "1":
+    if cookie_only:
         ch_options.add_argument("--headless")
         ch_options.add_argument("--no-sandbox")
         print("no head")
@@ -61,7 +63,8 @@ def open_sellercenter(account, password, cookie_only):
     cookies_text = json.dumps(cookies_dict)
     with  sqlite3.connect(database_name) as cc:
         sql = "insert or replace into cookies values(?, ?, ?)"
-        cc.execute(sql, [account, cookies_text, time.ctime()])
+        t = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        cc.execute(sql, [account, cookies_text, t])
         cc.commit()
     return cookies_text
 
@@ -95,7 +98,7 @@ def check_cookie_jar(account):
             cu = cc.execute(sql, [account])
             con = cu.fetchone()
             password = con[0]
-        selenium_chrome.open_sellercenter(account, password, True)
+        open_sellercenter(account, password, True)
     print(account, ' cookies updated')
     return
 
@@ -243,3 +246,6 @@ def get_all_page(account):
     total_page = total_count // 48 + 1
     num_list = [[account, cookie_jar, i] for i in range(1, total_page + 1)]
     multiple_mission(get_single_page, num_list)
+
+
+

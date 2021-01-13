@@ -380,18 +380,32 @@ def open_sellercenter():
     return res_data 
 
 #按账号更新全部在线产品
-@app.route('/update_all_listing', methods=['GET'])
-def update_all_listing():
+@app.route('/update_all_listings', methods=['GET'])
+def update_all_listings():
     account = request.args["account"]
     shopee_api.check_cookie_jar(account)
     shopee_api.clear_listing(account)
     shopee_api.get_all_page(account)
-    #shopee_api.get_single_page(account)
     res_data = {"message": "success", "data":{}}
     res_data = jsonify(res_data)
     return res_data
 
-#按账号更新全部在线产品
+#按更新全部账号在线产品
+@app.route('/update_all_accounts_listings', methods=['GET'])
+def update_all_accounts_listings():
+    sql = 'select account from password'
+    with  sqlite3.connect(database_name) as cc:       
+        cu = cc.execute(sql)
+        account_list = [i[0] for i in cu]
+    for account in account_list:
+        shopee_api.check_cookie_jar(account)
+        shopee_api.clear_listing(account)
+        shopee_api.get_all_page(account)
+    res_data = {"message": "success", "data":{}}
+    res_data = jsonify(res_data)
+    return res_data
+
+#按账号账号表现
 @app.route('/update_shop_performance', methods=['GET'])
 def update_shop_performance():
     account = request.args["account"]
