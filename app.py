@@ -391,7 +391,7 @@ def update_all_listings():
     res_data = jsonify(res_data)
     return res_data
 
-#按更新全部账号在线产品
+#更新全部账号在线产品
 @app.route('/update_all_accounts_listings', methods=['GET'])
 def update_all_accounts_listings():
     sql = 'select account from password'
@@ -401,12 +401,8 @@ def update_all_accounts_listings():
     for account in account_list:
         shopee_api.check_cookie_jar(account)
         shopee_api.clear_listing(account)
-        try:
-            shopee_api.get_all_page(account)
-        except:
-            time.sleep(5)
-            shopee_api.clear_listing(account)
-            shopee_api.get_all_page(account)
+        shopee_api.get_all_page(account)
+        time.sleep(5)
     res_data = {"message": "success", "data":{}}
     res_data = jsonify(res_data)
     return res_data

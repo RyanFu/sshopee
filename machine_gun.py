@@ -1,11 +1,11 @@
-import threading
+import threading, time
 from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor,as_completed
 from functools import wraps
 
 db_lock = threading.Lock()
 
 #新线程伪异步装饰器
-def asy_decor(func):
+def decor_async(func):
     @wraps(func)
     def wrapped_function(*args, **kwargs):
         print('one new thread started for ', func.__name__)
@@ -13,8 +13,21 @@ def asy_decor(func):
         mission.start()
     return wrapped_function
 
+#失败重试装饰器
+def decor_retry(func):
+    @wraps(func)
+    def wrapped_function(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+        except:
+            print(func.__name__, " failed , try again later")
+            time.sleep(5)
+            result = func(*args, **kwargs)
+        return result
+    return wrapped_function
+
 #多任务并发, 线程版
-def multiple_mission(func, args_list, max_number=50):
+def multiple_mission(func, args_list, max_number=32):
     num = len(args_list)
     print('total mission number is ', num)
     for i in range(num):
@@ -28,7 +41,7 @@ def multiple_mission(func, args_list, max_number=50):
     return
 
 #多任务并发, 线程版, 加线程池
-def multiple_mission_pool(func, args_list, max_workers=50):
+def multiple_mission_pool(func, args_list, max_workers=32):
     num = len(args_list)
     print('total mission number is ', num)
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -39,7 +52,7 @@ def multiple_mission_pool(func, args_list, max_workers=50):
     print('all missions done')
 
 # #多任务并发,协程版,慢
-# def multiple_mission_gevent(func, args_list, max_workers=50):
+# def multiple_mission_gevent(func, args_list, max_workers=32):
 #     num = len(args_list)
 #     print('total mission number is ', num)
 #     jobs = [gevent.spawn(func, args) for args in args_list]

@@ -4,7 +4,7 @@ import sqlite3, json, requests, time, platform
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
-from machine_gun import multiple_mission_pool, asy_decor, db_lock
+from machine_gun import multiple_mission_pool, decor_retry, decor_async, db_lock
 
 if platform.system() == "Windows":
     database_name = "D:/shopee.db"
@@ -184,6 +184,7 @@ def convert_page_list(page):
     return row_list
 
 #单个页面产品获取并保存, 加锁
+@decor_retry
 def get_single_page(account, cookie_jar, page_num, dp=False):
     site = account.split(".")[1]
     host = "https://seller.{site}.shopee.cn".format(site=site)    

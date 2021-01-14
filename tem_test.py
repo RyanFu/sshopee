@@ -1,6 +1,6 @@
 #coding=utf-8  
-import sqlite3, json, os, requests, time, threading
-from functools import wraps
+import sqlite3, json, os, requests, time
+import machine_gun
 
 database_name = "../shopee.db" 
 # with  sqlite3.connect(database_name) as cc:
@@ -55,10 +55,14 @@ def file_process():
     # cc.executemany(sql, data)
     # cc.commit()
 
+@machine_gun.decor_retry
+def f(i):
+    print(i)
+    assert(i!=2)
 
 
-
-
+for i in range(3):
+    f(i)
 
 
 
