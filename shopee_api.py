@@ -1,12 +1,10 @@
 #coding=utf-8  
 #import gevent
-import sqlite3, json, requests, time, threading, platform
+import sqlite3, json, requests, time, platform
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
-from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor 
-
-db_lock = threading.Lock();
+from machine_gun import multiple_mission_pool, asy_decor, db_lock
 
 if platform.system() == "Windows":
     database_name = "D:/shopee.db"
@@ -17,38 +15,6 @@ else:
 ua = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.62 Safari/537.36"
 #http://chromedriver.storage.googleapis.com/index.html
 
-#多任务并发, 线程版
-def multiple_mission(func, args_list, max_number=50):
-    num = len(args_list)
-    print('total mission number is ', num)
-    for i in range(num):
-        args = args_list[i]
-        while threading.active_count() > max_number + 1:
-            print('reach max mission number, waiting...')
-            time.sleep(1)
-        mission = threading.Thread(target=func, args = args)
-        mission.start()
-        print('start mission NO.', i)
-    return
-
-#多任务并发, 线程版, 加线程池
-def multiple_mission_pool(func, args_list, max_workers=50):
-    num = len(args_list)
-    print('total mission number is ', num)
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        #future = executor.map(get_one, [*args for args in args_list])
-        future = [executor.submit(func, *args) for args in args_list]
-        print('started missions number is', len(future))
-    print('all missions done')
-
-# #多任务并发,协程版,慢
-# def multiple_mission_gevent(func, args_list, max_workers=50):
-#     num = len(args_list)
-#     print('total mission number is ', num)
-#     jobs = [gevent.spawn(func, args) for args in args_list]
-#     gevent.wait(jobs)
-#     print('all missions done')
-#     return
 
 #使用SELENIUM控制CHORME打开账号后台
 def open_sellercenter(account, password, cookie_only):

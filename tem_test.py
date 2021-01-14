@@ -19,7 +19,6 @@ def file_process():
         print(od, nd)
         #os.rename(od, nd)
 
-
 # def logit(logfile='out.log'):
 #     def logging_decorator(func):
 #         @wraps(func)
@@ -35,41 +34,26 @@ def file_process():
 #     return logging_decorator
 
 
-def asynic_decor(func):
-    def wrapped_function(*args, **kwargs):
-        mission = threading.Thread(target=func, args=args, kwargs=kwargs)
-        mission.start()
-    return wrapped_function
-
-@asynic_decor
-def tf(i):
-    print(i, "start")
-    time.sleep(i)
-    print(i, "done")
-
-import asyncio, requests, httpx
-
-
-# async def myrequest(i):
-#     print(i,' start')
-#     async with httpx.AsyncClient() as client:
-#         url = 'https://www.baidu.com'
-#         status = await client.get(url) 
-#         print(i, ' end')
-#         return status
-
-# tasks = []
-# for i in range(5):
-#     task = asyncio.ensure_future(myrequest(i))
-#     tasks.append(task)
-# print('Tasks:', tasks)
-
-# loop = asyncio.get_event_loop()
-# loop.run_until_complete(asyncio.wait(tasks))
-
-# for task in tasks:
-#     print('Task Result:', task.result())
-
+# site_list = ['sku', 'my', 'id', 'th', 'ph', 'vn', 'sg', 'br']
+# sql = '''select zong.sku, items.category_id from items join zong 
+    # on items.parent_sku = zong.sku or items.model_sku = zong.sku 
+    # where items.account like ? group by zong.sku order by items.sold;'''
+# mp = {}
+# with  sqlite3.connect(database_name) as cc:
+    # for i in range(1, len(site_list)):
+        # site = site_list[i];print(site);
+        # cu = cc.execute(sql, ('%' + site,))
+        # for row in cu:
+            # sku, cat = row
+            # vs = mp.get(sku, [0 for i in site_list])
+            # vs[0] = sku
+            # vs[i] = cat.split('.')[-1]
+            # mp[sku] = vs 
+    # data = [i for i in mp.values()]
+    # print(len(data))
+    # sql = 'insert into cat values(?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    # cc.executemany(sql, data)
+    # cc.commit()
 
 
 
