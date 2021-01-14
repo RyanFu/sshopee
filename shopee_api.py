@@ -218,6 +218,7 @@ def get_single_page(account, cookie_jar, page_num, dp=False):
             print("complete listng count ", conplete_count)
 
 #更新账号全部产品
+@decor_retry
 def get_all_page(account):
     site = account.split(".")[1]
     cookie_jar = get_cookie_jar(account)  

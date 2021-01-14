@@ -72,14 +72,7 @@ def login():
         if password == "redback12":
             session['username'] = request.form['username']       
             return redirect('/shopee_console')
-    return '''
-        <form method="post">
-            <p><input type=text name=username>
-            <p><input type=password name=password>
-            <p><input type=submit value=Login>
-        </form>
-    '''
-
+    return render_template("login.html")
 
 @app.route('/', methods = ['GET'])
 def defaultPage_a():
