@@ -1,178 +1,52 @@
-﻿<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
 <head>
-<meta charset="utf-8">
-<script src="static/js/jquery.min.js"></script>
-<script src="static/js/jquery.cookie.js"></script>
-<link rel="shortcut icon" href="static/favicon.ico" type="image/x-icon"/>
-<style type="text/css">
-div {margin:10px;}
-input {margin:5px;}
-.container {width: 95%; padding:5%;}
-table.gridtable {font-size:11px;border-width: 1px;border-collapse: collapse;}
-table.gridtable th {border-width: 1px;padding: 8px;border-style: solid;
-  background-color: #dedede;}
-table.gridtable td {border-width: 1px;padding: 8px;border-style: solid;}
-</style>
-
-<title>数据分析v1.0.2 控制台</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="keywords" content="jquery,ui,easy,easyui,web">
+	<meta name="description" content="easyui help you build your web page easily!">
+	<title>Build CRUD DataGrid with jQuery EasyUI - jQuery EasyUI Demo</title>
+	<link rel="stylesheet" type="text/css" href="/static/js/easyui/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="/static/js/easyui/themes/icon.css">
+	<link rel="stylesheet" type="text/css" href="/static/js/easyui/demo/demo.css">
+	<script type="text/javascript" src="/static/js/jquery.min.js"></script>
+	<script type="text/javascript" src="/static/js/easyui/jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="/static/js/easyui/jquery.edatagrid.js"></script>
+	<script type="text/javascript">
+		$(function(){
+			$('#dg').edatagrid({
+				url: '/easyui/sufix/get',
+				saveUrl: '/easyui/sufix/save',
+				updateUrl: '/easyui/sufix/update',
+				destroyUrl: '/easyui/sufix/delete'
+			});
+		});
+	</script>
 </head>
-
 <body>
-<div class=container>
-<div class=head>
-<input id=table_name type=text>
-<input id=table_export type=button value=导出表格>
-<input id=update_all_accounts_performance type=button value=更新全部账号表现>
-<input id=update_all_accounts_listings type=button value=更新全部在线产品>
-
-  <form action="/upload_file" method="post" enctype="multipart/form-data">
-    <input type="file" name="file">
-    <input type="submit" value="提交文件到后台并更新数据">
-    </form>
-
-</div>
-
-<div class=content>
-
-</div>
-
-<div class=foot>
-</div>
-</div>
+	<h2>后台数据管理</h2>
+	<div class="demo-info" style="margin-bottom:10px">
+		<div class="demo-tip icon-tip">&nbsp;</div>
+		<div>Double click the row to begin editing.</div>
+	</div>
+	
+	<table id="dg" title="My Users" style="width:60%x;height:520px"
+			toolbar="#toolbar" pagination="true" idField="id"
+			rownumbers="true" fitColumns="true" singleSelect="true">
+		<thead>
+			<tr>
+				<th field="account" width="50" editor="{type:'validatebox',options:{required:true}}">账号组</th>
+				<th field="name" width="50" editor="{type:'validatebox',options:{required:true}}">标题后缀</th>
+				<th field="image" width="80" editor="text">水印文字</th>
+				<th field="description" width="120" editor="text">描述后缀</th>
+			</tr>
+		</thead>
+	</table>
+	<div id="toolbar">
+		<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:$('#dg').edatagrid('addRow')">New</a>
+		<a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="javascript:$('#dg').edatagrid('destroyRow')">Destroy</a>
+		<a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="javascript:$('#dg').edatagrid('saveRow')">Save</a>
+		<a href="#" class="easyui-linkbutton" iconCls="icon-undo" plain="true" onclick="javascript:$('#dg').edatagrid('cancelRow')">Cancel</a>
+	</div>
+	
 </body>
 </html>
-
-<script>
-  //从二级数组生成表格
-function array2table(data, edit=false){
-  var tb = $("<table class=gridtable>")[0]
-  let tr = $("<tr>")[0]
-  tb.append(tr)
-  data[0].map(i=>{
-    let th = $("<th>")[0]
-    th.textContent = i
-    tr.append(th)
-  })
-  data.slice(1,).map(r=>{
-    let tr = $("<tr>")[0]
-    tb.append(tr)
-    r.map(i=>{
-      let td = $("<td>")[0]
-      let bx = $("<input>")[0]
-      td.textContent = i
-      tr.append(td)
-    })
-  })
-  return tb
-}
-
-//获取初始信息
-account_info()
-function account_info(){
-  var url = "/account_info"
-  $.get(url, function(res){
-    var data = res.data
-    var hd = [["account_info", "password", "cookies", "update_time", "action"]]
-    data.map(i => i.push(""))
-    data = hd.concat(data)
-    var tb = array2table(data)
-    $("div.content")[0].append(tb)
-    var rows = $("tr", tb).toArray().slice(1,)
-    rows.map(i=>{
-      let ck = i.children[2].textContent
-      i.children[2].textContent = ""
-      let ip = $("<input>")[0]
-      ip.value = ck
-      i.children[2].append(ip)
-    })
-    rows.map(i=>{
-      let b1 = $("<input type=button class=get_update_cookie_jar value=获取cookies>")[0]
-      i.children[4].append(b1)
-      let b2 = $("<input type=button class=update_all_listings value=产品列表>")[0]
-      i.children[4].append(b2)
-      let b3 = $("<input type=button class=update_shop_performance value=账号表现>")[0]
-      i.children[4].append(b3)
-      let b4 = $("<input type=button class=open_sellercenter value=打开后台>")[0]
-      if (res.platform = 'Windows'){i.children[4].append(b4)}     
-    })
-  })
-}
-
-//检查并更新cookies
-$(".content").delegate(".get_update_cookie_jar", "click", function(){  
-  var tr = $(this)[0].parentElement.parentElement
-  $("input", tr)[0].value = "获取中"
-  var account = tr.children[0].textContent
-  var url = `/get_update_cookie_jar?account=${account}`
-  $.get(url, function(res){
-    $("input", tr)[0].value = res.data.cookies;
-  })
-})
-
-//更新账号在线产品
-$(".content").delegate(".update_all_listings", "click", function(){  
-  var tr = $(this)[0].parentElement.parentElement
-  $("input", tr)[0].value = "获取中"
-  var account = tr.children[0].textContent
-  var url = `/update_all_listings?account=${account}`
-  $.get(url, function(res){
-    $("input", tr)[0].value = "success";
-  })
-})
-//更新全部在线产品
-$(".container").delegate("#update_all_accounts_listings", "click", function(){
-  if (! confirm("更新所有账号在线产品?")){return;}
-  var url = `/update_all_accounts_listings`
-  $.get(url, function(res){})
-})
-
-//更新账号表现状态
-$(".content").delegate(".update_shop_performance", "click", function(){  
-  var tr = $(this)[0].parentElement.parentElement
-  $("input", tr)[0].value = "获取中"
-  var account = tr.children[0].textContent
-  var url = `/update_shop_performance?account=${account}`
-  $.get(url, function(res){
-    $("input", tr)[0].value = res.data.join("\t");
-  })
-})
-// //更新全部账号表现
-// $(".container").delegate("#update_all_accounts_performance", "click", function(){
-//   var button_list = $(".update_shop_performance").toArray()
-//   for (let i=0; i<button_list.length; i++){
-//     setTimeout(function(){button_list[i].click()}, i * 200)
-//   }
-// })
-
-//打开后台页面
-$(".content").delegate(".open_sellercenter", "click", function(){  
-  var tr = $(this)[0].parentElement.parentElement
-  $("input", tr)[0].value = "获取中"
-  var account = tr.children[0].textContent
-  var url = `/open_sellercenter?account=${account}`
-  $.get(url, function(res){
-    $("input", tr)[0].value = res.data.cookies;
-  })
-})
-
-//导出表格 导出静态文件
-$(".container").delegate("#table_export", "click", function(){
-  var name = $("#table_name")[0].value
-  var url = `/download_table?table=${name}`
-  $.ajax({
-    type:"GET",
-    timeout: 1000 * 60 * 5,
-    url: url,
-    success: function(res){
-        var url = res.data
-        var ad = $("<a download>")[0]
-        ad.href = url
-        ad.value = "下载文件"
-        ad.click()
-    }
-  })
-})
-
-
-
-</script>

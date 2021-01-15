@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    {% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script href="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script href="{{ url_for('static', filename='js/xlsx.core.min.js') }}"></script>
+    <script href="{{ url_for('static', filename='js/irobotbox_api.js') }}"></script>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='ico/favicon.ico') }}" type="image/x-icon"/>
+    <title>{% block title %}{% endblock %} - shopee数据分析</title>
+    {% endblock %}
+  </head>
+  <body>
+  <div id="navbar" >
+    <li ><a href="{{ url_for('homePage') }}">在线产品</a></li>
+    <li ><a href="{{ url_for('homePage') }}">指标统计</a></li>
+    <li ><a href="{{ url_for('homePage') }}">取消退款</a></li>
+    <li ><a href="{{ url_for('adminPage') }}">后台管理</a></li>
+  </div>
+    <div id="content">{% block content %}{% endblock %}</div>
+    <div id="footer">
+      {% block footer %}
+      &copy; Copyright 2010 by <a href="">shopee数据分析</a>.
+      {% endblock %}
+    </div>
+  </body>
+</html>

@@ -83,14 +83,26 @@ def defaultPage_b():
     return redirect("/shopee_listing")
 
 @app.route('/shopee_listing', methods = ['GET'])
-def HomePage():
+def homePage():
     return render_template("home.html")
-
+    
+@app.route('/shopee_admin')
+def adminPage():
+    return render_template('admin.html')
+    
+@app.route('/shopee_dashboard', methods = ['GET'])
+def dashboardPage():
+    navigation = [
+    {'name':'在线产品查询', 'href':'/shopee_listing'},
+    {'name':'账号指标统计', 'href':'/shopee_dashboard'},
+    {'name':'后台更新管理', 'href':'/shopee_console'},
+    ]
+    return render_template("dashboard.html", navigation=navigation)
 
 @app.route('/shopee_console', methods = ['GET'])
 @login_required
-def AdminPage():
-    return render_template("admin.html")
+def consolePage():
+    return render_template("console.html")
 
 @app.route('/basic_info', methods = ['GET'])
 def basic_info():
@@ -523,6 +535,59 @@ def listings_count():
     res_data = jsonify(res_data)
     return res_data
 
+@app.route('/easyui/<name>/<action>', methods=['GET', 'POST']) 
+def easyui(name, action):
+    print(action, request.args,request.json,request.form)
+    if action == 'get':
+        page = int(request.form['page'])
+        rows = int(request.form['rows'])
+        offset = rows * (page - 1)
+        sql = 'select * from {name}'.format(name=name)
+        with  sqlite3.connect(database_name) as cc:
+            cc.row_factory = dict_factory
+            con = cc.execute(sql).fetchall()
+        res_data = {'total':len(con), 'rows': con[offset: offset + rows]}
+
+    elif action == 'save':
+        keys = [i for i in request.form.keys()][1:]
+        values = [request.form[i] for i in keys]
+        ph = ','.join(['?' for i in values])
+        keys = ','.join(keys)
+        sql = 'insert into {name} ({keys}) values({ph})'.format(name=name, keys=keys, ph=ph)
+        with  sqlite3.connect(database_name) as cc:
+            print(sql)
+            cc.execute(sql, values)
+            cc.commit()       
+            res_data = {}
+    elif action == 'delete':
+        num = request.form['id']
+        sql = 'delete from {name} where id = ?'.format(name=name)
+        with  sqlite3.connect(database_name) as cc:
+            print(sql)
+            cc.execute(sql, (num,))
+            cc.commit()       
+            res_data = {'success': True}
+    elif action == 'update':
+        num = request.form['id']
+        keys = [i for i in request.form.keys()]
+        sql = 'update {} set '.format(name)
+        data = []
+        res_data = {}
+        for k in keys:
+            if k != 'id':
+                sql += '{} = ?,'.format(k)
+                data.append(request.form[k])
+            res_data[k] = request.form[k]
+        sql = sql[:-1] + ' where id = ?'
+        sql2 = 'select * from {} where id = ? '.format(name)
+        data.append(num)
+        with  sqlite3.connect(database_name) as cc:
+            print(sql, data)
+            cc.execute(sql, data)
+            cc.commit()
+    res_data = jsonify(res_data)
+    return res_data
+    
 if __name__ == "__main__":    
         app.debug = True
         app.run(port=5001)
