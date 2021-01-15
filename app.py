@@ -256,7 +256,7 @@ def shopee_search():
     data = request.json
     if data["sku"]:
         con.append("(items.parent_sku = '{}' or items.model_sku = '{}')".format(data["sku"], data["sku"]))
-        sql = sql.replace("select", "select items.account,items.create_time,")
+        #sql = sql.replace("select", "select items.account,items.create_time,")
     else:
         if data["account"]:
             con.append("items.account = '{account}'".format(account=data["account"]))
@@ -301,7 +301,7 @@ def shopee_cookies():
 def wrong_sku():
     data = request.json
     sku_list = [i for i in data["sku_list"] if i !=""]
-    sql = '''select account, update_time, item_id, model_id,
+    sql = '''select update_time, item_id, model_id,account, model_sold, 
     parent_sku, model_sku from items 
     where parent_sku = ? or model_sku = ? '''
     res_data = {"message": "success", "data": {"rows":[]}}

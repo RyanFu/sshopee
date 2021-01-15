@@ -247,7 +247,7 @@ function format_item_ids(){
 function shopee_search(){
   var data = {}  
   data.account = $("[name=account]")[0].value.trim()
-  data.sku = $("[name=sku]")[0].value
+  data.sku = $("[name=sku]")[0].value.trim()
   data.rating = $("[name=rating]")[0].value
   data.ado = $("[name=ado]")[0].value
   data.sold = $("[name=sold]")[0].value
