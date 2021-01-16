@@ -1,0 +1,36 @@
+
+#navigator {
+    width: 10%;
+    float: left;
+    position: fixed;
+    
+}
+#navigator_panel {
+    width:100%;
+    height:auto;
+    padding:10px;
+
+}
+#content {
+    width: 80%;
+    margin: auto;
+
+}
+#footer {
+    width:100%;
+    margin: auto;
+    bottom: 10;
+    text-align: center;
+}
+
+#login_form_div {
+    margin:auto; 
+    width:30%;
+    top:20%;
+}
+#command_div input{
+    margin:5px
+}
+.textarea_div textarea {
+    width: 100%; 
+}

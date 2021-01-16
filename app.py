@@ -1,6 +1,6 @@
 #coding=utf-8 
 #from gevent import monkey;monkey.patch_socket()
-from flask import Flask, request, render_template, jsonify, redirect, session
+from flask import Flask, request, render_template, jsonify, redirect, session, flash
 from os import listdir, system
 from functools import wraps
 from pandas import read_sql
@@ -52,7 +52,8 @@ def shopee_price(cost, weight, profit_rate = 0):
     "br": math.ceil((cost+shipping_fee["br"]*exchange_rate["br"])/(1-cost_rate-0.05-profit_rate)/exchange_rate['br'] * 10)/10,
     }
     return sale_price
-    
+
+#登录权限检查
 def login_required(func):
 	@wraps(func)  # 保存原来函数的所有属性,包括文件名
 	def inner(*args, **kwargs):
@@ -60,20 +61,51 @@ def login_required(func):
 			ret = func(*args, **kwargs)
 			return ret
 		else:
-			return redirect("/login")
+			return redirect("/shopee_login")
 	return inner
-    
-@app.route('/login', methods=['GET', 'POST'])
+
+#登录页面  
+@app.route('/shopee_login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'GET':
+        username = session.get('username', None)
+        if username:
+            flash(username + '已经登录') 
+            return redirect('/shopee_admin')
+        else:
+            return render_template("login.html")
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         print(request.form)
-        if password == "redback12":
-            session['username'] = request.form['username']       
-            return redirect('/shopee_console')
+        if username == "guoliang" and password == "gl23r42":
+            session['username'] = username
+            flash(username + '登录成功') 
+            return redirect('/shopee_admin')
+        else:
+            flash(username + '登录失败') 
+            return redirect('/shopee_login')
     return render_template("login.html")
 
+#退出
+@app.route('/shopee_logout', methods=['GET'])
+def logout():
+    session.clear()
+    flash("已退出登录")
+    return redirect('/shopee_login')
+
+#当前用户状态
+@app.route('/login_status', methods=['GET'])
+def login_status():
+    if session:
+        name = session['username']
+    else:
+        name = ''
+    res_data = {"message": "success", "username": name}
+    res_data = jsonify(res_data)
+    return res_data
+
+#常用基础页面
 @app.route('/', methods = ['GET'])
 def defaultPage_a():
     return redirect("/shopee_listing")
@@ -85,25 +117,26 @@ def defaultPage_b():
 @app.route('/shopee_listing', methods = ['GET'])
 def homePage():
     return render_template("home.html")
-    
+
+@app.route('/shopee_index', methods = ['GET'])
+def indexPage():
+    return render_template("index.html")
+
 @app.route('/shopee_admin')
+@login_required
 def adminPage():
     return render_template('admin.html')
     
 @app.route('/shopee_dashboard', methods = ['GET'])
 def dashboardPage():
-    navigation = [
-    {'name':'在线产品查询', 'href':'/shopee_listing'},
-    {'name':'账号指标统计', 'href':'/shopee_dashboard'},
-    {'name':'后台更新管理', 'href':'/shopee_console'},
-    ]
-    return render_template("dashboard.html", navigation=navigation)
+    return render_template("dashboard.html")
 
 @app.route('/shopee_console', methods = ['GET'])
 @login_required
 def consolePage():
     return render_template("console.html")
 
+#前台初始化
 @app.route('/basic_info', methods = ['GET'])
 def basic_info():
     sql = "select account, count(distinct(item_id)), update_time from items group by account order by account asc"
@@ -412,7 +445,7 @@ def update_all_accounts_listings():
     res_data = jsonify(res_data)
     return res_data
 
-#按账号账号表现
+#单个账号表现
 @app.route('/update_shop_performance', methods=['GET'])
 def update_shop_performance():
     account = request.args["account"]
@@ -423,6 +456,15 @@ def update_shop_performance():
     con = values
     res_data = {"message": "success", "data":con}
     res_data = jsonify(res_data)
+    return res_data
+
+#全部账号表现更新
+@app.route('/update_all_shop_performance', methods=['GET'])
+def update_all_shop_performance():
+    shopee_api.get_all_performance()
+    res_data = {"message": "success", "data":[]}
+    res_data = jsonify(res_data)
+    flash("账号表现已更新")
     return res_data
 
 #转发到ERP的API避免CORS
@@ -498,7 +540,8 @@ def get_sufix():
     res_data = {"message": "success", "data":sufix}
     res_data = jsonify(res_data)
     return res_data
-    
+
+#在线数量分析
 @app.route('/listings_count', methods=['GET'])
 def listings_count():
     day10 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() - 60*60*24*7))
@@ -514,28 +557,39 @@ def listings_count():
     sqld = '''select account, count( distinct item_id) from items 
     where create_time > ? and  create_time < ? and sold >= 1 
     group by account '''
+    sqle = '''select account, count( distinct item_id) from items group by account'''
+    sql_up = '''insert or replace into listings_count 
+    values (?,?,?,?,?,?) '''
     with  sqlite3.connect(database_name) as cc:
         cu0 = cc.execute(sql).fetchall()
         cu1 = cc.execute(sqla, (day10,)).fetchall()   
         cu2 = cc.execute(sqla, (day30,)).fetchall()
-        cu3 = cc.execute(sqlc, (day30, day60)).fetchall()
-        cu4 = cc.execute(sqlc, (day30, day60)).fetchall()
-    mp = {}
-    for i in cu0:
-        account = i[0]
-        mp[account] = [account,0,0,0,0]
-    cus = [cu0, cu1, cu2, cu3, cu4]
-    for i in range(1, 5):
-        cu = cus[i]
-        for j in cu:
-            account, num = j
-            mp[account][i] = num
-    vs = [i for i in mp.values()]
-    res_data = {"message": "success", "data":vs}
+        cu3 = cc.execute(sqlc, (day60, day30)).fetchall()
+        cu4 = cc.execute(sqld, (day60, day30)).fetchall()
+        cu5 = cc.execute(sqle).fetchall()
+
+        mp = {}
+        for i in cu0:
+            account = i[0]
+            mp[account] = [account,0,0,0,0,0]
+        cus = [cu0, cu1, cu2, cu3, cu4, cu5]
+        for i in range(1, len(cus)):
+            cu = cus[i]
+            for j in cu:
+                account, num = j
+                mp[account][i] = num
+        values = [i for i in mp.values()]
+
+        cc.executemany(sql_up, values)
+        cc.commit()
+    flash("刊登统计已更新")
+    res_data = {"message": "success", "data":values}
     res_data = jsonify(res_data)
     return res_data
 
-@app.route('/easyui/<name>/<action>', methods=['GET', 'POST']) 
+#EASYUI网格数据查询
+@app.route('/easyui/<name>/<action>', methods=['GET', 'POST'])
+@login_required
 def easyui(name, action):
     print(action, request.args,request.json,request.form)
     if action == 'get':
@@ -587,7 +641,8 @@ def easyui(name, action):
             cc.commit()
     res_data = jsonify(res_data)
     return res_data
-    
+
+#调试模式运行
 if __name__ == "__main__":    
         app.debug = True
         app.run(port=5001)

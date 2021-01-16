@@ -1,52 +1,106 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	<meta name="keywords" content="jquery,ui,easy,easyui,web">
-	<meta name="description" content="easyui help you build your web page easily!">
-	<title>Build CRUD DataGrid with jQuery EasyUI - jQuery EasyUI Demo</title>
-	<link rel="stylesheet" type="text/css" href="/static/js/easyui/themes/default/easyui.css">
-	<link rel="stylesheet" type="text/css" href="/static/js/easyui/themes/icon.css">
-	<link rel="stylesheet" type="text/css" href="/static/js/easyui/demo/demo.css">
-	<script type="text/javascript" src="/static/js/jquery.min.js"></script>
-	<script type="text/javascript" src="/static/js/easyui/jquery.easyui.min.js"></script>
-	<script type="text/javascript" src="/static/js/easyui/jquery.edatagrid.js"></script>
-	<script type="text/javascript">
-		$(function(){
-			$('#dg').edatagrid({
-				url: '/easyui/sufix/get',
-				saveUrl: '/easyui/sufix/save',
-				updateUrl: '/easyui/sufix/update',
-				destroyUrl: '/easyui/sufix/delete'
-			});
-		});
-	</script>
-</head>
-<body>
-	<h2>后台数据管理</h2>
-	<div class="demo-info" style="margin-bottom:10px">
-		<div class="demo-tip icon-tip">&nbsp;</div>
-		<div>Double click the row to begin editing.</div>
-	</div>
-	
-	<table id="dg" title="My Users" style="width:60%x;height:520px"
-			toolbar="#toolbar" pagination="true" idField="id"
-			rownumbers="true" fitColumns="true" singleSelect="true">
-		<thead>
-			<tr>
-				<th field="account" width="50" editor="{type:'validatebox',options:{required:true}}">账号组</th>
-				<th field="name" width="50" editor="{type:'validatebox',options:{required:true}}">标题后缀</th>
-				<th field="image" width="80" editor="text">水印文字</th>
-				<th field="description" width="120" editor="text">描述后缀</th>
-			</tr>
-		</thead>
-	</table>
-	<div id="toolbar">
-		<a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:$('#dg').edatagrid('addRow')">New</a>
-		<a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="javascript:$('#dg').edatagrid('destroyRow')">Destroy</a>
-		<a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="javascript:$('#dg').edatagrid('saveRow')">Save</a>
-		<a href="#" class="easyui-linkbutton" iconCls="icon-undo" plain="true" onclick="javascript:$('#dg').edatagrid('cancelRow')">Cancel</a>
-	</div>
-	
-</body>
-</html>
+﻿{% extends "layout.html" %}
+{% block title %}后台{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+
+    <h2>后台数据管理</h2>
+    <div class="demo-info" style="margin-bottom:10px">
+        <div class="demo-tip icon-tip">&nbsp;</div>
+        <div id="command_div">
+            <input id=table_name type=text>
+            <a  href="#" class="easyui-linkbutton" iconCls="icon-print" id=table_export type=button>导出表格</a>
+            <a  href="#" class="easyui-linkbutton" iconCls="icon-reload" id=update_all_accounts_listings>更新全部在线产品</a>            
+        <form id="upload_form" action="/upload_file" method="post" enctype="multipart/form-data">
+            <input type="file" name="file">
+            <input type="submit" value="提交文件到后台并更新数据">
+            
+        </form>
+        </div>
+    </div>
+    
+    <table id="table_sufix" title="后缀管理" style="width:95%;"
+            toolbar="#toolbar_sufix" pagination="true" idField="id"
+            rownumbers="true" fitColumns="true" singleSelect="true">
+        <thead>
+            <tr>
+                <th field="account" width="50" editor="{type:'validatebox',options:{required:true}}">账号组</th>
+                <th field="name" width="50" editor="{type:'validatebox',options:{required:true}}">标题后缀</th>
+                <th field="image" width="80" editor="text">水印文字</th>
+                <th field="description" width="120" editor="text">描述后缀</th>
+            </tr>
+        </thead>
+    </table>
+    <div id="toolbar_sufix">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:$('#table_sufix').edatagrid('addRow')">New</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="javascript:$('#table_sufix').edatagrid('destroyRow')">Destroy</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="javascript:$('#table_sufix').edatagrid('saveRow')">Save</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-undo" plain="true" onclick="javascript:$('#table_sufix').edatagrid('cancelRow')">Cancel</a>
+    </div>
+
+    <br><br>
+    <table id="table_password" title="密码管理" style="width:95%;"
+            toolbar="#toolbar_password" pagination="true" idField="id"
+            rownumbers="true" fitColumns="true" singleSelect="true">
+        <thead>
+            <tr>
+                <th field="account" width="50" editor="{type:'validatebox',options:{required:true}}">账号组</th>
+                <th field="password" width="50" editor="{type:'validatebox',options:{required:true}}">标题后缀</th>
+            </tr>
+        </thead>
+    </table>
+    <div id="toolbar_password">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="javascript:$('#table_password').edatagrid('addRow')">New</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="javascript:$('#table_password').edatagrid('destroyRow')">Destroy</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="javascript:$('#table_password').edatagrid('saveRow')">Save</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-undo" plain="true" onclick="javascript:$('#table_password').edatagrid('cancelRow')">Cancel</a>
+    </div>
+
+    <script type="text/javascript">
+        //easyUI表单功能
+        $(function(){
+            $('#table_sufix').edatagrid({
+                url: '/easyui/sufix/get',
+                saveUrl: '/easyui/sufix/save',
+                updateUrl: '/easyui/sufix/update',
+                destroyUrl: '/easyui/sufix/delete'
+            });
+            //
+            $('#table_password').edatagrid({
+                url: '/easyui/password/get',
+                saveUrl: '/easyui/password/save',
+                updateUrl: '/easyui/password/update',
+                destroyUrl: '/easyui/password/delete'
+            });
+        });
+
+        //更新全部在线产品
+        $("#command_div").delegate("#update_all_accounts_listings", "click", function(){
+          if (! confirm("更新所有账号在线产品?")){return;}
+          var url = `/update_all_accounts_listings`
+          $.get(url, function(res){})
+        })
+
+        //导出表格 导出静态文件
+        $("#command_div").delegate("#table_export", "click", function(){
+          var name = $("#table_name")[0].value
+          var url = `/download_table?table=${name}`
+          $.ajax({
+            type:"GET",
+            timeout: 1000 * 60 * 5,
+            url: url,
+            success: function(res){
+                var url = res.data
+                var ad = $("<a download>")[0]
+                ad.href = url
+                ad.value = "下载文件"
+                ad.click()
+            }
+          })
+        })
+
+
+
+    </script>
+{% endblock %}

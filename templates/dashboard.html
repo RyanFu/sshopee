@@ -4,7 +4,85 @@
   {{ super() }}
 {% endblock %}
 {% block content %}
-  <h1>账号指标统计</h1>
-  <p class="important">
-    Welcome on my awesome homepage.
+
+<h2>账号指标统计</h2>
+<div class="demo-info" style="margin-bottom:10px">
+    <div class="demo-tip icon-tip">&nbsp;</div>
+    <div id="command_div"></div>
+</div>
+
+<table id="table_performance" title="账号表现" style="width:95%;"
+        toolbar="#toolbar_performance" pagination="true" idField="id"
+        rownumbers="true" fitColumns="true" singleSelect="true">
+    <thead>
+        <tr>
+            <th field="account" width="80" editor="text">账号</th>
+            <th field="follower_count" width="50" editor="text">粉丝</th>
+            <th field="item_count" width="50" editor="text">产品</th>
+            <th field="rating_star" width="50" editor="text">评分</th>
+            <th field="rating_count" width="50" editor="text">评价数</th>
+            <th field="pre_sale_rate" width="50" editor="text">预售比</th>
+            <th field="points" width="50" editor="text">扣分</th>
+            <th field="response_rate" width="50" editor="text">回复率</th>
+            <th field="non_fulfill_rate" width="50" editor="text">未完成率</th>
+            <th field="cancel_rate" width="50" editor="text">取消率</th>
+            <th field="refund_rate" width="50" editor="text">退款率</th>
+            <th field="apt" width="50" editor="text">平均时长</th>
+            <th field="late_shipping_rate" width="50" editor="text">逾期率</th>
+        </tr>
+    </thead>
+</table>
+<div id="toolbar_performance">
+    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="javascript:update_all_shop_performance()">全部更新</a>
+</div>
+<br><br>
+<table id="table_listings_count" title="刊登统计" style="width:95%;"
+        toolbar="#toolbar_listings_count" pagination="true" idField="id"
+        rownumbers="true" fitColumns="true" singleSelect="true">
+    <thead>
+        <tr>
+            <th field="account" width="80" editor="text">账号</th>
+            <th field="d7" width="50" editor="text">本周上架</th>
+            <th field="d30" width="50" editor="text">本月上架</th>
+            <th field="d3060" width="50" editor="text">上月上架</th>
+            <th field="ds3060" width="50" editor="text">上月上架售出</th>
+            <th field="total" width="50" editor="text">在线数量</th>
+        </tr>
+    </thead>
+</table>
+<div id="toolbar_listings_count">
+    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="javascript:listings_count()">全部更新</a>
+</div>
+
+
+<script type="text/javascript">
+    //easyUI表单功能
+    $(function(){
+        $('#table_performance').edatagrid({
+            url: '/easyui/performance/get',
+        });
+        $('#table_listings_count').edatagrid({
+            url: '/easyui/listings_count/get',
+        });
+        $('#table_performance').edatagrid('disableEditing');
+        $('#table_listings_count').edatagrid('disableEditing');
+    })
+    //自定义功能
+    //更新全部账号表现
+    function update_all_shop_performance(){
+        if (! confirm("更新全部账号表现?")){return;}
+          var url = "/update_all_shop_performance";
+          $.get(url, function(res){
+            location.reload(true);
+          })
+        }
+    function listings_count(){
+        if (! confirm("更新刊登数量统计?")){return;}
+          var url = "/listings_count";
+          $.get(url, function(res){
+            location.reload(true);
+          })
+        }
+
+</script>
 {% endblock %}

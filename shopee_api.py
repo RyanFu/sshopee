@@ -106,6 +106,7 @@ def clear_listing(account):
     return
 
 def get_performance(account):
+    check_cookie_jar(account)
     site = account.split(".")[1]
     with requests.Session() as se:
         se.cookies = get_cookie_jar(account)
@@ -121,7 +122,7 @@ def get_performance(account):
         url = "https://seller.{site}.shopee.cn/api/v2/shops/sellerCenter/shopPerformance".format(site=site)
         data = se.get(url).json()
         data = data["data"]
-        print(data)
+        #print(data)
         values = [
             follower_count, #0
             item_count, #1
@@ -143,9 +144,24 @@ def get_performance(account):
             except:
                 values[i] = 0
         values[-2] *= 10
-        #values = [float(i) for i in values]
-        print(values)
+        values.insert(0, account)
+        ph = ["?" for i in values]
+        ph = ", ".join(ph)
+        sql = "insert or replace into performance values ({ph})".format(ph=ph)
+        print(sql, values)
+        with db_lock:
+            with sqlite3.connect(database_name) as cc:
+                cc.execute(sql, values)
+                cc.commit()
         return values
+
+def get_all_performance():
+    sql = 'select account from password'
+    with  sqlite3.connect(database_name) as cc:       
+        cu = cc.execute(sql)
+        account_list = [i for i in cu]
+    multiple_mission_pool(get_performance, account_list, 10)
+    return
 
 #单面产品列表转换格式
 def convert_page_list(page):
