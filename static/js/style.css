@@ -28,9 +28,13 @@
     width:30%;
     top:20%;
 }
+#login_form table tr {
+    height:45px
+}
 #command_div input{
     margin:5px
 }
 .textarea_div textarea {
     width: 100%; 
 }
+

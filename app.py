@@ -589,9 +589,15 @@ def listings_count():
 
 #EASYUI网格数据查询
 @app.route('/easyui/<name>/<action>', methods=['GET', 'POST'])
-@login_required
 def easyui(name, action):
-    print(action, request.args,request.json,request.form)
+    #print(action, request.args,request.json,request.form)
+    #未登录用户只允许访问白名单表, 权限为只查看
+    white_list = ['listings_count', 'performance']
+    if session.get('username', None) is None:
+        if action != 'get' or name not in white_list:
+            flash('当前数据需要登录权限')
+            return redirect('/shopee_login')
+
     if action == 'get':
         page = int(request.form['page'])
         rows = int(request.form['rows'])
@@ -613,6 +619,7 @@ def easyui(name, action):
             cc.execute(sql, values)
             cc.commit()       
             res_data = {}
+
     elif action == 'delete':
         num = request.form['id']
         sql = 'delete from {name} where id = ?'.format(name=name)
@@ -621,6 +628,7 @@ def easyui(name, action):
             cc.execute(sql, (num,))
             cc.commit()       
             res_data = {'success': True}
+
     elif action == 'update':
         num = request.form['id']
         keys = [i for i in request.form.keys()]
@@ -639,6 +647,7 @@ def easyui(name, action):
             print(sql, data)
             cc.execute(sql, data)
             cc.commit()
+            
     res_data = jsonify(res_data)
     return res_data
 
