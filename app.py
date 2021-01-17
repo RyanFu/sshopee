@@ -75,8 +75,8 @@ def login():
         else:
             return render_template("login.html")
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form['Username']
+        password = request.form['Password']
         print(request.form)
         if username == "guoliang" and password == "gl23r42":
             session['username'] = username
