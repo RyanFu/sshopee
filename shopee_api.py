@@ -4,7 +4,7 @@ import sqlite3, json, requests, time, platform
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
-from machine_gun import multiple_mission_pool, decor_retry, decor_async, db_lock
+from machine_gun import multiple_mission_pool, decor_retry, decor_async, snow, db_lock
 
 if platform.system() == "Windows":
     database_name = "D:/shopee.db"
@@ -252,4 +252,58 @@ def get_all_page(account):
     multiple_mission_pool(get_single_page, num_list)
 
 
+#获取取消订单
+def get_cancellations_by_account(account):
+    site = account.split(".")[1]
+    cookie_jar = get_cookie_jar(account) 
+    url = 'https://seller.{}.shopee.cn/api/v3/order/get_simple_order_ids'.format(site)
+    params = {
+    'SPC_CDS_VER':2,
+    'source':'cancelled_to_respond',
+    'page_size':40,
+    'page_number':1,
+    'total':0,
+    'is_massship':False
+    }
+    with requests.Session() as se:
+        se.cookies = cookie_jar
+        se.headers.update({'User-Agent': ua})
+        data = se.get(url, params=params).json()
+        orders = data['data']['orders'] #shop_id,order_id
+        print(orders)
+    order_ids = [str(i['order_id']) for i in orders]
+    order_ids = ','.join(order_ids)
+    url = 'https://seller.{}.shopee.cn/api/v3/order/get_compact_order_list_by_order_ids'.format(site)
+    params = {'SPC_CDS_VER':2, 'order_ids':order_ids}
+    with requests.Session() as se:
+        se.cookies = cookie_jar
+        se.headers.update({'User-Agent': ua})
+        data = se.get(url, params=params).json()
+        orders = data['data']['orders'] 
+        #cancellation_end_date,order_sn,order_id,shop_id
+        values = [[account, i['order_id'], i['order_sn'], i['cancellation_end_date'], snow()] for i in orders]
+    sql = '''insert into cancellation (account,order_id,order_sn,cancellation_end_date) 
+    values (?, ?, ?, ?, ?)'''
+    with db_lock:
+        with sqlite3.connect(database_name) as cc:
+            cc.executemany(sql, values)
+            cc.commit()
 
+def get_all_cancellations():
+    sql = 'select account from password'
+    with  sqlite3.connect(database_name) as cc:       
+        cu = cc.execute(sql)
+        account_list = [i for i in cu]
+        print(account_list)
+    multiple_mission_pool(check_cookie_jar, account_list, 2)
+    multiple_mission_pool(get_cancellations_by_account, account_list, 10)
+    return
+      
+def cancellation_reject_accept():
+    url = 'https://seller.br.shopee.cn/api/v3/order/respond_cancel_request'
+    params = {'order_id':'', 'action': 'accept'}
+
+def return_by_account(account):
+    url = 'https://seller.br.shopee.cn/api/v1/return/list?SPC_CDS_VER=2&page_size=40&refund_status=refund_unprocessed'
+    #returns = data['data']['list']
+    #order_id,reason,refund_amount,return_id,return_sn,

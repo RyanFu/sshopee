@@ -4,6 +4,10 @@ from functools import wraps
 
 db_lock = threading.Lock()
 
+def snow():
+    t = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    return t
+
 #新线程伪异步装饰器
 def decor_async(func):
     @wraps(func)

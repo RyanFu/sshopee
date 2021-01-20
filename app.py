@@ -651,6 +651,15 @@ def easyui(name, action):
     res_data = jsonify(res_data)
     return res_data
 
+#
+@app.route('/get_cancellation_orders', methods=['GET'])
+def get_cancellation_orders():
+    shopee_api.get_all_cancellations()
+    res_data = {}
+    res_data = jsonify(res_data)
+    return res_data
+
+
 #调试模式运行
 if __name__ == "__main__":    
         app.debug = True
