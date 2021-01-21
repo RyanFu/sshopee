@@ -1,0 +1,80 @@
+﻿{% extends "layout.html" %}
+{% block title %}指标{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+
+<h2>问题订单汇总</h2>
+<div class="demo-info" style="margin-bottom:10px">
+    <div class="demo-tip icon-tip">&nbsp;</div>
+    <div id="command_div"></div>
+</div>
+
+<table id="table_cancellations" title="取消订单" style="width:95%;"
+        toolbar="#toolbar_cancellations" pagination="true" idField="id"
+        rownumbers="true" fitColumns="true" singleSelect="true">
+    <thead>
+        <tr>
+            <th field="account" width="50" editor="text">账号</th>
+            <th field="order_sn" width="100" editor="text">订单号</th>
+            <th field="cancellation_end_date" width="100" editor="text">截止时间</th>
+            <th field="update_time" width="100" editor="text">更新时间</th>
+ 
+        </tr>
+    </thead>
+</table>
+<div id="toolbar_cancellations">
+    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="javascript:get_all_cancellations()">全部更新</a>
+</div>
+<br><br>
+<table id="table_refund" title="退款订单" style="width:95%;"
+        toolbar="#toolbar_listings_count" pagination="true" idField="id"
+        rownumbers="true" fitColumns="true" singleSelect="true">
+    <thead>
+        <tr>
+            <th field="account" width="80" editor="text">账号</th>
+            <th field="d7" width="50" editor="text">本周上架</th>
+            <th field="d30" width="50" editor="text">本月上架</th>
+            <th field="d3060" width="50" editor="text">上月上架</th>
+            <th field="ds3060" width="50" editor="text">上月上架售出</th>
+            <th field="total" width="50" editor="text">在线数量</th>
+        </tr>
+    </thead>
+</table>
+<div id="toolbar_listings_count">
+    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="javascript:listings_count()">全部更新</a>
+</div>
+
+
+<script type="text/javascript">
+    //easyUI表单功能
+    $(function(){
+        $('#table_cancellations').edatagrid({
+            url: '/easyui/cancellation/get',
+        });
+        $('#table_refund').edatagrid({
+            url: '/easyui/refund/get',
+        });
+        $('#table_cancellations').edatagrid('disableEditing');
+        $('#table_refund').edatagrid('disableEditing');
+    })
+    //自定义功能
+    //更新全部账号表现
+    function get_all_cancellations(){
+        if (! confirm("重新获取取消订单?")){return;}
+          var url = "/get_cancellation_orders";
+          $.get(url, function(res){
+            location.reload(true);
+          })
+        }
+    function get_all_returns(){
+        if (! confirm("重新获取退款订单?")){return;}
+          var url = "/listings_count";
+          $.get(url, function(res){
+            location.reload(true);
+          })
+        }
+
+</script>
+{% endblock %}

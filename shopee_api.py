@@ -282,7 +282,7 @@ def get_cancellations_by_account(account):
         orders = data['data']['orders'] 
         #cancellation_end_date,order_sn,order_id,shop_id
         values = [[account, i['order_id'], i['order_sn'], i['cancellation_end_date'], snow()] for i in orders]
-    sql = '''insert into cancellation (account,order_id,order_sn,cancellation_end_date) 
+    sql = '''insert into cancellation (account,order_id,order_sn,cancellation_end_date,update_time) 
     values (?, ?, ?, ?, ?)'''
     with db_lock:
         with sqlite3.connect(database_name) as cc:
@@ -295,8 +295,8 @@ def get_all_cancellations():
         cu = cc.execute(sql)
         account_list = [i for i in cu]
         print(account_list)
-    multiple_mission_pool(check_cookie_jar, account_list, 2)
-    multiple_mission_pool(get_cancellations_by_account, account_list, 10)
+    multiple_mission_pool(check_cookie_jar, account_list, 5)
+    multiple_mission_pool(get_cancellations_by_account, account_list, 32)
     return
       
 def cancellation_reject_accept():
@@ -304,6 +304,8 @@ def cancellation_reject_accept():
     params = {'order_id':'', 'action': 'accept'}
 
 def return_by_account(account):
+    site = account.split(".")[1]
+    cookie_jar = get_cookie_jar(account) 
     url = 'https://seller.br.shopee.cn/api/v1/return/list?SPC_CDS_VER=2&page_size=40&refund_status=refund_unprocessed'
     #returns = data['data']['list']
     #order_id,reason,refund_amount,return_id,return_sn,

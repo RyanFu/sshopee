@@ -131,6 +131,10 @@ def adminPage():
 def dashboardPage():
     return render_template("dashboard.html")
 
+@app.route('/shopee_orders', methods = ['GET'])
+def orderPage():
+    return render_template("orders.html")
+
 @app.route('/shopee_console', methods = ['GET'])
 @login_required
 def consolePage():
