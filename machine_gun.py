@@ -4,8 +4,8 @@ from functools import wraps
 
 db_lock = threading.Lock()
 
-def snow():
-    t = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+def snow(tsp=None):
+    t = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tsp))
     return t
 
 #新线程伪异步装饰器
@@ -45,7 +45,11 @@ def multiple_mission(func, args_list, max_number=32):
     return
 
 #多任务并发, 线程版, 加线程池
-def multiple_mission_pool(func, args_list, max_workers=32):
+def multiple_mission_pool(func, args_list, max_workers=32, debug=False):
+    if debug:
+        arg = args_list[0]
+        func(*arg)
+        return 
     num = len(args_list)
     print('total mission number is ', num)
     with ThreadPoolExecutor(max_workers=max_workers) as executor:

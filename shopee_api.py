@@ -13,8 +13,23 @@ else:
     database_name = "/root/shopee.db"
     driver_path = "/root/chromedriver.exe"
 ua = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.62 Safari/537.36"
+headers = {'User-Agent': ua}
 #http://chromedriver.storage.googleapis.com/index.html
 
+def mydb(sql, values=(), many=False):
+    with sqlite3.connect(database_name) as db:
+        if 'select' in sql:
+            cur = db.execute(sql, values)
+            rv = cur.fetchall()
+        else:
+            with db_lock:
+                if many:
+                    db.executemany(sql, values)
+                else:
+                    db.execute(sql, values)
+                db.commit()
+            rv = None
+    return rv
 
 #使用SELENIUM控制CHORME打开账号后台
 def open_sellercenter(account, password, cookie_only):
@@ -56,110 +71,92 @@ def open_sellercenter(account, password, cookie_only):
 
 #检查COOKIES有效性,失效则更新
 def check_cookie_jar(account):
-    with  sqlite3.connect(database_name) as cc:
-        sql = "select cookies from cookies where account = ?"
-        cu = cc.execute(sql, [account])
-        con = cu.fetchone()
-    if con is None:
-        print(account, ' cookies not found, go get it now')
-    else:
-        cookie_dict = json.loads(con[0])
-        cookie_jar = requests.utils.cookiejar_from_dict(cookie_dict)
+    sql = "select cookies from cookies where account = ?"
+    con = mydb(sql, [account])        
+    if con:
+        cookie_dict = json.loads(con[0][0])
         site = account.split(".")[1]
         host = "https://seller.{site}.shopee.cn".format(site=site)    
         url = host + "/api/v3/product/page_product_list"
         params = "/?source=seller_center&page_size=12&version=3.2.0&page_number=1"
-        with requests.Session() as se:
-            se.cookies = cookie_jar
-            se.headers.update({'User-Agent': ua})
-            data = se.get(url+params).json()
-            message = data["message"]
-        if message != "success":
+        data = requests.get(url+params, cookies=cookie_dict, headers=headers).json()
+        message = data["message"]
+        if message == "success":
+            print(account, " cookies still usable")
+        else:
             print(account, " cookies invalid, update now")
             con = None
-
-    if con is None:       
-        with  sqlite3.connect(database_name) as cc:
-            sql = "select password from password where account = ?"
-            cu = cc.execute(sql, [account])
-            con = cu.fetchone()
-            password = con[0]
+    else:
+        print(account, ' cookies not found, go get it now')
+    if not con:
+        sql = 'select password from password where account = ?'
+        con = mydb(sql, [account,])
+        password = con[0][0]
         open_sellercenter(account, password, True)
     print(account, ' cookies updated')
     return
 
 #获取账号COOKIES
 def get_cookie_jar(account):
-    with  sqlite3.connect(database_name) as cc:
-        sql = "select cookies from cookies where account = ?"
-        cu = cc.execute(sql, [account])
-        con = cu.fetchone()
-    cookie_dict = json.loads(con[0])
+    sql = "select cookies from cookies where account = ?"
+    con = mydb(sql, [account])        
+    cookie_dict = json.loads(con[0][0])
     cookie_jar = requests.utils.cookiejar_from_dict(cookie_dict)
     return cookie_jar
 
 #插入前先清空账号避免重复
 def clear_listing(account):
-    with  sqlite3.connect(database_name) as cc:
-        sql = "delete from items where account = ?"
-        cu = cc.execute(sql, [account])
+    sql = "delete from items where account = ?"
+    mydb(sql, [account])
     return
 
 def get_performance(account):
-    check_cookie_jar(account)
     site = account.split(".")[1]
-    with requests.Session() as se:
-        se.cookies = get_cookie_jar(account)
-        se.headers.update({'User-Agent': ua})
-        url = "https://seller.{site}.shopee.cn/api/v3/general/get_shop".format(site=site)
-        data = se.get(url).json()["data"]
-        follower_count = data["follower_count"]
-        item_count = data["item_count"]
-        rating_count = data["rating_bad"] + data["rating_good"] + data["rating_normal"]
-        url = "https://seller.{site}.shopee.cn/api/v2/shops/sellerCenter/ongoingPoints".format(site=site)
-        data = se.get(url).json()["data"]
-        totalPoints = data["totalPoints"]
-        url = "https://seller.{site}.shopee.cn/api/v2/shops/sellerCenter/shopPerformance".format(site=site)
-        data = se.get(url).json()
-        data = data["data"]
-        #print(data)
-        values = [
-            follower_count, #0
-            item_count, #1
-            data["customerSatisfaction"][0]["my"], #2
-            rating_count, #3
-            data["listingViolations"][1]["my"], #4
-            totalPoints, #5
-            data["customerService"][0]["my"], #6
-            data["fulFillMent"][0]["my"], #7
-            data["fulFillMent"][0]["children"][0]["my"], #8
-            data["fulFillMent"][0]["children"][1]["my"], #9
-            data["fulFillMent"][2]["my"], #10
-            data["fulFillMent"][1]["my"], #11
-        ]
-        i_list = [2, 4, 6, 7, 8, 9, 10, 11]
-        for i in i_list:
-            try:
-                values[i] = int(values[i]) / 1000000
-            except:
-                values[i] = 0
-        values[-2] *= 10
-        values.insert(0, account)
-        ph = ["?" for i in values]
-        ph = ", ".join(ph)
-        sql = "insert or replace into performance values ({ph})".format(ph=ph)
-        print(sql, values)
-        with db_lock:
-            with sqlite3.connect(database_name) as cc:
-                cc.execute(sql, values)
-                cc.commit()
-        return values
+    cookies = get_cookie_jar(account)
+    url = "https://seller.{site}.shopee.cn/api/v3/general/get_shop".format(site=site)
+    data = requests.get(url, cookies=cookies, headers=headers).json()["data"]
+    follower_count = data["follower_count"]
+    item_count = data["item_count"]
+    rating_count = data["rating_bad"] + data["rating_good"] + data["rating_normal"]
+    url = "https://seller.{site}.shopee.cn/api/v2/shops/sellerCenter/ongoingPoints".format(site=site)
+    data = requests.get(url, cookies=cookies, headers=headers).json()["data"]
+    totalPoints = data["totalPoints"]
+    url = "https://seller.{site}.shopee.cn/api/v2/shops/sellerCenter/shopPerformance".format(site=site)
+    data = requests.get(url, cookies=cookies, headers=headers).json()["data"]
+    #print(data)
+    values = [
+        follower_count, #0
+        item_count, #1
+        data["customerSatisfaction"][0]["my"], #2
+        rating_count, #3
+        data["listingViolations"][1]["my"], #4
+        totalPoints, #5
+        data["customerService"][0]["my"], #6
+        data["fulFillMent"][0]["my"], #7
+        data["fulFillMent"][0]["children"][0]["my"], #8
+        data["fulFillMent"][0]["children"][1]["my"], #9
+        data["fulFillMent"][2]["my"], #10
+        data["fulFillMent"][1]["my"], #11
+    ]
+    i_list = [2, 4, 6, 7, 8, 9, 10, 11]
+    for i in i_list:
+        try:
+            values[i] = int(values[i]) / 1000000
+        except:
+            values[i] = 0
+    values[-2] *= 10
+    values.insert(0, account)
+    ph = ["?" for i in values]
+    ph = ", ".join(ph)
+    sql = "insert or replace into performance values ({ph})".format(ph=ph)
+    print(sql, values)
+    mydb(sql, values)
+    return values
 
 def get_all_performance():
     sql = 'select account from password'
-    with  sqlite3.connect(database_name) as cc:       
-        cu = cc.execute(sql)
-        account_list = [i for i in cu]
+    cu = mydb(sql)
+    account_list = [i for i in cu]
     multiple_mission_pool(get_performance, account_list, 10)
     return
 
@@ -201,61 +198,49 @@ def convert_page_list(page):
 
 #单个页面产品获取并保存, 加锁
 @decor_retry
-def get_single_page(account, cookie_jar, page_num, dp=False):
+def get_single_page(account, cookies, page_num, dp=False):
     site = account.split(".")[1]
     host = "https://seller.{site}.shopee.cn".format(site=site)    
     url = host + "/api/v3/product/page_product_list"
-    params = "/?source=seller_center&page_size=48&version=3.2.0&page_number={num}".format(num=page_num)
-    with requests.Session() as se:
-        se.cookies = cookie_jar
-        se.headers.update({'User-Agent': ua})
-        data = se.get(url+params).json()
-        print(data["message"])
-        total_count = data["data"]["page_info"]["total"]
-        page = data["data"]["list"]
-        row_list = convert_page_list(page)
-        for row in row_list:
-            row.append(account)
-            row.append(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+    params = "/?source=seller_center&page_size=48&version=3.2.0&page_number={num}".format(num=page_num)      
+    data = requests.get(url+params, cookies=cookies, headers=headers).json()
+    print(data["message"])
+    total_count = data["data"]["page_info"]["total"]
+    page = data["data"]["list"]
+    row_list = convert_page_list(page)
+    for row in row_list:
+        row.append(account)
+        row.append(snow())
 
-        rows = row_list[1:]
-        sql = "insert into items values (?" + ",?" * 24 + ")"
-        rows2delete = [[i[0], i[16]] for i in rows]
-        sql2delete = "delete from items where item_id=? and model_id=?"
-        with db_lock:
-            with sqlite3.connect(database_name) as cc:
-                cc.executemany(sql2delete, rows2delete)
-                cc.executemany(sql, rows)
-                cc.commit()
-        print(time.ctime(), account, "add items complete")
+    rows = row_list[1:]
+    sql = "insert into items values (?" + ",?" * 24 + ")"
+    mydb(sql, rows, True)
+    print(time.ctime(), account, "add items complete")
 
-        conplete_count = page_num * 48
-        if conplete_count <= total_count:
-            print("complete listng count ", conplete_count)
+    conplete_count = page_num * 48
+    if conplete_count <= total_count:
+        print("complete listng count ", conplete_count)
 
-#更新账号全部产品
-@decor_retry
+#更新账号产品
+#@decor_retry
 def get_all_page(account):
     site = account.split(".")[1]
-    cookie_jar = get_cookie_jar(account)  
+    cookies = get_cookie_jar(account)  
     host = "https://seller.{site}.shopee.cn".format(site=site)
     url = host + "/api/v3/product/page_product_list"
     params = "/?source=seller_center&page_size=12&version=3.2.0&page_number=1"
-    with requests.Session() as se:
-        se.cookies = cookie_jar
-        se.headers.update({'User-Agent': ua})
-        data = se.get(url+params).json()
-        message = data["message"]
-        total_count = data["data"]["page_info"]["total"]
+    data = requests.get(url+params, cookies=cookies, headers=headers).json()
+    message = data["message"]
+    total_count = data["data"]["page_info"]["total"]
     total_page = total_count // 48 + 1
-    num_list = [[account, cookie_jar, i] for i in range(1, total_page + 1)]
+    num_list = [[account, cookies, i] for i in range(1, total_page + 1)]
     multiple_mission_pool(get_single_page, num_list)
 
 
 #获取取消订单
 def get_cancellations_by_account(account):
     site = account.split(".")[1]
-    cookie_jar = get_cookie_jar(account) 
+    cookies = get_cookie_jar(account) 
     url = 'https://seller.{}.shopee.cn/api/v3/order/get_simple_order_ids'.format(site)
     params = {
     'SPC_CDS_VER':2,
@@ -265,37 +250,26 @@ def get_cancellations_by_account(account):
     'total':0,
     'is_massship':False
     }
-    with requests.Session() as se:
-        se.cookies = cookie_jar
-        se.headers.update({'User-Agent': ua})
-        data = se.get(url, params=params).json()
-        orders = data['data']['orders'] #shop_id,order_id
-        print(orders)
+    data = requests.get(url, params=params,cookies=cookies, headers=headers).json()
+    orders = data['data']['orders'] #shop_id,order_id
+    print(account, len(orders))
     order_ids = [str(i['order_id']) for i in orders]
     order_ids = ','.join(order_ids)
     url = 'https://seller.{}.shopee.cn/api/v3/order/get_compact_order_list_by_order_ids'.format(site)
     params = {'SPC_CDS_VER':2, 'order_ids':order_ids}
-    with requests.Session() as se:
-        se.cookies = cookie_jar
-        se.headers.update({'User-Agent': ua})
-        data = se.get(url, params=params).json()
-        orders = data['data']['orders'] 
-        #cancellation_end_date,order_sn,order_id,shop_id
-        values = [[account, i['order_id'], i['order_sn'], i['cancellation_end_date'], snow()] for i in orders]
+    data = data = requests.get(url, params=params,cookies=cookies, headers=headers).json()
+    orders = data['data']['orders'] 
+    #cancellation_end_date,order_sn,order_id,shop_id
+    values = [[account, i['order_id'], i['order_sn'], i['cancellation_end_date'], snow()] for i in orders]
     sql = '''insert into cancellation (account,order_id,order_sn,cancellation_end_date,update_time) 
     values (?, ?, ?, ?, ?)'''
-    with db_lock:
-        with sqlite3.connect(database_name) as cc:
-            cc.executemany(sql, values)
-            cc.commit()
+    mydb(sql, values, True)
+    return
 
 def get_all_cancellations():
-    sql = 'select account from password'
-    with  sqlite3.connect(database_name) as cc:       
-        cu = cc.execute(sql)
-        account_list = [i for i in cu]
-        print(account_list)
-    multiple_mission_pool(check_cookie_jar, account_list, 5)
+    mydb('delete from cancellation')
+    cu = mydb('select account from password')
+    account_list = [i for i in cu]
     multiple_mission_pool(get_cancellations_by_account, account_list, 32)
     return
       
@@ -303,9 +277,35 @@ def cancellation_reject_accept():
     url = 'https://seller.br.shopee.cn/api/v3/order/respond_cancel_request'
     params = {'order_id':'', 'action': 'accept'}
 
-def return_by_account(account):
+def get_returns_by_account(account):
     site = account.split(".")[1]
-    cookie_jar = get_cookie_jar(account) 
-    url = 'https://seller.br.shopee.cn/api/v1/return/list?SPC_CDS_VER=2&page_size=40&refund_status=refund_unprocessed'
-    #returns = data['data']['list']
-    #order_id,reason,refund_amount,return_id,return_sn,
+    cookies = get_cookie_jar(account) 
+    url = 'https://seller.{}.shopee.cn/api/v1/return/list'.format(site)
+    params = '?SPC_CDS_VER=2&page_size=40&refund_status=refund_unprocessed'
+    data = requests.get(url+params, cookies=cookies, headers=headers).json()
+    returns = data['data']['list']
+    values = []
+    rt = {1:"商品未收到",
+        2:"收到不对的商品",
+        4:"商品与叙述不符",
+        103:"收到不完整商品",
+        106:"商品损坏",
+        107:"商品部分功能无法使用"}
+    for i in returns:
+        #print(i)
+        rv = [account, i['order_id'], i['return_id'], i['return_sn'], 
+        i['reason'], 0, i['refund_amount'], snow() ]
+        rv[5] = i['return_header']['attribute_list']['return_attributes'][2]['value']
+        rv[5] = snow(int(rv[5]))
+        rv[4] = rt.get(int(rv[4]), rt[4])
+        values.append(rv)
+    mydb('delete from return where account = ?', (account,))
+    sql = '''insert into return (account, order_id, return_id, return_sn,
+    reason, refund_end_date,refund_amount,update_time) values (?,?,?,?,?,?,?,?)'''
+    mydb(sql, values, True)
+
+def get_all_returns():
+    cu = mydb('select account from password')
+    account_list = [i for i in cu]
+    multiple_mission_pool(get_returns_by_account, account_list, 32)
+    return

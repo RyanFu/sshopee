@@ -29,21 +29,21 @@
 </div>
 <br><br>
 <table id="table_refund" title="退款订单" style="width:95%;"
-        toolbar="#toolbar_listings_count" pagination="true" idField="id"
+        toolbar="#toolbar_refund" pagination="true" idField="id"
         rownumbers="true" fitColumns="true" singleSelect="true">
     <thead>
         <tr>
-            <th field="account" width="80" editor="text">账号</th>
-            <th field="d7" width="50" editor="text">本周上架</th>
-            <th field="d30" width="50" editor="text">本月上架</th>
-            <th field="d3060" width="50" editor="text">上月上架</th>
-            <th field="ds3060" width="50" editor="text">上月上架售出</th>
-            <th field="total" width="50" editor="text">在线数量</th>
+            <th field="account" width="60" editor="text">账号</th>
+            <th field="return_sn" width="80" editor="text">退款单号</th>
+            <th field="reason" width="80" editor="text">退款原因</th>
+            <th field="refund_amount" width="50" editor="text">退款金额</th>
+            <th field="refund_end_date" width="100" editor="text">截止时间</th>
+            <th field="update_time" width="100" editor="text">更新时间</th>
         </tr>
     </thead>
 </table>
-<div id="toolbar_listings_count">
-    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="javascript:listings_count()">全部更新</a>
+<div id="toolbar_refund">
+    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="javascript:get_all_returns()">全部更新</a>
 </div>
 
 
@@ -54,7 +54,7 @@
             url: '/easyui/cancellation/get',
         });
         $('#table_refund').edatagrid({
-            url: '/easyui/refund/get',
+            url: '/easyui/return/get',
         });
         $('#table_cancellations').edatagrid('disableEditing');
         $('#table_refund').edatagrid('disableEditing');
@@ -70,7 +70,7 @@
         }
     function get_all_returns(){
         if (! confirm("重新获取退款订单?")){return;}
-          var url = "/listings_count";
+          var url = "/get_return_orders";
           $.get(url, function(res){
             location.reload(true);
           })

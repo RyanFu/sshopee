@@ -661,8 +661,16 @@ def get_cancellation_orders():
     shopee_api.get_all_cancellations()
     res_data = {}
     res_data = jsonify(res_data)
+    flash("取消订单已更新")
     return res_data
 
+@app.route('/get_return_orders', methods=['GET'])
+def get_return_orders():
+    shopee_api.get_all_returns()
+    res_data = {}
+    res_data = jsonify(res_data)
+    flash("退款订单已更新")
+    return res_data
 
 #调试模式运行
 if __name__ == "__main__":    
