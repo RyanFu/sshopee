@@ -146,6 +146,7 @@ def get_performance(account):
             values[i] = 0
     values[-2] *= 10
     values.insert(0, account)
+    values.append(snow())
     ph = ["?" for i in values]
     ph = ", ".join(ph)
     sql = "insert or replace into performance values ({ph})".format(ph=ph)
