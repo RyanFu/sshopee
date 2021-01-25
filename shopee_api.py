@@ -237,7 +237,23 @@ def get_all_page(account):
     num_list = [[account, cookies, i] for i in range(1, total_page + 1)]
     multiple_mission_pool(get_single_page, num_list)
 
-
+@decor_async
+def timer_update_all_accounts_listings():
+    while True:        
+        h = time.localtime().tm_hour
+        if h == 0:
+            print(time.ctime(), "do it now")
+            cu = mydb('select account from password')
+            account_list = [i[0] for i in cu]
+            for account in account_list:
+                check_cookie_jar(account)
+                get_all_page(account)
+                time.sleep(60*2)
+        else:
+            print(time.time(), "waiting...")
+        time.sleep(60*60)
+timer_update_all_accounts_listings()   
+    
 #获取取消订单
 def get_cancellations_by_account(account):
     site = account.split(".")[1]
