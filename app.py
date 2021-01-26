@@ -427,7 +427,6 @@ def open_sellercenter():
 def update_all_listings():
     account = request.args["account"]
     shopee_api.check_cookie_jar(account)
-    shopee_api.clear_listing(account)
     shopee_api.get_all_page(account)
     res_data = {"message": "success", "data":{}}
     res_data = jsonify(res_data)
@@ -442,7 +441,6 @@ def update_all_accounts_listings():
         account_list = [i[0] for i in cu]
     for account in account_list:
         shopee_api.check_cookie_jar(account)
-        shopee_api.clear_listing(account)
         shopee_api.get_all_page(account)
         time.sleep(5)
     res_data = {"message": "success", "data":{}}

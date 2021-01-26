@@ -104,11 +104,6 @@ def get_cookie_jar(account):
     cookie_jar = requests.utils.cookiejar_from_dict(cookie_dict)
     return cookie_jar
 
-#插入前先清空账号避免重复
-def clear_listing(account):
-    sql = "delete from items where account = ?"
-    mydb(sql, [account])
-    return
 
 def get_performance(account):
     site = account.split(".")[1]
@@ -234,8 +229,10 @@ def get_all_page(account):
     message = data["message"]
     total_count = data["data"]["page_info"]["total"]
     total_page = total_count // 48 + 1
+    mydb('delete from items where account = ?', (account,))
     num_list = [[account, cookies, i] for i in range(1, total_page + 1)]
     multiple_mission_pool(get_single_page, num_list)
+    mydb('delete from items where status > 3')
 
 @decor_async
 def timer_update_all_accounts_listings():
