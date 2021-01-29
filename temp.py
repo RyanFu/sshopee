@@ -94,3 +94,49 @@ def xlsx2stock(account):
     msg = res.json()['data']['list'][0]
     print(msg)
 
+
+
+account, item_id, model_id, stock = "machinehome.sg", 5409941832, 41914362299, 80
+con = mydb('select cookies from cookies where account = ?', (account,))
+cookies = json.loads(con[0][0])
+site = account[-2:]
+host = "https://seller.{}.shopee.cn".format(site)
+url = host + "/api/v3/product/get_product_detail"
+params = "/?SPC_CDS_VER=2&product_id=" + str(item_id)
+res = requests.get(url + params, cookies=cookies)
+data = res.json()['data']
+
+mych = [{"size":0,"price":"5.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":28016,"sizeid":0}]
+idch = [{"size":0,"price":"10000.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":88001,"sizeid":0}]
+sgch = [{"size":0.02,"price":"0.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":18028,"sizeid":0},
+{"size":0.02,"price":"1.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":18025,"sizeid":0}]
+udata = {"unlisted":False, "ds_cat_rcmd_id":""}
+udata["logistics_channels"] = mych
+ks = ["id","name","brand","images","description","model_list","category_path","attribute_model",
+      "category_recommend","stock","price","price_before_discount","parent_sku","wholesale_list",
+      "installment_tenures","weight","dimension","pre_order","days_to_ship","condition","size_chart",
+      "tier_variation","add_on_deal"]
+for k in ks:
+    udata[k] = data[k]
+
+if len(data['model_list']) == 0:
+    udata['stock'] = stock
+else:
+    nms = [];
+    for  m in udata['model_list']:
+        if m['id'] == model_id:
+            udata['stock'] += stock - m['stock']
+            m['stock'] = stock
+        nm = {}
+        mks = ["id", "name", "price", "sku", "stock", "tier_index"]
+        for mk in mks:
+            nm[mk] = m[mk]
+        nms.append(nm)
+    udata['model_list'] = nms
+
+updata = [udata,];
+uurl = host + "/api/v3/product/update_product/?version=3.1.0&&SPC_CDS_VER=2"
+res = requests.post(uurl, json=updata, cookies=cookies)
+print(uurl, updata)
+print(res.json())
+

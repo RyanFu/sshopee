@@ -246,7 +246,7 @@ def wrong_stock_by_account():
         items.model_current_price, items.model_stock, 
         zong.status, zong.cname 
         from items 
-        join zong on (items.parent_sku != "" and items.parent_sku = zong.sku) 
+        left join zong on (items.parent_sku != "" and items.parent_sku = zong.sku) 
         or (items.model_sku != "" and items.model_sku = zong.sku) 
         where account = "{account}" 
         '''.format(account = account)
