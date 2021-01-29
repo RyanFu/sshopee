@@ -35,8 +35,8 @@
 
                     }
                     ob_row["ImageList"] = $("ImageUrl", row).toArray().map(i=>i.textContent)
-                    ob_row["Cover"] = $("ApiProductImage", row).toArray().filter(i=>i.innerHTML.indexOf("true")>0)[0]
-                    ob_row["Cover"] = $("ImageUrl", ob_row["Cover"])[0].textContent
+                    ob_row["Cover"] = $("ApiProductImage", row).toArray().filter(i=>i.innerHTML.indexOf("true")>0)
+                    if (ob_row["Cover"].length > 0 ){ob_row["Cover"] = $("ImageUrl", ob_row["Cover"][0])[0].textContent}else{ob_row["Cover"]=null}
                     ob_row_list.push(ob_row)
                 }
                 $.get("/get_sufix", function(res){
@@ -93,7 +93,7 @@
             urow[4] = psk
             urow[5] = "color"
             urow[6] = "No." + row.ClientSKU.split("-")[1].slice(0, 2)
-            urow[7] = row.Cover + sfimg
+            urow[7] = row.Cover ? row.Cover + sfimg : row.ImageList[0]
             urow[12] = row.ClientSKU
         }
         //urow[1] = '"' + urow[1] + '"'
