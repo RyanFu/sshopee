@@ -233,9 +233,17 @@ def get_all_page(account):
     num_list = [[account, cookies, i] for i in range(1, total_page + 1)]
     multiple_mission_pool(get_single_page, num_list)
     mydb('delete from items where status > 3')
+    mydb('update items set model_current_price = model_original_price where model_current_price  = 0')
+    return
 
 @decor_async
-def timer_update_all_accounts_listings():
+def tm_get_all_page(account):
+    get_all_page(account)
+    return
+    
+
+@decor_async
+def mytimer():
     while True:        
         h = time.localtime().tm_hour
         if h == 0:
@@ -244,12 +252,12 @@ def timer_update_all_accounts_listings():
             account_list = [i[0] for i in cu]
             for account in account_list:
                 check_cookie_jar(account)
-                get_all_page(account)
-                time.sleep(60*2)
+                tm_get_all_page(account)
+                time.sleep(60*3)
         else:
             print(time.time(), "waiting...")
         time.sleep(60*60)
-timer_update_all_accounts_listings()   
+ 
     
 #获取取消订单
 def get_cancellations_by_account(account):

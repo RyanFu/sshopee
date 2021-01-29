@@ -80,6 +80,7 @@ def login():
         print(request.form)
         if username == "guoliang" and password == "gl23r42":
             session['username'] = username
+            session.permanent = True
             flash(username + '登录成功') 
             return redirect('/shopee_admin')
         else:
