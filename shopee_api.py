@@ -298,9 +298,14 @@ def get_all_cancellations():
     multiple_mission_pool(get_cancellations_by_account, account_list, 32)
     return
       
-def cancellation_reject_accept():
-    url = 'https://seller.br.shopee.cn/api/v3/order/respond_cancel_request'
-    params = {'order_id':'', 'action': 'accept'}
+def cancellation_reject_accept(account, order_id, action):
+    account, order_id, action = 'jihuishi.my', 65371133466290, 'accept'
+    site = account[-2:]
+    url = 'https://seller.{}.shopee.cn/api/v3/order/respond_cancel_request'.format(site)
+    data = {'order_id':order_id, 'action': action}
+    cookies = get_cookie_jar(account)
+    res = requests.post(url, data=data, cookies=cookies)
+    print(res.json(),res.status_code)
 
 def get_returns_by_account(account):
     site = account.split(".")[1]
@@ -334,3 +339,16 @@ def get_all_returns():
     account_list = [i for i in cu]
     multiple_mission_pool(get_returns_by_account, account_list, 32)
     return
+
+def sn2id(account, sn):
+    site = account[-2:]
+    cookies = get_cookie_jar(account)
+    url = "https://seller.ph.shopee.cn/api/v3/order/get_order_hint".replace("ph",site)
+    params = {"keyword": sn, "query": sn}
+    data = requests.get(url, params=params, cookies=cookies).json()
+    print(data)
+    if len(data['data']['orders']) > 0:
+        id = data['data']['orders'][0]['order_id']
+    else:
+        id = None
+    return id
