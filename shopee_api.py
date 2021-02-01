@@ -237,7 +237,15 @@ def get_all_page(account):
     return
 
 @decor_async
-def tm_get_all_page(account):
+def tm_get_all_accounts_listings():
+    cu = mydb('select account from password')
+    account_list = [i[0] for i in cu]
+    for account in account_list:
+        check_cookie_jar(account)
+        get_performance(account)
+    for account in account_list:
+        get_all_page(account)
+        time.sleep(60*3)
     get_all_page(account)
     return
     
@@ -247,16 +255,11 @@ def mytimer():
     while True:        
         h = time.localtime().tm_hour
         if h == 0:
-            print(time.ctime(), "do it now")
-            cu = mydb('select account from password')
-            account_list = [i[0] for i in cu]
-            for account in account_list:
-                check_cookie_jar(account)
-                tm_get_all_page(account)
-                time.sleep(60*3)
-        else:
+            print(time.ctime(), "start updating listings")   
+            tm_get_all_accounts_listings()
+        for i in range(60):
             print(time.time(), "waiting...")
-        time.sleep(60*60)
+            time.sleep(60)
  
     
 #获取取消订单
