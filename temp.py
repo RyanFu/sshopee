@@ -4,14 +4,15 @@ from machine_gun import *
 from shopee_api import *
 from bs4 import BeautifulSoup
 def file_process():
-    root_path = r"C:\Users\guoliang\Downloads\shopee 11月 账单"
-    file_names = os.listdir(root_path)
-    for f in file_names:
-        od = "\\".join([root_path, f])
-        si = od[-6:-4] + "_"
-        nd = "\\".join([root_path, si + f])
-        print(od, nd)
-        #os.rename(od, nd)
+    root_path = r"C:\Users\guoliang\Downloads\1月"
+    for fo in os.listdir(root_path):
+        fop = "\\".join([root_path, fo])
+        for f in os.listdir(fop):
+            nf = fo + "." + f
+            f = "\\".join([fop, f])
+            nf = "\\".join([fop, nf])
+            print(f, nf)
+            os.rename(f, nf)
 
 def logit(logfile='out.log'):
     def logging_decorator(func):
@@ -27,20 +28,8 @@ def logit(logfile='out.log'):
         return wrapped_function
     return logging_decorator
 
-def stock2csv():
-    import pandas
-    p = 'C:/Users/guoliang/Desktop/库存1-27 -.xlsx'
-    print(time.ctime())
-    df = pandas.read_excel(p, engine='openpyxl')
-    print(time.ctime())
-    df = df.query('备货仓库="本地中国仓库"')
-    cols = ['自定义SKU', '可用库存数', '库存结余数', '本仓估算日销量']
-    df = df.filter(items=cols)
-    df.to_csv('C:/Users/guoliang/Desktop/put.csv', index=False,)
-    print(time.ctime())
-
 def erp2stock():
-    con = mydb("select sku from stock where ado > 5 limit 5;")
+    con = mydb("select sku from stock where ado > 5 limit 50;")
     sku_list = [i[0] for i in con]
     sku_list = ",".join(sku_list)
 
@@ -74,34 +63,7 @@ def erp2stock():
         AvgDailySales = row.find("AvgDailySales").getText()
         print(ClientSKU, ProductNameCN, WithBattery, ProductState, LastBuyPrice,
         GrossWeight,GoodNum,AvgDailySales)
-from requests_toolbelt import MultipartEncoder
-def xlsx2stock(account):
-    site = account[-2:]
-    host = 'https://seller.{}.shopee.cn'.format(site)
-    con = mydb('select cookies from cookies where account = ?', (account,))
-    cookies = json.loads(con[0][0])
-    file_name = '2restock_{}.xlsx'.format(account)
-    file_path = 'D:/Downloads/{}'.format(file_name)
-    url = host + '/api/tool/mass_product/upload_edit_template/?SPC_CDS_VER=2'
-    #url = 'http://127.0.0.1:5001/upload_file'
-    files = {'file': open(file_path, 'rb')}
-    m = MultipartEncoder(
-        fields={
-            "name":'file',
-            "filename":'name.xlsx',
-            'file':(
-            'name.xlsx',
-            open(file_path,'rb'),
-            'application/vnd.ms-excel'
-            #'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            )
-        }
-    )
-    headers['referer'] = 'https://seller.sg.shopee.cn/portal/tools/mass-update/upload'
-    headers['Content-Type'] = m.content_type
-    res = requests.post(url, data=m, cookies=cookies, headers=headers)
-    #res = requests.post(url, files=files, cookies=cookies, headers=headers)
-    print(res.json(), res.status_code, headers)
+erp2stock()       
 
 def update_stock():
     account, item_id, model_id, stock = "jihuishi.sg", 9309705353,73333353757, 80
@@ -153,12 +115,3 @@ def update_stock():
             print(k, udata[k], a[k])
             print("--------------------------------")
     
-    
-
-account, order_id, action = 'jihuishi.my', 65371133466290, 'accept'
-site = account[-2:]
-url = 'https://seller.{}.shopee.cn/api/v3/order/respond_cancel_request'.format(site)
-data = {'order_id':order_id, 'action': action}
-cookies = get_cookie_jar(account)
-res = requests.post(url, data=data, cookies=cookies)
-print(res.json(),res.status_code)

@@ -672,7 +672,21 @@ def get_cancellation_orders():
     res_data = jsonify(res_data)
     flash("取消订单已更新")
     return res_data
-
+    
+@app.route('/process_cancellation_order', methods=['POST'])
+@login_required
+def process_cancellation_order():
+    data = request.json
+    message = ''
+    for row in data['data']:
+        account, order_id, action = row['account'], row['order_id'], row['action']
+        data = shopee_api.cancellation_reject_accept(account, order_id, action)
+        message += str(row['order_sn']) + ' ' + data['message'] + "; "
+    res_data = {}
+    res_data = jsonify(res_data)
+    flash(message)
+    return res_data
+    
 @app.route('/get_return_orders', methods=['GET'])
 def get_return_orders():
     shopee_api.get_all_returns()

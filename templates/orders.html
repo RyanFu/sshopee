@@ -13,19 +13,23 @@
 
 <table id="table_cancellations" title="取消订单" style="width:95%;"
         toolbar="#toolbar_cancellations" pagination="true" idField="id"
-        rownumbers="true" fitColumns="true" singleSelect="true">
+        rownumbers="true" fitColumns="true" singleSelect="false">
     <thead>
         <tr>
-            <th field="account" width="50" editor="text">账号</th>
-            <th field="order_sn" width="100" editor="text">订单号</th>
-            <th field="cancellation_end_date" width="100" editor="text">截止时间</th>
+            <th field="account" width="60" editor="text">账号</th>
+            <th field="order_id" width="100" editor="text">订单ID</th>
+            <th field="order_sn" width="100" editor="text">订单编号</th>
+            <th field="cancellation_end_date" width="80" editor="text">截止时间</th>
             <th field="update_time" width="100" editor="text">更新时间</th>
  
         </tr>
     </thead>
 </table>
 <div id="toolbar_cancellations">
-    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="javascript:get_all_cancellations()">全部更新</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="get_all_cancellations()">全部更新</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-print" onclick="copy_all_cancellations()">全部查询</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-ok" onclick="accept_selected_cancellations()">勾选同意</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-cancel" onclick="reject_selected_cancellations()">勾选拒绝</a>
 </div>
 <br><br>
 <table id="table_refund" title="退款订单" style="width:95%;"
@@ -75,6 +79,41 @@
             location.reload(true);
           })
         }
-
+    function copy_all_cancellations(){
+        $('#table_cancellations').edatagrid('selectAll')
+        var rows = $('#table_cancellations').datagrid('getSelections')
+        var ids = rows.map(i=>i.order_sn).join('%0A')
+        url = 'http://runbu.irobotbox.com/IrobotBox/Order/OrderInfoListV2.aspx?BatchSearchType=1&Message=' + ids
+        window.open(url)
+        $('#table_cancellations').edatagrid('clearSelections')
+    }
+    function accept_selected_cancellations(){
+        if (! confirm("同意退款?")){return;}
+        var rows = $('#table_cancellations').datagrid('getSelections')
+        rows.map(i=>i.action = 'accept')
+        var data = {data:rows}
+        $.ajax({
+        type: "POST",
+        url: "/process_cancellation_order",
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(data),
+        dataType: "json",
+        success: function (res) {location.reload(true)}
+        })
+    }
+    function reject_selected_cancellations(){
+        if (! confirm("拒绝退款?")){return;}
+        var rows = $('#table_cancellations').datagrid('getSelections')
+        rows.map(i=>i.action = 'reject')
+        var data = {data:rows}
+        $.ajax({
+        type: "POST",
+        url: "/process_cancellation_order",
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(data),
+        dataType: "json",
+        success: function (res) {location.reload(true)}
+        })
+    }
 </script>
 {% endblock %}

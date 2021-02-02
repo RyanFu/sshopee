@@ -32,8 +32,9 @@ def mydb(sql, values=(), many=False):
     return rv
 
 #使用SELENIUM控制CHORME打开账号后台
-def open_sellercenter(account, password, cookie_only):
-    print(account, password)
+def open_sellercenter(account, password, cookie_only=True):
+    if driver_path == "/root/chromedriver.exe":
+        cookie_only = True
     site = account[-2:]
     ch_options = Options()
     if cookie_only:
@@ -299,13 +300,14 @@ def get_all_cancellations():
     return
       
 def cancellation_reject_accept(account, order_id, action):
-    account, order_id, action = 'jihuishi.my', 65371133466290, 'accept'
+    #account, order_id, action = 'jihuishi.my', 65371133466290, 'accept'
     site = account[-2:]
     url = 'https://seller.{}.shopee.cn/api/v3/order/respond_cancel_request'.format(site)
     data = {'order_id':order_id, 'action': action}
     cookies = get_cookie_jar(account)
     res = requests.post(url, data=data, cookies=cookies)
-    print(res.json(),res.status_code)
+    print(order_id, res.json(),res.status_code)
+    return res.json()
 
 def get_returns_by_account(account):
     site = account.split(".")[1]

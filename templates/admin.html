@@ -45,8 +45,8 @@
             rownumbers="true" fitColumns="true" singleSelect="true">
         <thead>
             <tr>
-                <th field="account" width="50" editor="{type:'validatebox',options:{required:true}}">账号组</th>
-                <th field="password" width="50" editor="{type:'validatebox',options:{required:true}}">标题后缀</th>
+                <th field="account" width="50" editor="{type:'validatebox',options:{required:true}}">账号</th>
+                <th field="password" width="50" editor="{type:'validatebox',options:{required:true}}">密码</th>
             </tr>
         </thead>
     </table>
@@ -55,6 +55,7 @@
         <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="javascript:$('#table_password').edatagrid('destroyRow')">Destroy</a>
         <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="javascript:$('#table_password').edatagrid('saveRow')">Save</a>
         <a href="#" class="easyui-linkbutton" iconCls="icon-undo" plain="true" onclick="javascript:$('#table_password').edatagrid('cancelRow')">Cancel</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="auto_login()">Login</a>
     </div>
 
     <script type="text/javascript">
@@ -99,6 +100,12 @@
             }
           })
         })
+        function auto_login(){
+        var row = $('#table_password').datagrid('getSelected')
+        var account = row.account
+        var url = '/open_sellercenter?account=' + account
+        $.get(url, function(res){})
+        }
 
 
 

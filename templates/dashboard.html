@@ -52,7 +52,8 @@
     </thead>
 </table>
 <div id="toolbar_listings_count">
-    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="javascript:listings_count()">全部更新</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="listings_count()">全部重新统计</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="listings_update()">在线产品更新</a>
 </div>
 
 
@@ -84,6 +85,15 @@
             location.reload(true);
           })
         }
-
+    function listings_update(){
+        var rows = $('#table_listings_count').datagrid('getSelections')
+        for (let row of rows){
+            let url = '/update_shop_performance?account=' + row.account
+            $('#jsmessage')[0].textContent += row.account + '准备更新;'
+            $.get(url, function(res){
+            $('#jsmessage')[0].textContent += row.account + '更新成功;'
+            })
+        }
+    }
 </script>
 {% endblock %}
