@@ -8,6 +8,7 @@ from datetime import timedelta
 import sqlite3, json, time, math, requests, csv, platform
 import shopee_api
 from machine_gun import snow
+from shopee_api import mydb
 
 app = Flask(__name__)   
 app.secret_key = '9dsm8G9OSYlJy64mig9KeXJmp' 
@@ -438,18 +439,21 @@ def update_all_listings():
 @app.route('/update_all_accounts_listings', methods=['GET'])
 def update_all_accounts_listings():
     sql = 'select account from password'
-    with  sqlite3.connect(database_name) as cc:       
-        cu = cc.execute(sql)
-        account_list = [i[0] for i in cu]
+    con = mydb(sql)
+    account_list = [i[0] for i in con]
     for account in account_list:
+        print('now for ', account)
         sql = 'select update_time from items where account=? limit 1'
-        update_time = shopee_api.mydb(sql, (account,))[0][0]
+        update_time = mydb(sql, (account,))[0][0]
         tsp = time.time() - 60 * 60 * 3
         lasthour = snow(tsp)
         if update_time < lasthour:
+            print(account, ' will update')
             shopee_api.check_cookie_jar(account)
             shopee_api.get_all_page(account)
             time.sleep(5)
+        else:
+            print(account, ' updated')
     res_data = {"message": "success", "data":{}}
     res_data = jsonify(res_data)
     return res_data
