@@ -237,7 +237,7 @@ def export_by_account():
     res_data = jsonify(res_data)
     return res_data
 
-#按账号排查库存异常更新
+#按账号排查库存异常 按产品状态
 @app.route('/wrong_stock_by_account', methods = ['POST'])
 def wrong_stock_by_account():
     account = request.json["account"]
@@ -268,6 +268,38 @@ def wrong_stock_by_account():
     res_data = jsonify(res_data)
     return res_data
 
+#按账号排查库存异常 按实际库存
+@app.route('/wrong_stock_by_account_hard', methods = ['POST'])
+def wrong_stock_by_account_hard():
+    account = request.json["account"]
+    sql = '''select items.item_id, items.name, 
+    items.model_id, items.model_name, 
+    items.parent_sku, items.model_sku, 
+    items.model_current_price, items.model_stock, 
+    stock.total, items.sold  
+    from items 
+    left join stock on (items.parent_sku != "" and items.parent_sku = stock.sku) 
+    or (items.model_sku != "" and items.model_sku = stock.sku) 
+    where account = ? '''
+    cu = mydb(sql, (account,))
+    data = []
+    for row in cu:   
+        new_row = [i for i in row]
+        new_row[8] = 0 if new_row[8] is None else new_row[8]
+        if new_row[8] <= 0:
+            if new_row[7] > 0:       
+                new_row[7] = 0
+                data.append(new_row)
+        elif new_row[8] <= 10:       
+            new_row[7] = new_row[8]
+            data.append(new_row)
+        elif new_row[8] > 10 and new_row[7] < 10:       
+            new_row[7] = new_row[8]
+            data.append(new_row)
+    res_data = {"message": "success", "data": {"rows": data}}
+    res_data = jsonify(res_data)
+    return res_data
+    
 #价格异常
 @app.route('/wrong_price_by_account', methods = ['POST'])
 def wrong_price_by_account():

@@ -63,7 +63,7 @@ def erp2stock():
         AvgDailySales = row.find("AvgDailySales").getText()
         print(ClientSKU, ProductNameCN, WithBattery, ProductState, LastBuyPrice,
         GrossWeight,GoodNum,AvgDailySales)
-erp2stock()       
+      
 
 def update_stock():
     account, item_id, model_id, stock = "jihuishi.sg", 9309705353,73333353757, 80
@@ -115,3 +115,32 @@ def update_stock():
             print(k, udata[k], a[k])
             print("--------------------------------")
     
+
+print(time.ctime())
+account = "bigbighouse.br"
+sql = '''select items.item_id, items.name, 
+items.model_id, items.model_name, 
+items.parent_sku, items.model_sku, 
+items.model_current_price, items.model_stock, 
+stock.total, stock.ado 
+from items 
+left join stock on (items.parent_sku != "" and items.parent_sku = stock.sku) 
+or (items.model_sku != "" and items.model_sku = stock.sku) 
+where account = ? '''
+cu = mydb(sql, (account,))
+data = []
+print(time.ctime())
+for row in cu:   
+    new_row = [i for i in row]
+    new_row[8] = 0 if new_row[8] is None else new_row[8]
+    if new_row[8] <= 0 and new_row[7] > 0:       
+        new_row[7] = 0
+        data.append(new_row)
+    elif new_row[8] <= 10:       
+        new_row[7] = new_row[8]
+        data.append(new_row)
+    elif new_row[8] > 10 and new_row[7] < 10:       
+        new_row[7] = new_row[8]
+        data.append(new_row)    
+print(len(data))
+print(time.ctime())

@@ -13,7 +13,8 @@
 <div class="command_div">
 <a class="easyui-linkbutton" iconCls="icon-search" id="promotion_calculation" >产品信息匹配</a>
 <a class="easyui-linkbutton" iconCls="icon-print" id="export_by_account" >账号产品导出</a>
-<a class="easyui-linkbutton" iconCls="icon-print" id="wrong_stock_by_account"  >缺货停产调零</a>
+<a class="easyui-linkbutton" iconCls="icon-print" id="wrong_stock_by_account_easy"  >库存更新(按状态)</a>
+<a class="easyui-linkbutton" iconCls="icon-print" id="wrong_stock_by_account_hard"  >库存更新(按库存)</a>
 <a class="easyui-linkbutton" iconCls="icon-search" id="wrong_price_by_account"  >产品价格异常</a>
 <a class="easyui-linkbutton" iconCls="icon-search" id="wrong_sku"  >违禁品批量查询</a>
 <a class="easyui-linkbutton" iconCls="icon-search" id="duplicate_sku_by_account"  >上架前查重复</a>
@@ -22,21 +23,21 @@
 <br><br>
 <!-- 搜索在线产品 -->
   <label >自定义SKU:</label>
-  <input type="text" name="sku">
+  <input type="text" name="sku" class="search_value">
   <label >虾皮账号:</label>
-  <input type="text" name="account">
+  <input type="text" name="account" class="search_value">
   <label >评分大于:</label>
-  <input type="number" name="rating">
+  <input type="number" name="rating" class="search_value">
   <label >日均售出大于:</label>
-  <input type="number" name="ado">
+  <input type="number" name="ado" class="search_value">
 
 <br><br>
   <label >ERP用户名:</label>
-  <input type="text" id="user_name">
+  <input type="text" id="user_name" class="search_value">
   <label >用户密码:</label>
-  <input type="password" id="user_password">
+  <input type="password" id="user_password" class="search_value">
   <label >售出数量:</label>
-  <input type="number" name="sold">
+  <input type="number" name="sold" class="search_value">
     <label >包含多属性 : </label>
       <input type="checkbox" name="multi_model">
   <a class="easyui-linkbutton" id="search" iconCls="icon-search">产品搜索</a>
@@ -55,7 +56,8 @@
   var flag = {}
 $("#promotion_calculation")[0].onclick = promotin_calculation
 $("#export_by_account")[0].onclick = export_by_account
-$("#wrong_stock_by_account")[0].onclick = wrong_stock_by_account
+$("#wrong_stock_by_account_easy")[0].onclick = wrong_stock_by_account_easy
+$("#wrong_stock_by_account_hard")[0].onclick = wrong_stock_by_account_hard
 $("#wrong_price_by_account")[0].onclick = wrong_price_by_account
 $("#wrong_sku")[0].onclick = wrong_sku
 $("#duplicate_sku_by_account")[0].onclick = duplicate_sku_by_account
@@ -137,7 +139,9 @@ function export_by_account(){
 }
 
 //按账号导出库存异常LISTING
-function wrong_stock_by_account(){
+function wrong_stock_by_account_easy(){wrong_stock_by_account(false)}
+function wrong_stock_by_account_hard(){wrong_stock_by_account(true)}
+function wrong_stock_by_account(hard){
   var hd = [["et_title_product_id","et_title_product_name","et_title_variation_id",
     "et_title_variation_name","et_title_parent_sku","et_title_variation_sku",
     "et_title_variation_price","et_title_variation_stock","et_title_result",
@@ -146,7 +150,7 @@ function wrong_stock_by_account(){
     $("textarea")[0].value = "处理中"
   var account = $("[name=account]")[0].value.trim()
   if (account.indexOf(".") < 0){alert("账号名称错误");return;}
-  var url = "/wrong_stock_by_account"
+  var url = hard ? "/wrong_stock_by_account_hard" : "/wrong_stock_by_account"
   data = {"account": account}
   $.ajax({
     type:"POST",
@@ -156,8 +160,7 @@ function wrong_stock_by_account(){
     success:function(res){
         var rows = res.data.rows
         hd = hd.concat(rows)
-        //show_data(hd)
-        resock2book(hd)
+        resock2book(hd)        
         $("textarea")[0].value = "处理完成"        
     }
 })

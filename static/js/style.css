@@ -1,21 +1,26 @@
+html,body{ 
+margin:0px; 
+height:100%; 
+} 
 
+.command_div .search_value{
+    width:15%;
+}
 #navigator {
     width: 10%;
-    float: left;
-    position: fixed;
-    
 }
 #navigator_panel {
     width:100%;
     height:auto;
     padding:10px;
-
+}
+#center_div {
+    margin-left: 15px;
+    border:hidden;
 }
 #content {
-    width: 80%;
-    margin:10px 5px 15px 12%;
-
-
+    margin:auto;
+    width:90%
 }
 #footer {
     width:100%;

@@ -17,8 +17,8 @@
     {% endblock %}
   </head>
   <body>
-    <div id="layout_div" class="easyui-layout" style="width:100%;height:100%;">
-      <div id="navigator" title="Navigator" data-options="region:'west',split:true">
+
+      <div id="navigator" title="Navigator">
 
         <div id="navigator_panel" class="easyui-panel" title="导航" collapsible="true" >
             <a href="/shopee_index" class="easyui-linkbutton" >在线产品</a><br><br>
@@ -46,23 +46,21 @@
       </div><br><br>
 
       </div>
-      <div  id="center_div" data-options="region:'center'">
-      <div id="content" >{% block content %}{% endblock %}</div>
-      </div>
+      <div  id="content">{% block content %}{% endblock %}</div>
       <br><br>
       <div id="footer">
         {% block footer %}
-        &copy; Copyright 2020 by <a href="">shopee数据分析</a>.
+        &copy; Copyright 2010 by <a href="">shopee数据分析</a>.
         {% endblock %}
       </div>
-    </div>
+
   </body>
 </html>
 <script type="text/javascript">
-    var url = "/login_status"
-    $.get(url, res=>{
+  var url = "/login_status"
+  $.get(url, res=>{
     var username = res.username ? res.username : "未登录";
     $("#username")[0].textContent += username
-    })
-    $(document).ready(function(){$('#layout_div').layout('collapse','west')});
+
+  })
 </script>
