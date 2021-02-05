@@ -286,6 +286,8 @@ def wrong_stock_by_account_hard():
     for row in cu:   
         new_row = [i for i in row]
         new_row[8] = 0 if new_row[8] is None else new_row[8]
+        if new_row[7] == new_row[8]:
+            continue
         if new_row[8] <= 0:
             if new_row[7] > 0:       
                 new_row[7] = 0

@@ -28,11 +28,10 @@ def logit(logfile='out.log'):
         return wrapped_function
     return logging_decorator
 
-def erp2stock():
-    con = mydb("select sku from stock where ado > 5 limit 50;")
-    sku_list = [i[0] for i in con]
-    sku_list = ",".join(sku_list)
 
+
+def erp2zong_page(sku_list):
+    sku_list = ",".join(sku_list)
     ev = '''<?xml version="1.0" encoding="utf-8"?>
         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
         <soap:Body>
@@ -46,25 +45,34 @@ def erp2stock():
         </GetProducts>
         </soap:Body>
         </soap:Envelope>'''.format(sku_list=sku_list)
-    print(sku_list)
+
     headers = {"content-type" : "text/xml; charset=utf-8"}
     url = "http://runbu.irobotbox.com/Api/API_ProductInfoManage.asmx"
     res = requests.post(url, data=ev, headers=headers)
     sp = BeautifulSoup(res.text, 'xml')
     rs = sp("ApiProductInfo")
+    data = []
+    ks = ('ClientSKU', 'ProductName', 'ProductNameCN', 'WithBattery', 'ProductState', 
+    'LastSupplierPrice', 'GrossWeight', 'GoodNum', 'AvgDailySales')
     for row in rs:
-        ClientSKU = row.find("ClientSKU").getText()
-        ProductNameCN = row.find("ProductNameCN").getText()
-        WithBattery = row.find("WithBattery").getText()
-        ProductState = row.find("ProductState").getText()
-        LastBuyPrice = row.find("LastBuyPrice").getText()
-        GrossWeight = row.find("GrossWeight").getText()
-        GoodNum = row.find("GoodNum").getText()
-        AvgDailySales = row.find("AvgDailySales").getText()
-        print(ClientSKU, ProductNameCN, WithBattery, ProductState, LastBuyPrice,
-        GrossWeight,GoodNum,AvgDailySales)
-      
-
+        #print(row)
+        vs = [row.find(k).getText() for k in ks]
+        data.append(vs)
+    sql  = 'insert into song values(?,?,?,?,?,?,?,?,?)'
+    mydb(sql, data, many=True)
+        
+def erp2zong():
+    mydb("delete from song;")
+    con = mydb("select sku from stock where stock > 0 ")
+    sku_list = [i[0] for i in con]
+    data = []
+    for i in range(0, len(sku_list), 50):
+        cur_list = sku_list[i: i + 50]
+        data.append((cur_list,))
+    multiple_mission_pool(erp2zong_page, data)
+    
+    return
+    
 def update_stock():
     account, item_id, model_id, stock = "jihuishi.sg", 9309705353,73333353757, 80
     con = mydb('select cookies from cookies where account = ?', (account,))
@@ -114,33 +122,28 @@ def update_stock():
         if udata[k] != a[k]:
             print(k, udata[k], a[k])
             print("--------------------------------")
-    
 
-print(time.ctime())
-account = "bigbighouse.br"
-sql = '''select items.item_id, items.name, 
-items.model_id, items.model_name, 
-items.parent_sku, items.model_sku, 
-items.model_current_price, items.model_stock, 
-stock.total, stock.ado 
-from items 
-left join stock on (items.parent_sku != "" and items.parent_sku = stock.sku) 
-or (items.model_sku != "" and items.model_sku = stock.sku) 
-where account = ? '''
-cu = mydb(sql, (account,))
-data = []
-print(time.ctime())
-for row in cu:   
-    new_row = [i for i in row]
-    new_row[8] = 0 if new_row[8] is None else new_row[8]
-    if new_row[8] <= 0 and new_row[7] > 0:       
-        new_row[7] = 0
-        data.append(new_row)
-    elif new_row[8] <= 10:       
-        new_row[7] = new_row[8]
-        data.append(new_row)
-    elif new_row[8] > 10 and new_row[7] < 10:       
-        new_row[7] = new_row[8]
-        data.append(new_row)    
-print(len(data))
-print(time.ctime())
+
+
+silent = False
+account, password = 'machinehome.ph', 'elen1212'
+site = account[-2:]
+ch_options = Options()
+if silent:
+    ch_options.add_argument("--headless")
+    ch_options.add_argument("--no-sandbox")
+    print("no head")
+
+driver = webdriver.Chrome(executable_path=driver_path, options=ch_options)
+driver.get('https://seller.{site}.shopee.cn/account/signin'.format(site=site))
+print("find login page")
+WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_tag_name("input"))
+bs = driver.find_elements_by_tag_name('input')
+bs[0].send_keys(account)
+bs[1].send_keys(password)
+driver.find_element_by_tag_name('button').click()
+print("login done")
+WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_class_name("num"))
+driver.get('https://seller.{site}.shopee.cn/portal/tools/mass-update/upload'.format(site=site))
+WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_class_name('shopee-upload__input'))
+driver.find_element_by_class_name('shopee-upload__input').send_keys('D:/Downloads/2restock_machinehome.ph.xlsx')

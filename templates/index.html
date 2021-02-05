@@ -64,7 +64,7 @@ $("#duplicate_sku_by_account")[0].onclick = duplicate_sku_by_account
 $("#format_item_ids")[0].onclick = format_item_ids
 $("#search")[0].onclick = shopee_search
 $("#mass_download_sku")[0].onclick = mass_download_sku
-
+$(document).ready(function(){$('#layout_div').layout('collapse','west')});
 //结果输出
 function show_data(data){
     if (typeof(data[0]) == "object"){
