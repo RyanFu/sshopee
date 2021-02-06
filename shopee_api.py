@@ -103,7 +103,7 @@ def get_cookie_jar(account):
     con = mydb(sql, [account])        
     cookie_dict = json.loads(con[0][0])
     cookie_jar = requests.utils.cookiejar_from_dict(cookie_dict)
-    return cookie_jar
+    return cookie_dict
 
 
 def get_performance(account):
@@ -154,6 +154,8 @@ def get_all_performance():
     sql = 'select account from password'
     cu = mydb(sql)
     account_list = [i for i in cu]
+    for account in account_list:
+        check_cookie_jar(account)
     multiple_mission_pool(get_performance, account_list, 10)
     return
 

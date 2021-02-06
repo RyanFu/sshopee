@@ -551,9 +551,11 @@ def upload_file():
             cc.execute(sql_up,(tb, update_time))
             cc.commit()
         print("table updated", time.ctime())
+        if tb in ['stock', 'zong']:
+            sql = 'delete from {} where sku = ""'.format(tb)
+            mydb(sql)
         msg += ' as table'
 
-    print(file_path)
     print(file_path)
     return msg
 
@@ -639,9 +641,9 @@ def listings_count():
 def easyui(name, action):
     #print(action, request.args,request.json,request.form)
     #未登录用户只允许访问白名单表, 权限为只查看
-    white_list = ['listings_count', 'performance']
+    black_list = ['password', 'cookies']
     if session.get('username', None) is None:
-        if action != 'get' or name not in white_list:
+        if action != 'get' or name in black_list_list:
             flash('当前数据需要登录权限')
             return redirect('/shopee_login')
 

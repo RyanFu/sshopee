@@ -1,5 +1,5 @@
 #coding=utf-8  
-import sqlite3, json, os, requests, time
+import sqlite3, json, os, requests, time, csv
 from machine_gun import *
 from shopee_api import *
 from bs4 import BeautifulSoup
@@ -124,26 +124,40 @@ def update_stock():
             print("--------------------------------")
 
 
+def upload_stock(account, password, silent=True):
+    site = account[-2:]
+    file_path = 'D:/Downloads/2restock_{}.xlsx'.format(account)
+    ch_options = Options()
+    if silent:
+        ch_options.add_argument("--headless")
+        ch_options.add_argument("--no-sandbox")
+    t1 = snow()
+    driver = webdriver.Chrome(executable_path=driver_path, options=ch_options)
+    driver.get('https://seller.{site}.shopee.cn/account/signin'.format(site=site))
+    print("find login page", snow())
+    WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_tag_name("input"))
+    bs = driver.find_elements_by_tag_name('input')
+    bs[0].send_keys(account)
+    bs[1].send_keys(password)
+    driver.find_element_by_tag_name('button').click()
+    print("login done", snow())
+    WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_class_name("num"))
+    driver.get('https://seller.{site}.shopee.cn/portal/tools/mass-update/upload'.format(site=site))
+    WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_class_name('shopee-upload__input'))
+    driver.find_element_by_class_name('shopee-upload__input').send_keys(file_path)
+    print('upload done', t1, snow())
+    time.sleep(5)
+    driver.quit()
 
-silent = False
-account, password = 'machinehome.ph', 'elen1212'
-site = account[-2:]
-ch_options = Options()
-if silent:
-    ch_options.add_argument("--headless")
-    ch_options.add_argument("--no-sandbox")
-    print("no head")
+def auto_stock():
+    account_list = ['jihuishi.my','jihuishi.id','jihuishi.th','jihuishi.ph','jihuishi.vn','jihuishi.sg']
+    for account in account_list:
+        account, password = mydb('select account, password from password where account=?', (account,))[0]
+        upload_stock(account, password)
+        
 
-driver = webdriver.Chrome(executable_path=driver_path, options=ch_options)
-driver.get('https://seller.{site}.shopee.cn/account/signin'.format(site=site))
-print("find login page")
-WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_tag_name("input"))
-bs = driver.find_elements_by_tag_name('input')
-bs[0].send_keys(account)
-bs[1].send_keys(password)
-driver.find_element_by_tag_name('button').click()
-print("login done")
-WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_class_name("num"))
-driver.get('https://seller.{site}.shopee.cn/portal/tools/mass-update/upload'.format(site=site))
-WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_class_name('shopee-upload__input'))
-driver.find_element_by_class_name('shopee-upload__input').send_keys('D:/Downloads/2restock_machinehome.ph.xlsx')
+
+with open('C:/Users/guoliang/Desktop/test.csv', 'r', encoding='gbk') as file:
+    c = csv.reader(file)
+    for i in c:
+        print(i)
