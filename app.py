@@ -478,8 +478,8 @@ def update_all_accounts_listings():
     for account in account_list:
         print('now for ', account)
         sql = 'select update_time from items where account=? limit 1'
-        update_time = mydb(sql, (account,))[0]
-        update_time = update_time[0] if update_time else '0'
+        update_time = mydb(sql, (account,))
+        update_time = update_time[0][0] if update_time else '0'
         tsp = time.time() - 60 * 60 * 3
         lasthour = snow(tsp)
         if update_time < lasthour or update_time > snow():
