@@ -249,7 +249,6 @@ def tm_get_all_accounts_listings():
     for account in account_list:
         get_all_page(account)
         time.sleep(60*3)
-    get_all_page(account)
     return
     
 

@@ -481,7 +481,7 @@ def update_all_accounts_listings():
         update_time = mydb(sql, (account,))[0][0]
         tsp = time.time() - 60 * 60 * 3
         lasthour = snow(tsp)
-        if update_time < lasthour:
+        if update_time < lasthour or update_time > snow():
             print(account, ' will update')
             shopee_api.check_cookie_jar(account)
             shopee_api.get_all_page(account)
