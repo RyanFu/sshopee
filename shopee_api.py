@@ -343,15 +343,17 @@ def get_all_returns():
     multiple_mission_pool(get_returns_by_account, account_list, 32)
     return
 
-def sn2id(account, sn):
+def sn2details(account, sn):
     site = account[-2:]
     cookies = get_cookie_jar(account)
     url = "https://seller.ph.shopee.cn/api/v3/order/get_order_hint".replace("ph",site)
     params = {"keyword": sn, "query": sn}
     data = requests.get(url, params=params, cookies=cookies).json()
-    print(data)
+    #print(data)
     if len(data['data']['orders']) > 0:
-        id = data['data']['orders'][0]['order_id']
+        order_id = data['data']['orders'][0]['order_id']
+        status = data['data']['orders'][0]['status']
     else:
-        id = None
-    return id
+        order_id, status = None, None
+    data = {"order_id": order_id, "status": status}
+    return data

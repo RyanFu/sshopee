@@ -156,8 +156,3 @@ def auto_stock():
         upload_stock(account, password)
         
 
-
-with open('C:/Users/guoliang/Desktop/test.csv', 'r', encoding='gbk') as file:
-    c = csv.reader(file)
-    for i in c:
-        print(i)

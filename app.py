@@ -732,6 +732,15 @@ def get_return_orders():
     flash("退款订单已更新")
     return res_data
 
+@app.route('/get_orders_details', methods=['GET'])
+def get_orders_details():
+    account, sn = request.args["account"], request.args["sn"]
+    shopee_api.check_cookie_jar(account)
+    data = shopee_api.sn2details(account, sn)
+    res_data = {"message": "success", "data": data}
+    res_data = jsonify(res_data)
+    return res_data
+
 #调试模式运行
 if __name__ == "__main__":    
         app.debug = True
