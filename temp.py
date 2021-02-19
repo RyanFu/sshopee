@@ -150,9 +150,10 @@ def upload_stock(account, password, silent=True):
     driver.quit()
 
 def auto_stock():
-    account_list = ['jihuishi.my','jihuishi.id','jihuishi.th','jihuishi.ph','jihuishi.vn','jihuishi.sg']
+    #account_list = ['jihuishi.my','jihuishi.id','jihuishi.th','jihuishi.ph','jihuishi.vn','jihuishi.sg']
+    account_list = ['machinehome.my','machinehome.id','machinehome.th','machinehome.ph','machinehome.vn','machinehome.sg']
     for account in account_list:
         account, password = mydb('select account, password from password where account=?', (account,))[0]
         upload_stock(account, password)
-        
+auto_stock()        
 

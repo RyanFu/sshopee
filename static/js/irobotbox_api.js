@@ -70,7 +70,7 @@
         row.ImageList = row.ImageList.map(i => i + sfimg)
         var cost = Number(row.LastSupplierPrice)
         var weight = Number(row.GrossWeight)
-        row.sprice = calculate_price(cost, weight, 0.2)[site]
+        row.sprice = calculate_price(cost, weight, 0.15)[site]
         if (site == "br"){row.sprice *= 0.9}
         var cut = {"my":0.1, "id":100, "th":1, "ph":1, "vn":100, "br":0.1, "sg": 0.1}
         row.sprice = Math.floor(row.sprice /0.6 / cut[site]) * cut[site]
