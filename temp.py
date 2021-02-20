@@ -155,5 +155,64 @@ def auto_stock():
     for account in account_list:
         account, password = mydb('select account, password from password where account=?', (account,))[0]
         upload_stock(account, password)
-auto_stock()        
+
+
+def get_recommend_category_one(name, site, cookies, mp):
+    host = "https://seller.my.shopee.cn"
+    url = host + "/api/v3/category/get_recommend_category".replace("my", site)
+    params = {"version": "3.1.0", "name": name}
+    data = requests.get(url, params=params, cookies=cookies).json()
+    cats = data['data']['cats']
+    if cats:
+        cat = cats[0]
+        cat_id = cat[-1]
+    else:
+        cat_id = 0
+    mp[name] = cat_id
+    return cat_id
+
+def get_recommend_category(name_list, account):
+    cookies = get_cookie_jar(account)
+    site = account[-2:]
+    mp = {}
+    values = [[i, site, cookies, mp] for i in name_list]
+    multiple_mission_pool(get_recommend_category_one, values)
+    #result = [mp[i] for i in name_list]
+    #print(result)
+    return mp
+
+
+cats = [19074,19073,19072,19071,19070,19069,20327,19068,6965,17274]
+t1 = snow()
+ch_options = Options()
+ch_options.add_argument("--headless")
+ch_options.add_argument("--no-sandbox")
+driver = webdriver.Chrome(executable_path=driver_path, options=ch_options)
+for cat in cats:
+    url = 'https://ph.xiapibuy.com/search'
+    params = '?locations=-2&noCorrection=true&page=0&subcategory=' + str(cat)
+    driver.get(url + params)
+    WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_class_name("shopee-search-item-result__item"))
+    for i in range(5):
+        driver.execute_script("window.scrollBy(0,500)")
+    items = driver.find_elements_by_class_name("shopee-search-item-result__item")
+    rows = []
+    for i in items:
+        try:
+            img = i.find_element_by_tag_name('img').get_attribute('src')[:-3]
+            link = i.find_element_by_tag_name('a').get_attribute('href')
+            rows.append([img, link, cat])
+            print(cat, len(rows))
+        except:
+            print(cat, 'missing')
+    sql = 'insert or replace into temp values(?,?,?)'
+    mydb(sql, rows, True)
+driver.quit()
+t2 = snow()
+print(t1, t2)
+
+
+
+
+
 

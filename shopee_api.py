@@ -355,5 +355,36 @@ def sn2details(account, sn):
         status = data['data']['orders'][0]['status']
     else:
         order_id, status = None, None
-    data = {"order_id": order_id, "status": status}
+    channels = {"my": 28016,"id": 88001,"th": 78004,"ph": 48002,"vn": 58007,"sg": 18025, "br": 90001}
+    channel_id = channels[site]
+    url = "https://seller.ph.shopee.cn/api/v3/shipment/init_order".replace("ph",site)
+    payload = {"channel_id":channel_id,"order_id":order_id,"forder_id":order_id}
+    data = requests.post(url, payload, cookies=cookies).json()
+    message = data["user_message"]
+    #print(data)
+    data = {"order_id": order_id, "status": status, "tracking_message":message}
     return data
+
+def get_recommend_category_one(name, site, cookies, mp):
+    host = "https://seller.my.shopee.cn"
+    url = host + "/api/v3/category/get_recommend_category".replace("my", site)
+    params = {"version": "3.1.0", "name": name}
+    data = requests.get(url, params=params, cookies=cookies).json()
+    cats = data['data']['cats']
+    if cats:
+        cat = cats[0]
+        cat_id = cat[-1]
+    else:
+        cat_id = 0
+    mp[name] = cat_id
+    return cat_id
+
+def get_recommend_category(name_list, account):
+    cookies = get_cookie_jar(account)
+    site = account[-2:]
+    mp = {}
+    values = [[i, site, cookies, mp] for i in name_list]
+    multiple_mission_pool(get_recommend_category_one, values)
+    #result = [mp[i] for i in name_list]
+    #print(result)
+    return mp
