@@ -44,3 +44,6 @@ height:100%;
     width: 100%; 
 }
 
+.easyui-linkbutton {
+    margin-top: 5px
+}

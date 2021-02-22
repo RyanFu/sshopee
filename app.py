@@ -741,6 +741,25 @@ def get_orders_details():
     res_data = jsonify(res_data)
     return res_data
 
+@app.route('/update_stock_account', methods=['POST'])
+@login_required
+def update_stock_account():
+    account, rows = request.json["account"], request.json["rows"]
+    shopee_api.check_cookie_jar(account)
+    cookies = shopee_api.get_cookie_jar(account)
+    values = [[account, cookies, *i] for i in rows]
+    #multiple_mission_pool(shopee_api.update_stock_listing, values)
+    for i in values:
+        i[-1] = int(i[-1])
+        i[-2] = int(i[-2])
+        i[-3] = int(i[-3])
+        print(i)
+        shopee_api.update_stock_listing(*i)
+    res_data = {"message": "success", "data": ""}
+    res_data = jsonify(res_data)
+    return res_data
+
+
 #调试模式运行
 if __name__ == "__main__":    
         app.debug = True

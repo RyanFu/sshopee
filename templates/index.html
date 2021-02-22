@@ -20,6 +20,7 @@
 <a class="easyui-linkbutton" iconCls="icon-search" id="duplicate_sku_by_account"  >上架前查重复</a>
 <a class="easyui-linkbutton" iconCls="icon-reload" id="format_item_ids"  >item_id格式转换</a>
 <a class="easyui-linkbutton" iconCls="icon-print" id="mass_download_sku"  >刊登资料下载</a>
+
 <br><br>
 <!-- 搜索在线产品 -->
   <label >自定义SKU:</label>
@@ -45,7 +46,7 @@
 </div>
 <!-- 输入输出框 -->
 <div class="textarea_div">
-<textarea rows=32></textarea>
+<textarea rows=30></textarea>
 </div>
 <!-- 更新时间备注 -->
 <div class="des"> 
@@ -338,6 +339,20 @@ function calculate_price(c, w, r = 0){
             flag.sku_list_count += 1
         }
 
+    }
+    function mass_update_stock(){
+        var rows = $("textarea")[0].value.split("\n").map(i=>i.split("\t"))
+        var account = $("[name=account]")[0].value
+        var url = "/update_stock_account"
+        $.ajax({
+            type:"POST",
+            url: url,
+            data:JSON.stringify(data),
+            headers: {"Content-Type": "application/json"},
+            success:function(res){
+                console.log(res)     
+            }
+        })
     }
 
 </script>
