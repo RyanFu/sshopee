@@ -34,6 +34,7 @@ def shopee_price(cost, weight, profit_rate = 0):
     "th":  0.2146,
     "sg": 4.914,
     "br":  1.1675,
+    "mx": 0.3118,
     }
     shipping_fee = {
     "my": weight*0.015,
@@ -43,7 +44,7 @@ def shopee_price(cost, weight, profit_rate = 0):
     "vn": weight*90,
     "sg": max(weight*0.011 + 0.05,0.6),
     "br": min(max(5, weight * 0.14 + 0.8), weight * 0.09 + 5.8),
-    } 
+    "mx": min(max(20, weight * 0.5 + 5), weight * 0.4 + 55)}
     sale_price = { 
     "my": math.ceil((cost+shipping_fee["my"]*exchange_rate["my"])/(1-cost_rate-profit_rate)/exchange_rate['my'] *10)/10,
     "id": math.ceil((cost+shipping_fee["id"]*exchange_rate["id"])/(1-cost_rate-profit_rate)/exchange_rate['id'] /100)*100,
@@ -51,7 +52,8 @@ def shopee_price(cost, weight, profit_rate = 0):
     "ph": math.ceil((cost+shipping_fee["ph"]*exchange_rate["ph"])/(1-cost_rate-profit_rate)/exchange_rate['ph'] /1)*1,
     "vn": math.ceil((cost+shipping_fee["vn"]*exchange_rate["vn"])/(1-cost_rate-profit_rate)/exchange_rate['vn'] /100)*100,
     "sg": math.ceil((cost+shipping_fee["sg"]*exchange_rate["sg"])/(1-cost_rate-profit_rate)/exchange_rate['sg'] * 10)/10,
-    "br": math.ceil((cost+shipping_fee["br"]*exchange_rate["br"])/(1-cost_rate-0.05-profit_rate)/exchange_rate['br'] * 10)/10,
+    "br": math.ceil((cost+shipping_fee["br"]*exchange_rate["br"])/(1-cost_rate-profit_rate)/exchange_rate['br'] * 10)/10,
+    "mx": math.ceil((cost+shipping_fee["mx"]*exchange_rate["mx"])/(1-cost_rate-profit_rate)/exchange_rate['mx'] * 10)/10,
     }
     return sale_price
 

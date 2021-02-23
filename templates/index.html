@@ -267,6 +267,7 @@ function calculate_price(c, w, r = 0){
     var rth = 0.2146
     var rsg = 4.914
     var rbr = 1.1675
+    var rmx = 0.3118
     w = Math.ceil(w/10)*10
     var smy = w*0.015
     var sid = w*120
@@ -276,8 +277,9 @@ function calculate_price(c, w, r = 0){
     var sth = w*0.2
     var ssg = Math.max(w*0.011 + 0.05,0.6)
     var sbr = Math.min(Math.max(5, w * 0.14 + 0.8), w * 0.09 + 5.8)
+    var smx = Math.min(Math.max(20, w * 0.5 + 5), w * 0.4 + 55)
     var price = {}
-    var costrate = 0.06 + 0.02 + 0.02 + 0.04 + 0.02 + 0.02
+    var costrate = 0.06 + 0.02 + 0.02 + 0.04 + 0.02
     price.my = Math.ceil((c+smy*rmy)/(1-costrate-r)/rmy *10)/10
     price.id = Math.ceil((c+sid*rid)/(1-costrate-r)/rid /100)*100
     price.tw = Math.ceil((c+stw*rtw)/(1-costrate-r)/rtw /1)*1
@@ -285,7 +287,8 @@ function calculate_price(c, w, r = 0){
     price.ph = Math.ceil((c+sph*rph)/(1-costrate-r)/rph /1)*1
     price.vn = Math.ceil((c+svn*rvn)/(1-costrate-r)/rvn /100)*100
     price.sg = Math.ceil((c+ssg*rsg)/(1-costrate-r)/rsg * 10)/10
-    price.br = Math.ceil((c+sbr*rbr)/(1-costrate-0.05-r)/rbr * 10)/10
+    price.br = Math.ceil((c+sbr*rbr)/(1-costrate-r)/rbr * 10)/10
+    price.mx = Math.ceil((c+smx*rmx)/(1-costrate-r)/rmx * 10)/10
     return price
 }
   function resock2book(data){
