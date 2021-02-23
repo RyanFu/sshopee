@@ -294,10 +294,10 @@ def wrong_stock_by_account_hard():
             if new_row[7] > 0:       
                 new_row[7] = 0
                 data.append(new_row)
-        elif new_row[8] <= 10:       
+        elif new_row[8] <= 3:       
             new_row[7] = new_row[8]
             data.append(new_row)
-        elif new_row[8] > 10 and new_row[7] < 10:       
+        elif new_row[8] > 3 and new_row[7] < 3:       
             new_row[7] = new_row[8]
             data.append(new_row)
     res_data = {"message": "success", "data": {"rows": data}}

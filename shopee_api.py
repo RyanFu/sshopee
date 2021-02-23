@@ -406,6 +406,7 @@ def update_stock_listing(account, cookies, item_id, model_id, stock):
         "vn": [{"size":0,"price":"10000","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":58007,"sizeid":0}],
         "sg": [{"size":0.02,"price":"0.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":18028,"sizeid":0}],
         "br": [{"size":0,"price":"15","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":90001,"sizeid":0}],
+        "mx": [{"size":0,"price":"40","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":100001,"sizeid":0}],
         }
     udata = {"unlisted":False, "ds_cat_rcmd_id":""}
     udata["logistics_channels"] = chs[site]
