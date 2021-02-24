@@ -72,65 +72,61 @@ def erp2zong():
     multiple_mission_pool(erp2zong_page, data)
     return
     
-# def update_stock_listing(account, cookies, item_id, model_id, stock):    
-    # cookies = get_cookie_jar(account)
-    # site = account[-2:]
-    # host = "https://seller.{}.shopee.cn".format(site)
-    # url = host + "/api/v3/product/get_product_detail"
-    # params = "/?SPC_CDS_VER=2&product_id=" + str(item_id)
-    # res = requests.get(url + params, cookies=cookies)
-    # data = res.json()['data']
-    # #print(data)
-    # chs = {
-        # "my": [{"size":0,"price":"5.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":28016,"sizeid":0}],
-        # "id": [{"size":0,"price":"10000.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":88001,"sizeid":0}],
-        # "th": [{"size":0,"price":"20","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":78804,"sizeid":0}],
-        # "ph": [{"size":0,"price":"40","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":48802,"sizeid":0}],
-        # "vn": [{"size":0,"price":"10000","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":58007,"sizeid":0}],
-        # "sg": [{"size":0.02,"price":"0.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":18028,"sizeid":0}],
-        # "br": [{"size":0,"price":"15","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":90001,"sizeid":0}],
-        # }
-    # udata = {"unlisted":False, "ds_cat_rcmd_id":""}
-    # udata["logistics_channels"] = chs[site]
-    # ks = ["id", "name", "brand", "images", "description", "model_list", 
-    # "category_path", "attribute_model", "parent_sku", "wholesale_list", 
-    # "installment_tenures", "weight", "dimension", "pre_order", 
-    # "days_to_ship", "condition", "size_chart", "video_list", 
-    # "video_task_id", "tier_variation", "add_on_deal", "price",
-    # "stock", "category_recommend",]
-    # for k in ks:
-        # udata[k] = data[k]
+def update_stock_listing2(account, cookies, item_id, model_id, stock):    
+    cookies = get_cookie_jar(account)
+    site = account[-2:]
+    host = "https://seller.{}.shopee.cn".format(site)
+    url = host + "/api/v3/product/get_product_detail"
+    params = "/?SPC_CDS_VER=2&product_id=" + str(item_id)
+    res = requests.get(url + params, cookies=cookies)
+    data = res.json()['data']
+    #print(data)
+    chs = {
+        "my": [{"size":0,"price":"5.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":28016,"sizeid":0}],
+        "id": [{"size":0,"price":"10000.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":88001,"sizeid":0}],
+        "th": [{"size":0,"price":"20","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":78804,"sizeid":0}],
+        "ph": [{"size":0,"price":"40","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":48802,"sizeid":0}],
+        "vn": [{"size":0,"price":"10000","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":58007,"sizeid":0}],
+        "sg": [{"size":0.02,"price":"0.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":18028,"sizeid":0}],
+        "br": [{"size":0,"price":"15","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":90001,"sizeid":0}],
+        }
+    udata = {"unlisted":False, "ds_cat_rcmd_id":""}
+    #udata["logistics_channels"] = chs[site]
+    ks = ["id",  "model_list", "stock", ]
+    for k in ks:
+        udata[k] = data[k]
     
-    # if len(udata['model_list']) == 0:
-        # udata['stock'] = stock
-    # else:
-        # nms = [];
-        # for  m in udata['model_list']:
-            # if m['id'] == model_id:
-                # udata['stock'] += stock - m['stock']
-                # m['stock'] = stock
-            # nm = {}
-            # mks = ["id", "is_default","name", "sku", "stock","tier_index"]
-            # for mk in mks:
-                # nm[mk] = m[mk]
-            # nms.append(nm)
-        # udata['model_list'] = nms
+    if len(udata['model_list']) == 0:
+        udata['stock'] = stock
+    else:
+        nms = [];
+        for  m in udata['model_list']:
+            if m['id'] == model_id:
+                udata['stock'] += stock - m['stock']
+                m['stock'] = stock
+            nm = {}
+            mks = ["id",  "stock"]
+            for mk in mks:
+                nm[mk] = m[mk]
+            nms.append(nm)
+        udata['model_list'] = nms
 
-    # updata = [udata,]
-    # uurl = host + "/api/v3/product/update_product"
-    # params = "/?version=3.1.0&SPC_CDS_VER=2&SPC_CDS=" + cookies['SPC_CDS']
-    # res = requests.post(uurl + params, json=updata, cookies=cookies)
-    # #print(udata)
-    # print(res.json(), res.status_code)
-    # return res.json()
+    updata = [udata,]
+    uurl = host + "/api/v3/product/update_product"
+    params = "/?version=3.1.0&SPC_CDS_VER=2&SPC_CDS=" + cookies['SPC_CDS']
+    res = requests.post(uurl + params, json=updata, cookies=cookies)
+    #print(udata)
+    print("this it easy basic")
+    print(res.json(), res.status_code)
+    return res.json()
 
 def update_stock_account(account, rows):
     check_cookie_jar(account)
     cookies = get_cookie_jar(account)
     values = [[account, cookies, *i] for i in rows]
-    multiple_mission_pool(update_stock_listing, values)
-account = 'jihuishi.vn'
-rows = [[4548971823,30767917234,21]]
+    multiple_mission_pool(update_stock_listing2, values, debug=True)
+account = 'jihuishi.my'
+rows = [[4977639899,53512288784,55]]
 #rows[0] = [str(i) for i in rows[0]]
 update_stock_account(account, rows)
 

@@ -16,6 +16,13 @@ ua = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like G
 headers = {'User-Agent': ua}
 #http://chromedriver.storage.googleapis.com/index.html
 
+def host(site):
+    if site == "mx":
+        url = "https://seller.shopee.com.mx"
+    else:
+        url = "https://seller.{}.shopee.cn".format(site)
+    return url
+
 def mydb(sql, values=(), many=False):
     with sqlite3.connect(database_name) as db:
         if 'select' in sql:
@@ -43,15 +50,15 @@ def open_sellercenter(account, password, cookie_only=True):
         print("no head")
 
     driver = webdriver.Chrome(executable_path=driver_path, options=ch_options)
-    driver.get('https://seller.{site}.shopee.cn/account/signin'.format(site=site))
+    driver.get(host(site) + '/account/signin')
     print("find login page")
-    WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_tag_name("input"))
+    WebDriverWait(driver, timeout=30).until(lambda d: d.find_element_by_tag_name("input"))
     bs = driver.find_elements_by_tag_name('input')
     bs[0].send_keys(account)
     bs[1].send_keys(password)
     driver.find_element_by_tag_name('button').click()
     print("login done")
-    WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_class_name("num"))
+    WebDriverWait(driver, timeout=30).until(lambda d: d.find_element_by_class_name("card"))
     cookies_raw = driver.get_cookies()
     if cookie_only:  
         driver.quit()
@@ -65,8 +72,7 @@ def open_sellercenter(account, password, cookie_only=True):
     cookies_text = json.dumps(cookies_dict)
     with  sqlite3.connect(database_name) as cc:
         sql = "insert or replace into cookies values(?, ?, ?)"
-        t = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        cc.execute(sql, [account, cookies_text, t])
+        cc.execute(sql, [account, cookies_text, snow()])
         cc.commit()
     return cookies_text
 
@@ -76,9 +82,8 @@ def check_cookie_jar(account):
     con = mydb(sql, [account])        
     if con:
         cookie_dict = json.loads(con[0][0])
-        site = account.split(".")[1]
-        host = "https://seller.{site}.shopee.cn".format(site=site)    
-        url = host + "/api/v3/product/page_product_list"
+        site = account.split(".")[1]  
+        url = host(site) + "/api/v3/product/page_product_list"
         params = "/?source=seller_center&page_size=12&version=3.2.0&page_number=1"
         data = requests.get(url+params, cookies=cookie_dict, headers=headers).json()
         message = data["message"]
@@ -109,15 +114,15 @@ def get_cookie_jar(account):
 def get_performance(account):
     site = account.split(".")[1]
     cookies = get_cookie_jar(account)
-    url = "https://seller.{site}.shopee.cn/api/v3/general/get_shop".format(site=site)
+    url = host(site) + "/api/v3/general/get_shop"
     data = requests.get(url, cookies=cookies, headers=headers).json()["data"]
     follower_count = data["follower_count"]
     item_count = data["item_count"]
     rating_count = data["rating_bad"] + data["rating_good"] + data["rating_normal"]
-    url = "https://seller.{site}.shopee.cn/api/v2/shops/sellerCenter/ongoingPoints".format(site=site)
+    url = host(site) + "/api/v2/shops/sellerCenter/ongoingPoints"
     data = requests.get(url, cookies=cookies, headers=headers).json()["data"]
     totalPoints = data["totalPoints"]
-    url = "https://seller.{site}.shopee.cn/api/v2/shops/sellerCenter/shopPerformance".format(site=site)
+    url = host(site) + "/api/v2/shops/sellerCenter/shopPerformance"
     data = requests.get(url, cookies=cookies, headers=headers).json()["data"]
     #print(data)
     values = [
@@ -198,9 +203,8 @@ def convert_page_list(page):
 #单个页面产品获取并保存, 加锁
 @decor_retry
 def get_single_page(account, cookies, page_num, dp=False):
-    site = account.split(".")[1]
-    host = "https://seller.{site}.shopee.cn".format(site=site)    
-    url = host + "/api/v3/product/page_product_list"
+    site = account.split(".")[1]  
+    url = host(site) + "/api/v3/product/page_product_list"
     params = "/?source=seller_center&page_size=48&version=3.2.0&page_number={num}".format(num=page_num)      
     data = requests.get(url+params, cookies=cookies, headers=headers).json()
     print(data["message"])
@@ -224,9 +228,8 @@ def get_single_page(account, cookies, page_num, dp=False):
 #@decor_retry
 def get_all_page(account):
     site = account.split(".")[1]
-    cookies = get_cookie_jar(account)  
-    host = "https://seller.{site}.shopee.cn".format(site=site)
-    url = host + "/api/v3/product/page_product_list"
+    cookies = get_cookie_jar(account)
+    url = host(site) + "/api/v3/product/page_product_list"
     params = "/?source=seller_center&page_size=12&version=3.2.0&page_number=1"
     data = requests.get(url+params, cookies=cookies, headers=headers).json()
     message = data["message"]
@@ -268,7 +271,7 @@ def mytimer():
 def get_cancellations_by_account(account):
     site = account.split(".")[1]
     cookies = get_cookie_jar(account) 
-    url = 'https://seller.{}.shopee.cn/api/v3/order/get_simple_order_ids'.format(site)
+    url = host(site) + '/api/v3/order/get_simple_order_ids'
     params = {
     'SPC_CDS_VER':2,
     'source':'cancelled_to_respond',
@@ -282,7 +285,7 @@ def get_cancellations_by_account(account):
     print(account, len(orders))
     order_ids = [str(i['order_id']) for i in orders]
     order_ids = ','.join(order_ids)
-    url = 'https://seller.{}.shopee.cn/api/v3/order/get_compact_order_list_by_order_ids'.format(site)
+    url = host(site) + '/api/v3/order/get_compact_order_list_by_order_ids'
     params = {'SPC_CDS_VER':2, 'order_ids':order_ids}
     data = data = requests.get(url, params=params,cookies=cookies, headers=headers).json()
     orders = data['data']['orders'] 
@@ -303,7 +306,7 @@ def get_all_cancellations():
 def cancellation_reject_accept(account, order_id, action):
     #account, order_id, action = 'jihuishi.my', 65371133466290, 'accept'
     site = account[-2:]
-    url = 'https://seller.{}.shopee.cn/api/v3/order/respond_cancel_request'.format(site)
+    url = host(site) + '/api/v3/order/respond_cancel_request'
     data = {'order_id':order_id, 'action': action}
     cookies = get_cookie_jar(account)
     res = requests.post(url, data=data, cookies=cookies)
@@ -313,7 +316,7 @@ def cancellation_reject_accept(account, order_id, action):
 def get_returns_by_account(account):
     site = account.split(".")[1]
     cookies = get_cookie_jar(account) 
-    url = 'https://seller.{}.shopee.cn/api/v1/return/list'.format(site)
+    url = host(site) + '/api/v1/return/list'
     params = '?SPC_CDS_VER=2&page_size=40&refund_status=refund_unprocessed'
     data = requests.get(url+params, cookies=cookies, headers=headers).json()
     returns = data['data']['list']
@@ -346,7 +349,7 @@ def get_all_returns():
 def sn2details(account, sn):
     site = account[-2:]
     cookies = get_cookie_jar(account)
-    url = "https://seller.ph.shopee.cn/api/v3/order/get_order_hint".replace("ph",site)
+    url = host(site) + "/api/v3/order/get_order_hint"
     params = {"keyword": sn, "query": sn}
     data = requests.get(url, params=params, cookies=cookies).json()
     #print(data)
@@ -357,7 +360,7 @@ def sn2details(account, sn):
         order_id, status = None, None
     channels = {"my": 28016,"id": 88001,"th": 78004,"ph": 48002,"vn": 58007,"sg": 18025, "br": 90001}
     channel_id = channels[site]
-    url = "https://seller.ph.shopee.cn/api/v3/shipment/init_order".replace("ph",site)
+    url = host(site) + "/api/v3/shipment/init_order"
     payload = {"channel_id":channel_id,"order_id":order_id,"forder_id":order_id}
     data = requests.post(url, payload, cookies=cookies).json()
     message = data["user_message"]
@@ -366,8 +369,7 @@ def sn2details(account, sn):
     return data
 
 def get_recommend_category_one(name, site, cookies, mp):
-    host = "https://seller.my.shopee.cn"
-    url = host + "/api/v3/category/get_recommend_category".replace("my", site)
+    url = host(site) +  + "/api/v3/category/get_recommend_category"
     params = {"version": "3.1.0", "name": name}
     data = requests.get(url, params=params, cookies=cookies).json()
     cats = data['data']['cats']
@@ -389,11 +391,10 @@ def get_recommend_category(name_list, account):
     #print(result)
     return mp
 
-def update_stock_listing(account, cookies, item_id, model_id, stock):    
+def update_listing(account, cookies, item_id, model_id, stock):    
     cookies = get_cookie_jar(account)
     site = account[-2:]
-    host = "https://seller.{}.shopee.cn".format(site)
-    url = host + "/api/v3/product/get_product_detail"
+    url = host(site) + "/api/v3/product/get_product_detail"
     params = "/?SPC_CDS_VER=2&product_id=" + str(item_id)
     res = requests.get(url + params, cookies=cookies)
     data = res.json()['data']
@@ -401,8 +402,8 @@ def update_stock_listing(account, cookies, item_id, model_id, stock):
     chs = {
         "my": [{"size":0,"price":"5.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":28016,"sizeid":0}],
         "id": [{"size":0,"price":"10000.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":88001,"sizeid":0}],
-        "th": [{"size":0,"price":"20","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":78804,"sizeid":0}],
-        "ph": [{"size":0,"price":"40","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":48802,"sizeid":0}],
+        "th": [{"size":0,"price":"20","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":78004,"sizeid":0}],
+        "ph": [{"size":0,"price":"40","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":48002,"sizeid":0}],
         "vn": [{"size":0,"price":"10000","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":58007,"sizeid":0}],
         "sg": [{"size":0.02,"price":"0.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":18028,"sizeid":0}],
         "br": [{"size":0,"price":"15","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":90001,"sizeid":0}],
@@ -435,9 +436,63 @@ def update_stock_listing(account, cookies, item_id, model_id, stock):
         udata['model_list'] = nms
 
     updata = [udata,]
-    uurl = host + "/api/v3/product/update_product"
+    uurl = host(site) + "/api/v3/product/update_product"
     params = "/?version=3.1.0&SPC_CDS_VER=2&SPC_CDS=" + cookies['SPC_CDS']
     res = requests.post(uurl + params, json=updata, cookies=cookies)
     #print(udata)
-    print(res.json(), res.status_code)
+    print(item_id, res.json(), res.status_code)
+    return res.json()
+   
+def update_listing2(account, cookies, item_id, model_id, stock):    
+    cookies = get_cookie_jar(account)
+    site = account[-2:]
+    url = host(site) + "/api/v3/product/get_product_detail"
+    params = "/?SPC_CDS_VER=2&product_id=" + str(item_id)
+    res = requests.get(url + params, cookies=cookies)
+    data = res.json()['data']
+    #print(data)
+    chs = {
+        "my": [{"size":0,"price":"5.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":28016,"sizeid":0}],
+        "id": [{"size":0,"price":"10000.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":88001,"sizeid":0}],
+        "th": [{"size":0,"price":"20","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":78004,"sizeid":0}],
+        "ph": [{"size":0,"price":"40","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":48002,"sizeid":0}],
+        "vn": [{"size":0,"price":"10000","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":58007,"sizeid":0}],
+        "sg": [{"size":0.02,"price":"0.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":18028,"sizeid":0}],
+        "br": [{"size":0,"price":"15","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":90001,"sizeid":0}],
+        "mx": [{"size":0,"price":"40","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":100001,"sizeid":0}],
+        }
+    udata = {"unlisted":False, "ds_cat_rcmd_id":""}
+    udata["logistics_channels"] = chs[site]
+    ks = ["id", "name", "brand", "images", "description", "model_list", 
+    "category_path", "attribute_model", "parent_sku", "wholesale_list", 
+    "installment_tenures", "weight", "dimension", "pre_order", 
+    "days_to_ship", "condition", "size_chart", "video_list", 
+    "video_task_id", "tier_variation", "add_on_deal", "price",
+    "stock", "category_recommend",]
+    for k in ks:
+        udata[k] = data[k]
+    
+    if len(udata['model_list']) == 0:
+        udata['stock'] = stock
+    else:
+        nms = [];
+        for  m in udata['model_list']:
+            if m['id'] == model_id:
+                udata['stock'] += stock - m['stock']
+                m['stock'] = stock
+            sku = mydb('select model_sku from items where model_id=?',[m["id"],])[0][0]
+            m["sku"] = sku
+            nm = {}
+            mks = ["id", "is_default","name", "sku", "stock","tier_index"]
+            for mk in mks:
+                nm[mk] = m[mk]
+            nms.append(nm)
+        udata['model_list'] = nms
+
+    updata = [udata,]
+    uurl = host(site) + "/api/v3/product/update_product"
+    params = "/?version=3.1.0&SPC_CDS_VER=2&SPC_CDS=" + cookies['SPC_CDS']
+    res = requests.post(uurl + params, json=updata, cookies=cookies)
+    #print(udata)
+    print(item_id, res.json(), res.status_code)
     return res.json()

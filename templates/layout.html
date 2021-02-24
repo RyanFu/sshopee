@@ -63,6 +63,9 @@
     $.get(url, res=>{
     var username = res.username ? res.username : "未登录";
     $("#username")[0].textContent += username
+    if ($("#username")[0].textContent.indexOf("guoliang")>-1){
+    $(".admin").css("display","inline-block");
+    }
     })
     
 </script>

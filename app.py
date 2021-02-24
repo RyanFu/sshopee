@@ -7,7 +7,7 @@ from pandas import read_sql
 from datetime import timedelta
 import sqlite3, json, time, math, requests, csv, platform
 import shopee_api
-from machine_gun import snow
+from machine_gun import snow, multiple_mission_pool
 from shopee_api import mydb
 
 app = Flask(__name__)   
@@ -298,7 +298,7 @@ def wrong_stock_by_account_hard():
             new_row[7] = new_row[8]
             data.append(new_row)
         elif new_row[8] > 3 and new_row[7] < 3:       
-            new_row[7] = new_row[8]
+            new_row[7] = 300
             data.append(new_row)
     res_data = {"message": "success", "data": {"rows": data}}
     res_data = jsonify(res_data)
@@ -749,14 +749,8 @@ def update_stock_account():
     account, rows = request.json["account"], request.json["rows"]
     shopee_api.check_cookie_jar(account)
     cookies = shopee_api.get_cookie_jar(account)
-    values = [[account, cookies, *i] for i in rows]
-    #multiple_mission_pool(shopee_api.update_stock_listing, values)
-    for i in values:
-        i[-1] = int(i[-1])
-        i[-2] = int(i[-2])
-        i[-3] = int(i[-3])
-        print(i)
-        shopee_api.update_stock_listing(*i)
+    values = [[account, cookies, int(i[0]), int(i[1]), int(i[2])] for i in rows]    
+    multiple_mission_pool(shopee_api.update_listing, values, debug=False)
     res_data = {"message": "success", "data": ""}
     res_data = jsonify(res_data)
     return res_data

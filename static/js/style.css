@@ -47,3 +47,7 @@ height:100%;
 .easyui-linkbutton {
     margin-top: 5px
 }
+
+.admin {
+    display: None
+}

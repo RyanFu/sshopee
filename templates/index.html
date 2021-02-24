@@ -7,7 +7,7 @@
 
 <!-- 功能按键 -->
 <h2>在线产品筛查</h2>
-<div class="demo-info" style="margin-bottom:10px">
+<div class="demo-info">
     <div class="demo-tip icon-tip">&nbsp;</div>
 </div>
 <div class="command_div">
@@ -20,6 +20,7 @@
 <a class="easyui-linkbutton" iconCls="icon-search" id="duplicate_sku_by_account"  >上架前查重复</a>
 <a class="easyui-linkbutton" iconCls="icon-reload" id="format_item_ids"  >item_id格式转换</a>
 <a class="easyui-linkbutton" iconCls="icon-print" id="mass_download_sku"  >刊登资料下载</a>
+<a class="easyui-linkbutton admin" iconCls="icon-print" id="update_stock_account"  >部分更新库存</a>
 
 <br><br>
 <!-- 搜索在线产品 -->
@@ -65,7 +66,10 @@ $("#duplicate_sku_by_account")[0].onclick = duplicate_sku_by_account
 $("#format_item_ids")[0].onclick = format_item_ids
 $("#search")[0].onclick = shopee_search
 $("#mass_download_sku")[0].onclick = mass_download_sku
-$(document).ready(function(){$('#layout_div').layout('collapse','west')});
+$("#update_stock_account")[0].onclick = update_stock_account
+$(document).ready(function(){
+$('#layout_div').layout('collapse','west');
+});
 //结果输出
 function show_data(data){
     if (typeof(data[0]) == "object"){
@@ -343,10 +347,11 @@ function calculate_price(c, w, r = 0){
         }
 
     }
-    function mass_update_stock(){
+    function update_stock_account(){
         var rows = $("textarea")[0].value.split("\n").map(i=>i.split("\t"))
         var account = $("[name=account]")[0].value
         var url = "/update_stock_account"
+        var data = {"rows": rows, "account": account}
         $.ajax({
             type:"POST",
             url: url,
@@ -357,7 +362,6 @@ function calculate_price(c, w, r = 0){
             }
         })
     }
-
 </script>
 
 {% endblock %}

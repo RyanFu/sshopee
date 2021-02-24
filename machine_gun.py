@@ -50,13 +50,15 @@ def multiple_mission_pool(func, args_list, max_workers=32, debug=False):
         arg = args_list[0]
         func(*arg)
         return 
-    num = len(args_list)
+    count, num = 0, len(args_list)
     print('total mission number is ', num)
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        #future = executor.map(get_one, [*args for args in args_list])
         future_list = [executor.submit(func, *args) for args in args_list]
         # for future in as_completed(future_list):
             # result = future.result()
+            # count += 1
+            # rate = round(count/num, 2)
+            # msg = 'total mission {}, completed {}, {}%'.format(num, count, rate)
     print('all missions done')
 
 # #多任务并发,协程版,慢
