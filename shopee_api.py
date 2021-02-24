@@ -56,7 +56,11 @@ def open_sellercenter(account, password, cookie_only=True):
     bs = driver.find_elements_by_tag_name('input')
     bs[0].send_keys(account)
     bs[1].send_keys(password)
-    driver.find_element_by_tag_name('button').click()
+    try:
+        driver.find_element_by_tag_name('button').click()
+    except:
+        element = driver.find_element_by_tag_name('button')
+        driver.execute_script("arguments[0].click();", element)
     print("login done")
     WebDriverWait(driver, timeout=30).until(lambda d: d.find_element_by_class_name("card"))
     cookies_raw = driver.get_cookies()
