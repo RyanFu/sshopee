@@ -750,7 +750,7 @@ def update_stock_account():
     shopee_api.check_cookie_jar(account)
     cookies = shopee_api.get_cookie_jar(account)
     values = [[account, cookies, int(i[0]), int(i[1]), int(i[2])] for i in rows]    
-    multiple_mission_pool(shopee_api.update_listing, values, debug=False)
+    multiple_mission_pool(shopee_api.update_listing, values)
     res_data = {"message": "success", "data": ""}
     res_data = jsonify(res_data)
     return res_data
@@ -762,7 +762,7 @@ def update_promotion_account():
     shopee_api.check_cookie_jar(account)
     cookies = shopee_api.get_cookie_jar(account)
     values = [[account, cookies, *i] for i in rows]
-    multiple_mission_pool(shopee_api.update_promotion_price, values, debug=True)
+    multiple_mission_pool(shopee_api.update_promotion_price, values)
     res_data = {"message": "success", "data": ""}
     res_data = jsonify(res_data)
     return res_data
