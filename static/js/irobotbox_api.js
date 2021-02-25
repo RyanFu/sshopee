@@ -70,9 +70,10 @@
         row.ImageList = row.ImageList.map(i => i + sfimg)
         var cost = Number(row.LastSupplierPrice)
         var weight = Number(row.GrossWeight)
-        row.sprice = calculate_price(cost, weight, 0.15)[site]
-        if (site == "br"){row.sprice *= 0.9}
-        var cut = {"my":0.1, "id":100, "th":1, "ph":1, "vn":100, "br":0.1, "sg": 0.1}
+        var pr = ["mx", "br"].indexOf(site) > -1 ? 0.12 : 0.15
+        row.sprice = calculate_price(cost, weight, pr)[site]
+        //if (site == "br"){row.sprice *= 0.9}
+        var cut = {"my":0.1, "id":100, "th":1, "ph":1, "vn":100, "br":0.1, "sg": 0.1, "mx":0.1}
         row.sprice = Math.floor(row.sprice /0.6 / cut[site]) * cut[site]
 
         var urow = new Array(28).fill("")
@@ -116,7 +117,7 @@
         var channel_map = {"my": "channel_id_28016", "id": "channel_id_88001",
                            "th": "channel_id_78004", "ph": "channel_id_48002",
                            "vn": "channel_id_58007", "sg": "channel_id_18025",
-                           "br": "channel_id_90001"}
+                           "br": "channel_id_90001", "mx": "channel_id_100001"}
         hd[26] = channel_map[site]
         var rows = [hd,[],[],[],[]]
         var tem = rows.concat(data)
