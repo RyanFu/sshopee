@@ -500,3 +500,30 @@ def update_listing2(account, cookies, item_id, model_id, stock):
     #print(udata)
     print(item_id, res.json(), res.status_code)
     return res.json()
+
+def update_promotion_price(account, cookies, itemid, modelid, price):
+    site = account[-2:]
+    itemid, modelid, price = int(itemid), int(modelid), float(price)
+    url = host(site) + "/api/v3/product/get_product_detail"
+    params = "/?SPC_CDS_VER=2&product_id=" + str(itemid)
+    res = requests.get(url + params, cookies=cookies)
+    data = res.json()['data']
+    for m in data['model_list']:
+        if m['id'] == modelid:
+            discount_id = m['promotion_id']
+            break
+    #print(data, modelid)
+    url = host(site) + "/api/marketing/v3/discount/nominate/"
+    url += "?SPC_CDS_VER=2&SPC_CDS=" + cookies["SPC_CDS"]
+    data = {
+    "discount_id": discount_id,
+    "discount_model_list":[{
+    "itemid": itemid,
+    "modelid": modelid,
+    "promotion_price": price,
+    "user_item_limit":0,
+    "status":1
+    }]
+    }
+    res = requests.put(url, json=data, cookies=cookies)
+    print(itemid, modelid, res.json())

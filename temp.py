@@ -14,22 +14,6 @@ def file_process():
             print(f, nf)
             os.rename(f, nf)
 
-def logit(logfile='out.log'):
-    def logging_decorator(func):
-        @wraps(func)
-        def wrapped_function(*args, **kwargs):
-            log_string = func.__name__ + " was called"
-            print(log_string)
-            # 打开logfile，并写入内容
-            with open(logfile, 'a') as opened_file:
-                # 现在将日志打到指定的logfile
-                opened_file.write(log_string + '\n')
-            return func(*args, **kwargs)
-        return wrapped_function
-    return logging_decorator
-
-
-
 def erp2zong_page(sku_list):
     sku_list = ",".join(sku_list)
     ev = '''<?xml version="1.0" encoding="utf-8"?>
@@ -71,64 +55,6 @@ def erp2zong():
         data.append((cur_list,))
     multiple_mission_pool(erp2zong_page, data)
     return
-    
-def update_stock_listing2(account, cookies, item_id, model_id, stock):    
-    cookies = get_cookie_jar(account)
-    site = account[-2:]
-    host = "https://seller.{}.shopee.cn".format(site)
-    url = host + "/api/v3/product/get_product_detail"
-    params = "/?SPC_CDS_VER=2&product_id=" + str(item_id)
-    res = requests.get(url + params, cookies=cookies)
-    data = res.json()['data']
-    #print(data)
-    chs = {
-        "my": [{"size":0,"price":"5.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":28016,"sizeid":0}],
-        "id": [{"size":0,"price":"10000.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":88001,"sizeid":0}],
-        "th": [{"size":0,"price":"20","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":78804,"sizeid":0}],
-        "ph": [{"size":0,"price":"40","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":48802,"sizeid":0}],
-        "vn": [{"size":0,"price":"10000","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":58007,"sizeid":0}],
-        "sg": [{"size":0.02,"price":"0.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":18028,"sizeid":0}],
-        "br": [{"size":0,"price":"15","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":90001,"sizeid":0}],
-        }
-    udata = {"unlisted":False, "ds_cat_rcmd_id":""}
-    #udata["logistics_channels"] = chs[site]
-    ks = ["id",  "model_list", "stock", ]
-    for k in ks:
-        udata[k] = data[k]
-    
-    if len(udata['model_list']) == 0:
-        udata['stock'] = stock
-    else:
-        nms = [];
-        for  m in udata['model_list']:
-            if m['id'] == model_id:
-                udata['stock'] += stock - m['stock']
-                m['stock'] = stock
-            nm = {}
-            mks = ["id",  "stock"]
-            for mk in mks:
-                nm[mk] = m[mk]
-            nms.append(nm)
-        udata['model_list'] = nms
-
-    updata = [udata,]
-    uurl = host + "/api/v3/product/update_product"
-    params = "/?version=3.1.0&SPC_CDS_VER=2&SPC_CDS=" + cookies['SPC_CDS']
-    res = requests.post(uurl + params, json=updata, cookies=cookies)
-    #print(udata)
-    print("this it easy basic")
-    print(res.json(), res.status_code)
-    return res.json()
-
-def update_stock_account(account, rows):
-    check_cookie_jar(account)
-    cookies = get_cookie_jar(account)
-    values = [[account, cookies, *i] for i in rows]
-    multiple_mission_pool(update_stock_listing2, values, debug=True)
-account = 'jihuishi.my'
-rows = [[4977639899,53512288784,55]]
-#rows[0] = [str(i) for i in rows[0]]
-update_stock_account(account, rows)
 
 def upload_stock(account, password, silent=True):
     site = account[-2:]
@@ -154,38 +80,6 @@ def upload_stock(account, password, silent=True):
     print('upload done', t1, snow())
     time.sleep(5)
     driver.quit()
-
-def auto_upload_stock():
-    account_list = ['jihuishi.my','jihuishi.id','jihuishi.th','jihuishi.ph','jihuishi.vn','jihuishi.sg']
-    account_list = ['machinehome.my','machinehome.id','machinehome.th','machinehome.ph','machinehome.vn','machinehome.sg']
-    for account in account_list:
-        account, password = mydb('select account, password from password where account=?', (account,))[0]
-        upload_stock(account, password)
-
-
-def get_recommend_category_one(name, site, cookies, mp):
-    host = "https://seller.my.shopee.cn"
-    url = host + "/api/v3/category/get_recommend_category".replace("my", site)
-    params = {"version": "3.1.0", "name": name}
-    data = requests.get(url, params=params, cookies=cookies).json()
-    cats = data['data']['cats']
-    if cats:
-        cat = cats[0]
-        cat_id = cat[-1]
-    else:
-        cat_id = 0
-    mp[name] = cat_id
-    return cat_id
-
-def get_recommend_category(name_list, account):
-    cookies = get_cookie_jar(account)
-    site = account[-2:]
-    mp = {}
-    values = [[i, site, cookies, mp] for i in name_list]
-    multiple_mission_pool(get_recommend_category_one, values)
-    #result = [mp[i] for i in name_list]
-    #print(result)
-    return mp
 
 
 cats = [19074,19073,19072,19071,19070,19069,20327,19068,6965,17274]
@@ -219,7 +113,36 @@ def readcats(cats):
     print(t1, t2)
 
 
+def update_promotion_price(account, cookies, itemid, modelid, price):
+    site = account[-2:]
+    url = host(site) + "/api/v3/product/get_product_detail"
+    params = "/?SPC_CDS_VER=2&product_id=" + str(itemid)
+    res = requests.get(url + params, cookies=cookies)
+    data = res.json()['data']
+    for m in data['model_list']:
+        if m['id'] == modelid:
+            discount_id = m['promotion_id']
+            break
+    #print(data)
+    url = host(site) + "/api/marketing/v3/discount/nominate/"
+    url += "?SPC_CDS_VER=2&SPC_CDS=" + cookies["SPC_CDS"]
+    data = {
+    "discount_id": discount_id,
+    "discount_model_list":[{
+    "itemid": itemid,
+    "modelid": modelid,
+    "promotion_price": price,
+    "user_item_limit":0,
+    "status":1
+    }]
+    }
+    res = requests.put(url, json=data, cookies=cookies)
+    print(itemid, modelid, res.json())
 
 
+check_cookie_jar(account)
+cookies = get_cookie_jar(account)
+values = [[account, cookies, *i] for i in rows]
+multiple_mission_pool(update_promotion_price, values, debug=True)
 
 
