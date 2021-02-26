@@ -56,33 +56,8 @@ def erp2zong():
     multiple_mission_pool(erp2zong_page, data)
     return
 
-def upload_stock(account, password, silent=True):
-    site = account[-2:]
-    file_path = 'D:/Downloads/2restock_{}.xlsx'.format(account)
-    ch_options = Options()
-    if silent:
-        ch_options.add_argument("--headless")
-        ch_options.add_argument("--no-sandbox")
-    t1 = snow()
-    driver = webdriver.Chrome(executable_path=driver_path, options=ch_options)
-    driver.get('https://seller.{site}.shopee.cn/account/signin'.format(site=site))
-    print("find login page", snow())
-    WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_tag_name("input"))
-    bs = driver.find_elements_by_tag_name('input')
-    bs[0].send_keys(account)
-    bs[1].send_keys(password)
-    driver.find_element_by_tag_name('button').click()
-    print("login done", snow())
-    WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_class_name("num"))
-    driver.get('https://seller.{site}.shopee.cn/portal/tools/mass-update/upload'.format(site=site))
-    WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_class_name('shopee-upload__input'))
-    driver.find_element_by_class_name('shopee-upload__input').send_keys(file_path)
-    print('upload done', t1, snow())
-    time.sleep(5)
-    driver.quit()
-
-
-cats = [19074,19073,19072,19071,19070,19069,20327,19068,6965,17274]
+con = mydb('select catid from catname where site = "ph" and cat1 = "Home & Living"')
+cats = [i[0] for i in con]
 def readcats(cats):
     t1 = snow()
     ch_options = Options()
@@ -94,55 +69,30 @@ def readcats(cats):
         params = '?locations=-2&noCorrection=true&page=0&subcategory=' + str(cat)
         driver.get(url + params)
         WebDriverWait(driver, timeout=10).until(lambda d: d.find_element_by_class_name("shopee-search-item-result__item"))
-        for i in range(5):
-            driver.execute_script("window.scrollBy(0,500)")
+        for i in range(6):
+            driver.execute_script("window.scrollBy(0,400)")
+            time.sleep(0.5)
         items = driver.find_elements_by_class_name("shopee-search-item-result__item")
         rows = []
         for i in items:
             try:
                 img = i.find_element_by_tag_name('img').get_attribute('src')[:-3]
                 link = i.find_element_by_tag_name('a').get_attribute('href')
-                rows.append([img, link, cat])
+                name = link.split("com/")[1].split(" i.")[0].replace("-", " ")
+                rows.append([img, link, cat, name])
                 print(cat, len(rows))
             except:
                 print(cat, 'missing')
-        sql = 'insert or replace into temp values(?,?,?)'
+        sql = 'insert or replace into temp values(?,?,?,?)'
         mydb(sql, rows, True)
     driver.quit()
     t2 = snow()
     print(t1, t2)
 
 
-def update_promotion_price(account, cookies, itemid, modelid, price):
-    site = account[-2:]
-    url = host(site) + "/api/v3/product/get_product_detail"
-    params = "/?SPC_CDS_VER=2&product_id=" + str(itemid)
-    res = requests.get(url + params, cookies=cookies)
-    data = res.json()['data']
-    for m in data['model_list']:
-        if m['id'] == modelid:
-            discount_id = m['promotion_id']
-            break
-    #print(data)
-    url = host(site) + "/api/marketing/v3/discount/nominate/"
-    url += "?SPC_CDS_VER=2&SPC_CDS=" + cookies["SPC_CDS"]
-    data = {
-    "discount_id": discount_id,
-    "discount_model_list":[{
-    "itemid": itemid,
-    "modelid": modelid,
-    "promotion_price": price,
-    "user_item_limit":0,
-    "status":1
-    }]
-    }
-    res = requests.put(url, json=data, cookies=cookies)
-    print(itemid, modelid, res.json())
+
+    
 
 
-check_cookie_jar(account)
-cookies = get_cookie_jar(account)
-values = [[account, cookies, *i] for i in rows]
-multiple_mission_pool(update_promotion_price, values, debug=True)
 
 

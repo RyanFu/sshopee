@@ -261,7 +261,7 @@ def wrong_stock_by_account():
                 new_row = [i for i in row]
                 new_row[7] = 3000
                 data.append(new_row)
-            elif row[8] not in ["正常", "仅批量"] and row[7] > 0:
+            elif row[8] in ["清库", "停产", "暂时缺货"] and row[7] > 0:
                 new_row = [i for i in row]
                 new_row[7] = 0
                 data.append(new_row)
@@ -703,7 +703,15 @@ def easyui(name, action):
     res_data = jsonify(res_data)
     return res_data
 
-#
+@app.route('/select_output', methods=['POST'])
+@login_required
+def select_output():
+    sql = request.json["sql"]
+    con = mydb(sql)
+    res_data = {"message": "success", "data": con}
+    res_data = jsonify(res_data)
+    return res_data
+
 @app.route('/get_cancellation_orders', methods=['GET'])
 def get_cancellation_orders():
     shopee_api.get_all_cancellations()

@@ -23,6 +23,8 @@
 <a class="easyui-linkbutton admin" iconCls="icon-reload" id="update_listings_account"  >同步在线产品</a>
 <a class="easyui-linkbutton admin" iconCls="icon-reload" id="update_stock_account"  >更新在线库存</a>
 <a class="easyui-linkbutton admin" iconCls="icon-reload" id="update_promotion_account"  >更新活动价格</a>
+<a class="easyui-linkbutton admin" iconCls="icon-print" id="select_output"  >查询结果导出</a>
+
 <br><br>
 <!-- 搜索在线产品 -->
   <label >自定义SKU:</label>
@@ -70,6 +72,7 @@ $("#mass_download_sku")[0].onclick = mass_download_sku
 $("#update_listings_account")[0].onclick = update_listings_account
 $("#update_stock_account")[0].onclick = update_stock_account
 $("#update_promotion_account")[0].onclick = update_promotion_account
+$("#select_output")[0].onclick = select_output
 
 $(document).ready(function(){
 $('#layout_div').layout('collapse','west');
@@ -387,6 +390,21 @@ function calculate_price(c, w, r = 0){
         $('#jsmessage')[0].textContent += account + '准备更新;'
         $.get(url, function(res){
         $('#jsmessage')[0].textContent += account + '更新成功;'
+        })
+    }
+    function select_output(){
+        var sql = $("textarea")[0].value.trim()
+        var url = "/select_output"
+        var data = {"sql": sql}
+        $.ajax({
+            type:"POST",
+            url: url,
+            data:JSON.stringify(data),
+            headers: {"Content-Type": "application/json"},
+            success:function(res){
+                console.log(res)
+                show_data(res.data)
+            }
         })
     }
 </script>

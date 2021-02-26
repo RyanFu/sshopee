@@ -83,7 +83,7 @@
         urow[10] = row.sprice
         urow[11] = 300
         urow[22] = row.GrossWeight
-        urow[26] = site == "id" ? "On" : "开启"
+        urow[26] = ["id", "mx"].indexOf(site) > -1 ? "On" : "开启"
         for (let i = 0; i < Math.min(9, row.ImageList.length); i++){urow[13 + i] = row.ImageList[i];}
         if (site != "vn"){urow[22] = Math.ceil(urow[22]/10) / 100}
         if (row.ClientSKU.indexOf("-00") > -1 || row.ClientSKU.indexOf("-") == -1){
