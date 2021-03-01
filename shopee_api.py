@@ -161,11 +161,11 @@ def get_performance(account):
 
 def get_all_performance():
     sql = 'select account from password'
-    cu = mydb(sql)
-    account_list = [i[0] for i in cu]
+    con = mydb(sql)
+    account_list = [i[0] for i in con]
     for account in account_list:
         check_cookie_jar(account)
-    multiple_mission_pool(get_performance, account_list, 10)
+    multiple_mission_pool(get_performance, con)
     return
 
 #单面产品列表转换格式
@@ -246,15 +246,21 @@ def get_all_page(account):
     mydb('update items set model_current_price = model_original_price where model_current_price  = 0')
     return
 
+   
 @decor_async
 def tm_get_all_accounts_listings():
-    cu = mydb('select account from password')
-    account_list = [i[0] for i in cu]
+    con = mydb('select account from password')
+    account_list = [i[0] for i in con]
     for account in account_list:
-        check_cookie_jar(account)
-        get_performance(account)
-    for account in account_list:
-        get_all_page(account)
+        try:
+            print(snow(), account, "start")
+            check_cookie_jar(account)
+            get_performance(account)
+            get_all_page(account)
+            print(snow(), account, "success")
+        except KeyError:
+            print(snow(), account, "failed")
+            print("KeyError", account)
         time.sleep(60*3)
     return
     
@@ -266,9 +272,9 @@ def mytimer():
         if h == 0:
             print(time.ctime(), "start updating listings")   
             tm_get_all_accounts_listings()
-        for i in range(60):
-            print(time.time(), "waiting...")
-            time.sleep(60)
+        else:
+            print("waiting...")
+            time.sleep(60*60)
  
     
 #获取取消订单

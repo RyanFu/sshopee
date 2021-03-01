@@ -90,6 +90,18 @@ def readcats(cats):
     print(t1, t2)
 
 
+account, sn = "machinehome.ph", "210213SF14VSA2"
+site = account[-2:]
+cookies = get_cookie_jar(account)
+url = host(site) + "/portal/sale/order"
+params = {"search": sn}
+res = requests.get(url, params=params, cookies=cookies)
+sp = BeautifulSoup(res.text, 'lxml')
+print(sp)
+od = sp.find(class_='order-list-body')
+st = od.find(class_='item-status')
+print(st.text)
+
 
     
 
