@@ -356,18 +356,26 @@ function calculate_price(c, w, r = 0){
     }
     function update_stock_account(){
         var rows = $("textarea")[0].value.split("\n").map(i=>i.split("\t"))
-        var account = $("[name=account]")[0].value
-        var url = "/update_stock_account"
-        var data = {"rows": rows, "account": account}
-        $.ajax({
-            type:"POST",
-            url: url,
-            data:JSON.stringify(data),
-            headers: {"Content-Type": "application/json"},
-            success:function(res){
-                console.log(res)     
-            }
-        })
+        var mp = {}
+        for (let i of rows){
+            let account = i.length >= 4 ? i.pop() : $("[name=account]")[0].value
+            let values = mp[account] ? mp[account] : []
+            values.push(i)
+            mp[account] = values
+        }
+        for (let account of Object.keys(mp)){
+            var url = "/update_stock_account"
+            var data = {"rows": mp[account], "account": account}
+            $.ajax({
+                type:"POST",
+                url: url,
+                data:JSON.stringify(data),
+                headers: {"Content-Type": "application/json"},
+                success:function(res){
+                    console.log(res)     
+                }
+            })
+        }
     }
     function update_promotion_account(){
         var rows = $("textarea")[0].value.split("\n").map(i=>i.split("\t"))
@@ -392,8 +400,10 @@ function calculate_price(c, w, r = 0){
         $('#jsmessage')[0].textContent += account + '更新成功;'
         })
     }
+    //sql语法在线查询输出
     function select_output(){
         var sql = $("textarea")[0].value.trim()
+        $(".des")[0].textContent = sql
         var url = "/select_output"
         var data = {"sql": sql}
         $.ajax({

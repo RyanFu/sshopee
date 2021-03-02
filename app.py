@@ -389,8 +389,8 @@ def shopee_cookies():
 def wrong_sku():
     data = request.json
     sku_list = [i for i in data["sku_list"] if i !=""]
-    sql = '''select update_time, item_id, model_id,account, model_sold, 
-    parent_sku, model_sku from items 
+    sql = '''select item_id, model_id,account, model_sold, 
+    parent_sku, model_sku, update_time from items 
     where parent_sku = ? or model_sku = ? '''
     res_data = {"message": "success", "data": {"rows":[]}}
     with  sqlite3.connect(database_name) as cc:
