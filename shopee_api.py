@@ -249,19 +249,11 @@ def get_all_page(account):
    
 @decor_async
 def tm_get_all_accounts_listings():
-    con = mydb('select account from password')
-    account_list = [i[0] for i in con]
-    for account in account_list:
-        try:
-            print(snow(), account, "start")
-            check_cookie_jar(account)
-            get_performance(account)
-            get_all_page(account)
-            print(snow(), account, "success")
-        except KeyError:
-            print(snow(), account, "failed")
-            print("KeyError", account)
-        time.sleep(60*3)
+    host = "http://182.61.49.48:5000/"
+    url = host + "/update_all_shop_performance"
+    requests.get(url, timeout=None)
+    url = host + "/update_all_accounts_listings"
+    requests.get(url, timeout=None)   
     return
     
 
@@ -379,7 +371,7 @@ def sn2details(account, sn):
     return data
 
 def get_recommend_category_one(name, site, cookies, mp):
-    url = host(site) +  + "/api/v3/category/get_recommend_category"
+    url = host(site) +  "/api/v3/category/get_recommend_category"
     params = {"version": "3.1.0", "name": name}
     data = requests.get(url, params=params, cookies=cookies).json()
     cats = data['data']['cats']
@@ -395,10 +387,8 @@ def get_recommend_category(name_list, account):
     cookies = get_cookie_jar(account)
     site = account[-2:]
     mp = {}
-    values = [[i, site, cookies, mp] for i in name_list]
+    values = [[name, site, cookies, mp] for name in name_list]
     multiple_mission_pool(get_recommend_category_one, values)
-    #result = [mp[i] for i in name_list]
-    #print(result)
     return mp
 
 def update_listing(account, cookies, item_id, model_id, stock):    

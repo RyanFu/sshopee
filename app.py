@@ -751,6 +751,15 @@ def get_orders_details():
     res_data = jsonify(res_data)
     return res_data
 
+@app.route('/get_recommend_category', methods=['POST'])
+def get_recommend_category():
+    name_list, account = request.json["name_list"], request.json["account"]
+    shopee_api.check_cookie_jar(account)
+    data = shopee_api.get_recommend_category(name_list, account)
+    res_data = {"message": "success", "data": data}
+    res_data = jsonify(res_data)
+    return res_data
+
 @app.route('/update_stock_account', methods=['POST'])
 @login_required
 def update_stock_account():
