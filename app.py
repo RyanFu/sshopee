@@ -6,7 +6,7 @@ from functools import wraps
 from pandas import read_sql
 from datetime import timedelta
 import sqlite3, json, time, math, requests, csv, platform
-import shopee_api
+import shopee_api, sk_api
 from machine_gun import snow, multiple_mission_pool
 from shopee_api import mydb
 
@@ -781,6 +781,17 @@ def update_promotion_account():
     values = [[account, cookies, *i] for i in rows]
     multiple_mission_pool(shopee_api.update_promotion_price, values)
     res_data = {"message": "success", "data": ""}
+    res_data = jsonify(res_data)
+    return res_data
+
+@app.route('/ai_recommend_category', methods=['POST'])
+def ai_recommend_category():
+    account, name_list = request.json["account"], request.json["name_list"]
+    #shopee_api.check_cookie_jar(account)
+    #cookies = shopee_api.get_cookie_jar(account)
+    model_name = 'd://model_my.joblib'
+    cat_list = sk_api.pp_predict(name_list, model_name)
+    res_data = {"message": "success", "data": cat_list}
     res_data = jsonify(res_data)
     return res_data
 

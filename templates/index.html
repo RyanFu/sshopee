@@ -73,7 +73,7 @@ $("#update_listings_account")[0].onclick = update_listings_account
 $("#update_stock_account")[0].onclick = update_stock_account
 $("#update_promotion_account")[0].onclick = update_promotion_account
 $("#select_output")[0].onclick = select_output
-$("#get_recommend_category")[0].onclick = get_recommend_category
+$("#get_recommend_category")[0].onclick = ai_recommend_category
 $(document).ready(function(){
 $('#layout_div').layout('collapse','west');
 });
@@ -440,6 +440,24 @@ function calculate_price(c, w, r = 0){
                 console.log(res)
                 let data = name_list.map(i=>[i, res.data[i]])
                 show_data(data)
+            }
+        })
+    }
+    function ai_recommend_category(){
+        var name_list = $("textarea")[0].value.split("\n").map(i=>i.trim())
+        var account = $("[name=account]")[0].value
+        var url = "/ai_recommend_category"
+        var data = {"name_list": name_list, "account": account}
+        $('#jsmessage')[0].textContent += account + '准备查询;'
+        $.ajax({
+            type:"POST",
+            url: url,
+            data:JSON.stringify(data),
+            headers: {"Content-Type": "application/json"},
+            success:function(res){
+                $('#jsmessage')[0].textContent += account + '查询成功;'
+                console.log(res)
+                show_data(res.data)
             }
         })
     }

@@ -266,7 +266,7 @@ def mytimer():
             tm_get_all_accounts_listings()
         else:
             print("waiting...")
-            time.sleep(60*60)
+        time.sleep(60*60)
  
     
 #获取取消订单
