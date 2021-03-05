@@ -6,14 +6,18 @@ from functools import wraps
 from pandas import read_sql
 from datetime import timedelta
 import sqlite3, json, time, math, requests, csv, platform
-import shopee_api, sk_api
+import shopee_api, api_sklearn
 from machine_gun import snow, multiple_mission_pool
 from shopee_api import mydb
 
 app = Flask(__name__)   
 app.secret_key = '9dsm8G9OSYlJy64mig9KeXJmp' 
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=1)
-database_name = "D:/shopee.db" if platform.system() == "Windows" else "/root/shopee.db"
+env = platform.system()
+if env == "Windows":
+    database_name = "D:/shopee.db" 
+else:
+    database_name = "/root/shopee.db"
 
 
 def dict_factory(cursor, row):
@@ -789,8 +793,9 @@ def ai_recommend_category():
     account, name_list = request.json["account"], request.json["name_list"]
     #shopee_api.check_cookie_jar(account)
     #cookies = shopee_api.get_cookie_jar(account)
-    model_name = 'd://model_my.joblib'
-    cat_list = sk_api.pp_predict(name_list, model_name)
+    site = account[-2:]
+    model_name = site
+    cat_list = api_sklearn.pipe_predict(name_list, model_name)
     res_data = {"message": "success", "data": cat_list}
     res_data = jsonify(res_data)
     return res_data
