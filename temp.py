@@ -1,8 +1,9 @@
 #coding=utf-8  
-import sqlite3, json, os, requests, time, csv
+import sqlite3, json, os, requests, time, csv, zipfile
 from machine_gun import *
 from shopee_api import *
 from bs4 import BeautifulSoup
+
 def file_process():
     root_path = r"C:\Users\guoliang\Downloads\1月"
     for fo in os.listdir(root_path):
@@ -89,18 +90,6 @@ def readcats(cats):
     t2 = snow()
     print(t1, t2)
 
-
-account, sn = "machinehome.ph", "210213SF14VSA2"
-site = account[-2:]
-cookies = get_cookie_jar(account)
-url = host(site) + "/portal/sale/order"
-params = {"search": sn}
-res = requests.get(url, params=params, cookies=cookies)
-sp = BeautifulSoup(res.text, 'lxml')
-print(sp)
-od = sp.find(class_='order-list-body')
-st = od.find(class_='item-status')
-print(st.text)
 
 
     

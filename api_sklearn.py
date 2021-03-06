@@ -3,6 +3,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import SGDClassifier
+from sklearn.neural_network import MLPClassifier
 from shopee_api import mydb
 import time, numpy, joblib, os, csv
 
@@ -22,9 +23,11 @@ def pipe_train(x, y, model_name, debug=False):
     model = make_pipeline(
     CountVectorizer(),
     TfidfTransformer(),
-    SGDClassifier(loss='hinge', penalty='l2',alpha=1e-3, random_state=42, max_iter=5, tol=None),
+    #MultinomialNB(), 
+    #SGDClassifier(loss='hinge', penalty='l2',alpha=1e-3, random_state=42, max_iter=5, tol=None),
+    MLPClassifier(random_state=1, max_iter=100, verbose=True, early_stopping=True),
     )
-
+    #MY : NB 47 SGD 60 MLP 66  
     model.fit(x_train, y_train)
     model_path = "./static/{}_train.joblib".format(model_name)
     joblib.dump(model, model_path)
@@ -46,13 +49,12 @@ def pipe_predict(x_test, model_name):
     data = list(zip(x_test, predicted))
     return data
 
-def temp_train():
-    for site in ['my', 'ph']:
-        x, y = load_data(site)
-        pipe_train(x, y, site,)
+def temp_train(site, debug=False):
+    x, y = load_data(site)
+    pipe_train(x, y, site, debug)
 
 def temp_use(site):
     pass
 
 if __name__ == '__main__':
-    temp_train()
+    pass

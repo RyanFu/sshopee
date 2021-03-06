@@ -429,6 +429,7 @@ function calculate_price(c, w, r = 0){
         var account = $("[name=account]")[0].value
         var url = "/get_recommend_category"
         var data = {"name_list": name_list, "account": account}
+        if (!account){alert("账号未填写");return;}
         $('#jsmessage')[0].textContent += account + '准备查询;'
         $.ajax({
             type:"POST",
@@ -443,11 +444,13 @@ function calculate_price(c, w, r = 0){
             }
         })
     }
+    
     function ai_recommend_category(){
         var name_list = $("textarea")[0].value.split("\n").map(i=>i.trim())
         var account = $("[name=account]")[0].value
         var url = "/ai_recommend_category"
         var data = {"name_list": name_list, "account": account}
+        if (!account){alert("账号未填写");return;}
         $('#jsmessage')[0].textContent += account + '准备查询;'
         $.ajax({
             type:"POST",
