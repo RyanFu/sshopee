@@ -4,7 +4,7 @@ import sqlite3, json, requests, time, platform
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
-from machine_gun import multiple_mission_pool, decor_retry, decor_async, snow, db_lock
+from api_tools import multiple_mission_pool, decor_retry, decor_async, snow, db_lock
 
 if platform.system() == "Windows":
     database_name = "D:/shopee.db"

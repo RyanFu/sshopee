@@ -1,4 +1,4 @@
-import threading, time
+import threading, time, pandas
 from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor,as_completed
 from functools import wraps
 
@@ -7,6 +7,14 @@ db_lock = threading.Lock()
 def snow(tsp=None):
     t = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tsp))
     return t
+
+def data2book(data, name):
+    path = './static/{}.xlsx'.format(name)
+    book = pandas.ExcelWriter(path)
+    df = pandas.DataFrame(data)
+    df.to_excel(book, sheet_name='Sheet1', index=False, header=False)
+    book.save()
+    return path
 
 #新线程伪异步装饰器
 def decor_async(func):

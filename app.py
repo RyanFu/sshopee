@@ -7,7 +7,7 @@ from pandas import read_sql
 from datetime import timedelta
 import sqlite3, json, time, math, requests, csv, platform
 import shopee_api, api_sklearn
-from machine_gun import snow, multiple_mission_pool
+from api_tools import snow, multiple_mission_pool
 from shopee_api import mydb
 
 app = Flask(__name__)   
@@ -707,6 +707,7 @@ def easyui(name, action):
     res_data = jsonify(res_data)
     return res_data
 
+#SQL在线查询
 @app.route('/select_output', methods=['POST'])
 @login_required
 def select_output():
@@ -716,6 +717,7 @@ def select_output():
     res_data = jsonify(res_data)
     return res_data
 
+#获取取消订单列表
 @app.route('/get_cancellation_orders', methods=['GET'])
 def get_cancellation_orders():
     shopee_api.get_all_cancellations()
@@ -723,7 +725,8 @@ def get_cancellation_orders():
     res_data = jsonify(res_data)
     flash("取消订单已更新")
     return res_data
-    
+
+#取消订单处理
 @app.route('/process_cancellation_order', methods=['POST'])
 @login_required
 def process_cancellation_order():
@@ -738,6 +741,7 @@ def process_cancellation_order():
     flash(message)
     return res_data
     
+#获取退款订单列表
 @app.route('/get_return_orders', methods=['GET'])
 def get_return_orders():
     shopee_api.get_all_returns()
@@ -746,6 +750,7 @@ def get_return_orders():
     flash("退款订单已更新")
     return res_data
 
+#订单跟踪号获取
 @app.route('/get_orders_details', methods=['GET'])
 def get_orders_details():
     account, sn = request.args["account"], request.args["sn"]
@@ -755,6 +760,7 @@ def get_orders_details():
     res_data = jsonify(res_data)
     return res_data
 
+#平台推荐分类
 @app.route('/get_recommend_category', methods=['POST'])
 def get_recommend_category():
     name_list, account = request.json["name_list"], request.json["account"]
@@ -764,6 +770,7 @@ def get_recommend_category():
     res_data = jsonify(res_data)
     return res_data
 
+#修改在线库存
 @app.route('/update_stock_account', methods=['POST'])
 @login_required
 def update_stock_account():
@@ -776,6 +783,7 @@ def update_stock_account():
     res_data = jsonify(res_data)
     return res_data
 
+#修改当前活动价格
 @app.route('/update_promotion_account', methods=['POST'])
 @login_required
 def update_promotion_account():
@@ -788,6 +796,7 @@ def update_promotion_account():
     res_data = jsonify(res_data)
     return res_data
 
+#智能分类预测
 @app.route('/ai_recommend_category', methods=['POST'])
 def ai_recommend_category():
     account, name_list = request.json["account"], request.json["name_list"]

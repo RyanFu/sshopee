@@ -1,11 +1,11 @@
 #coding=utf-8  
 import sqlite3, json, os, requests, time, csv, zipfile
-from machine_gun import *
+from api_tools import *
 from shopee_api import *
 from bs4 import BeautifulSoup
 
 def file_process():
-    root_path = r"C:\Users\guoliang\Downloads\1月"
+    root_path = r"C:\Users\guoliang\Downloads\2月"
     for fo in os.listdir(root_path):
         fop = "\\".join([root_path, fo])
         for f in os.listdir(fop):
@@ -57,8 +57,6 @@ def erp2zong():
     multiple_mission_pool(erp2zong_page, data)
     return
 
-con = mydb('select catid from catname where site = "ph" and cat1 = "Home & Living"')
-cats = [i[0] for i in con]
 def readcats(cats):
     t1 = snow()
     ch_options = Options()
@@ -89,11 +87,6 @@ def readcats(cats):
     driver.quit()
     t2 = snow()
     print(t1, t2)
-
-
-
-    
-
 
 
 
