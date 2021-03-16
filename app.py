@@ -6,9 +6,8 @@ from functools import wraps
 from pandas import read_sql
 from datetime import timedelta
 import sqlite3, json, time, math, requests, csv, platform
-import shopee_api, api_sklearn
-from api_tools import snow, multiple_mission_pool
-from shopee_api import mydb
+import shopee_api
+from api_tools import mydb, snow, multiple_mission_pool
 
 app = Flask(__name__)   
 app.secret_key = '9dsm8G9OSYlJy64mig9KeXJmp' 
@@ -799,13 +798,9 @@ def update_promotion_account():
 #智能分类预测
 @app.route('/ai_recommend_category', methods=['POST'])
 def ai_recommend_category():
-    account, name_list = request.json["account"], request.json["name_list"]
-    #shopee_api.check_cookie_jar(account)
-    #cookies = shopee_api.get_cookie_jar(account)
-    site = account[-2:]
-    model_name = site
-    cat_list = api_sklearn.pipe_predict(name_list, model_name)
-    res_data = {"message": "success", "data": cat_list}
+    account, name_list = request.json["account"], request.json["name_list"]   
+    data = shopee_api.recommend_category(name_list, account)
+    res_data = {"message": "success", "data": data}
     res_data = jsonify(res_data)
     return res_data
 

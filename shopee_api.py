@@ -1,10 +1,10 @@
 #coding=utf-8  
-#import gevent
-import sqlite3, json, requests, time, platform
+import api_sklearn
+import json, requests, time, platform
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
-from api_tools import multiple_mission_pool, decor_retry, decor_async, snow, db_lock
+from api_tools import multiple_mission_pool, decor_retry, decor_async, snow, mydb
 
 if platform.system() == "Windows":
     database_name = "D:/shopee.db"
@@ -12,6 +12,7 @@ if platform.system() == "Windows":
 else:
     database_name = "/root/shopee.db"
     driver_path = "/root/chromedriver.exe"
+
 ua = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.62 Safari/537.36"
 headers = {'User-Agent': ua}
 #http://chromedriver.storage.googleapis.com/index.html
@@ -23,20 +24,7 @@ def host(site):
         url = "https://seller.{}.shopee.cn".format(site)
     return url
 
-def mydb(sql, values=(), many=False):
-    with sqlite3.connect(database_name) as db:
-        if 'select' in sql:
-            cur = db.execute(sql, values)
-            rv = cur.fetchall()
-        else:
-            with db_lock:
-                if many:
-                    db.executemany(sql, values)
-                else:
-                    db.execute(sql, values)
-                db.commit()
-            rv = None
-    return rv
+
 
 #使用SELENIUM控制CHORME打开账号后台
 def open_sellercenter(account, password, cookie_only=True):
@@ -383,13 +371,44 @@ def get_recommend_category_one(name, site, cookies, mp):
     mp[name] = cat_id
     return cat_id
 
-def get_recommend_category(name_list, account):
+def shopee_recommend_category(name_list, account):
     cookies = get_cookie_jar(account)
     site = account[-2:]
     mp = {}
     values = [[name, site, cookies, mp] for name in name_list]
     multiple_mission_pool(get_recommend_category_one, values)
     return mp
+
+def recommend_category(name_list, account):
+    site = account[-2:]
+    model_name = site
+    cat_id_ai = api_sklearn.pipe_predict(name_list, model_name)
+    sql = 'select catid, cat1, cat2, cat3 from catname where site=?'
+    con = mydb(sql, (site,))
+    mp = {}
+    for r in con:
+        mp[r[0]] = '/'.join(r[1:])
+    #print(mp)
+    cat_name_ai = [mp.get(int(i), []) for i in cat_id_ai]
+    data = list(zip(name_list, cat_id_ai, cat_name_ai))
+    return data
+
+def recommend_category_backup(name_list, account):
+    site = account[-2:]
+    model_name = site
+    mp = shopee_recommend_category(name_list, account)
+    cat_id_ai = api_sklearn.pipe_predict(name_list, model_name)
+    cat_id_shopee = [mp[i] for i in name_list]
+    sql = 'select catid, cat1, cat2, cat3 from catname where site=?'
+    con = mydb(sql, (site,))
+    mp = {}
+    for r in con:
+        mp[r[0]] = '/'.join(r[1:])
+    #print(mp)
+    cat_name_ai = [mp.get(int(i), []) for i in cat_id_ai]
+    cat_name_shopee = [mp.get(int(i), []) for i in cat_id_shopee]
+    data = list(zip(name_list, cat_id_shopee, cat_name_shopee, cat_id_ai, cat_name_ai))
+    return data
 
 def update_listing(account, cookies, item_id, model_id, stock):    
     cookies = get_cookie_jar(account)
@@ -443,7 +462,7 @@ def update_listing(account, cookies, item_id, model_id, stock):
     print(item_id, res.json(), res.status_code)
     return res.json()
    
-def update_listing2(account, cookies, item_id, model_id, stock):    
+def update_listing_backup(account, cookies, item_id, model_id, stock):    
     cookies = get_cookie_jar(account)
     site = account[-2:]
     url = host(site) + "/api/v3/product/get_product_detail"

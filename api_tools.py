@@ -1,8 +1,30 @@
-import threading, time, pandas
+import threading, time, pandas, sqlite3, platform
 from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor,as_completed
 from functools import wraps
 
 db_lock = threading.Lock()
+
+if platform.system() == "Windows":
+    database_name = "D:/shopee.db"
+    driver_path = 'D:/chromedriver_win32/chromedriver.exe'
+else:
+    database_name = "/root/shopee.db"
+    driver_path = "/root/chromedriver.exe"
+
+def mydb(sql, values=(), many=False):
+    with sqlite3.connect(database_name) as db:
+        if 'select' in sql:
+            cur = db.execute(sql, values)
+            rv = cur.fetchall()
+        else:
+            with db_lock:
+                if many:
+                    db.executemany(sql, values)
+                else:
+                    db.execute(sql, values)
+                db.commit()
+            rv = None
+    return rv
 
 def snow(tsp=None):
     t = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tsp))

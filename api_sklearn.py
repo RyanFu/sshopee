@@ -6,7 +6,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import SGDClassifier
 from sklearn.neural_network import MLPClassifier
-from shopee_api import mydb
+from api_tools import mydb
 import time, numpy, joblib, os, csv
 
 def load_data(site):
@@ -54,8 +54,7 @@ def pipe_predict(x_test, model_name):
     model_path = "./static/{}.joblib".format(model_name)
     model = joblib.load(model_path)
     predicted = model.predict(x_test)
-    data = list(zip(x_test, predicted))
-    return data
+    return predicted
 
 def temp_train(site, debug=False):
     x, y = load_data(site)
