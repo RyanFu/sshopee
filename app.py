@@ -613,8 +613,8 @@ def listings_count():
     where create_time > ? and  create_time < ? and sold >= 1 
     group by account '''
     sqle = '''select account, count( distinct item_id) from items group by account'''
-    sqlf = 'select account, create_time from (select account, create_time from items order by create_time desc) group by account'
-    sqlg = 'select account, update_time from (select account, update_time from items order by update_time asc) group by account'
+    sqlf = 'select account, max(create_time) from items group by account'
+    sqlg = 'select account, min(update_time) from items group by account'
     sql_up = '''insert into listings_count 
     values (?,?,?,?,?,?,?,?) '''
 
