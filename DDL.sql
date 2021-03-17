@@ -92,3 +92,13 @@ CREATE TABLE listings_count (
     ds3060         INTEGER,
     total         INTEGER
 );
+
+CREATE TABLE catname (
+    cat1  CHAR (200),
+    cat2  CHAR (200),
+    cat3  CHAR (200),
+    cat4  CHAR (200),
+    cat5  CHAR (200),
+    catid INTEGER,
+    site  CHAR (100) 
+);

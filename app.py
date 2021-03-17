@@ -27,7 +27,7 @@ def dict_factory(cursor, row):
 
 def shopee_price(cost, weight, profit_rate = 0):
     weight = math.ceil(weight/10)*10
-    cost_rate = 0.06 + 0.02 + 0.02 + 0.04 + 0.02 + 0.02
+    cost_rate = 0.06 + 0.02 + 0.02 + 0.02 + 0.02
     exchange_rate = {
     "my": 1.6074,
     "id":  0.000463,
@@ -151,7 +151,7 @@ def consolePage():
 #前台初始化
 @app.route('/basic_info', methods = ['GET'])
 def basic_info():
-    sql = "select account, count(distinct(item_id)), update_time from items group by account order by account asc"
+    sql = "select * from listings_count order by account asc"
     sql2 = "select update_time from log where name = 'zong'"
     sql3 = "select update_time from log where name = 'stock'"
     with sqlite3.connect(database_name) as cc:
@@ -234,7 +234,7 @@ def export_by_account():
         df = read_sql(sql, cc)
         t2 = time.time()
         file_name = "./static/{account}.csv".format(account=account)
-        df.to_csv(file_name)
+        df.to_csv(file_name, index=False)
         t3 = time.time()
         print("读", t2-t1, "写", t3-t2)
     res_data = {"message": "success", "data": {}}
@@ -613,30 +613,35 @@ def listings_count():
     where create_time > ? and  create_time < ? and sold >= 1 
     group by account '''
     sqle = '''select account, count( distinct item_id) from items group by account'''
-    sql_up = '''insert or replace into listings_count 
-    values (?,?,?,?,?,?) '''
-    with  sqlite3.connect(database_name) as cc:
-        cu0 = cc.execute(sql).fetchall()
-        cu1 = cc.execute(sqla, (day10,)).fetchall()   
-        cu2 = cc.execute(sqla, (day30,)).fetchall()
-        cu3 = cc.execute(sqlc, (day60, day30)).fetchall()
-        cu4 = cc.execute(sqld, (day60, day30)).fetchall()
-        cu5 = cc.execute(sqle).fetchall()
+    sqlf = 'select account, create_time from (select account, create_time from items order by create_time desc) group by account'
+    sqlg = 'select account, update_time from (select account, update_time from items order by update_time asc) group by account'
+    sql_up = '''insert into listings_count 
+    values (?,?,?,?,?,?,?,?) '''
 
-        mp = {}
-        for i in cu0:
-            account = i[0]
-            mp[account] = [account,0,0,0,0,0]
-        cus = [cu0, cu1, cu2, cu3, cu4, cu5]
-        for i in range(1, len(cus)):
-            cu = cus[i]
-            for j in cu:
-                account, num = j
-                mp[account][i] = num
-        values = [i for i in mp.values()]
+    cu0 = mydb(sql)
+    cu1 = mydb(sqla, (day10,))   
+    cu2 = mydb(sqla, (day30,))
+    cu3 = mydb(sqlc, (day60, day30))
+    cu4 = mydb(sqld, (day60, day30))
+    cu5 = mydb(sqle)
+    cu6 = mydb(sqlf)
+    cu7 = mydb(sqlg)
 
-        cc.executemany(sql_up, values)
-        cc.commit()
+    mp = {}
+    for i in cu0:
+        account = i[0]
+        mp[account] = [account,0,0,0,0,0,0,0]
+    cus = [cu0, cu1, cu2, cu3, cu4, cu5,cu6,cu7]
+    for i in range(1, len(cus)):
+        cu = cus[i]
+        for j in cu:
+            account, num = j
+            mp[account][i] = num
+
+    values = [i for i in mp.values()]
+    mydb('delete from listings_count')
+    mydb(sql_up, values, True)
+
     flash("刊登统计已更新")
     res_data = {"message": "success", "data":values}
     res_data = jsonify(res_data)

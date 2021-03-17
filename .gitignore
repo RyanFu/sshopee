@@ -10,7 +10,10 @@ __pycache__/
 *.db
 *.exe
 *.csv
-
+*.xls
+*.xlsx
+*.doc
+*.docx
 
 # Distribution / packaging
 .Python

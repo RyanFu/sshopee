@@ -99,7 +99,8 @@ basic_info()
 function basic_info(){
   $.get("/basic_info", function(res){
     var data = res.data;
-    show_data(data)
+    var hd = [['账号', '本周上架', '本月上架', '上月上架', '上月售出', '在线数量', '最后上架', '统计时间',]]
+    show_data(hd.concat(data))
     var zong = res.info[0]
     var stock = res.info[1]
     $(".des")[0].textContent = `说明：总表更新于${zong}, 库存表更新于${stock}.`
