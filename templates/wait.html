@@ -1,0 +1,69 @@
+﻿{% extends "layout.html" %}
+{% block title %}审核{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+
+<h2>价格修改审核</h2>
+<div class="demo-info" style="margin-bottom:10px">
+    <div class="demo-tip icon-tip">&nbsp;</div>
+    <div id="command_div"></div>
+</div>
+
+<table id="table_promotion_price" title="活动价格修改" style="width:95%;"
+        toolbar="#toolbar_promotion_price" pagination="true" idField="id"
+        rownumbers="true" fitColumns="true" singleSelect="true">
+    <thead>
+        <tr>
+            <th field="item_id" width="60" editor="text">item_id</th>
+            <th field="model_id" width="60" editor="text">model_id</th>
+            <th field="price" width="50" editor="text">改价</th>
+            <th field="account" width="70" editor="text">账号</th>
+            <th field="sku" width="50" editor="text">SKU</th>
+            <th field="cost" width="30" editor="text">成本</th>
+            <th field="weight" width="30" editor="text">重量</th>
+            <th field="rate" width="30" editor="text">利润率</th>
+            <th field="time" width="80" editor="text">提交时间</th>
+            <th field="done" width="30" editor="text">已处理</th>
+        </tr>
+    </thead>
+</table>
+<div id="toolbar_promotion_price">
+    <a href="#" class="easyui-linkbutton" iconCls="icon-add"  onclick="javascript:$('#table_promotion_price').edatagrid('selectAll')">全部选中</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-remove"  onclick="javascript:$('#table_promotion_price').edatagrid('unselectAll')">全部取消</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-ok" onclick="javascript:approve_promotion_price()">确认修改</a>
+</div>
+<br><br>
+
+
+<script type="text/javascript">
+    //easyUI表单功能
+    $(function(){
+        $('#table_promotion_price').edatagrid({
+            url: '/easyui/wait/get',
+        });
+        $('#table_promotion_price').edatagrid('disableEditing');
+    })
+    //自定义功能       
+     //活动价格更新
+    function approve_promotion_price(){
+        var data = $('#table_promotion_price').datagrid('getSelections')
+        rows = data.map(i=>[i.item_id, i.model_id, i.price])
+        var account = data[0].account
+        var url = "/update_promotion_account"
+        var data = {"rows": rows, "account": account}
+        $('#jsmessage')[0].textContent += account + '准备更新;'
+        $.ajax({
+            type:"POST",
+            url: url,
+            data:JSON.stringify(data),
+            headers: {"Content-Type": "application/json"},
+            success:function(res){
+                $('#jsmessage')[0].textContent += account + '更新成功;'
+                console.log(res)     
+            }
+        })
+    }
+</script>
+{% endblock %}

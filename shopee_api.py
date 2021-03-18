@@ -61,11 +61,9 @@ def open_sellercenter(account, password, cookie_only=True):
         v = i["value"]
         cookies_dict[k] = v
 
-    cookies_text = json.dumps(cookies_dict)
-    with  sqlite3.connect(database_name) as cc:
-        sql = "insert or replace into cookies values(?, ?, ?)"
-        cc.execute(sql, [account, cookies_text, snow()])
-        cc.commit()
+    cookies_text = json.dumps(cookies_dict) 
+    sql = "insert or replace into cookies values(?, ?, ?)"
+    mydb(sql, [account, cookies_text, snow()])
     return cookies_text
 
 #检查COOKIES有效性,失效则更新
@@ -236,12 +234,18 @@ def get_all_page(account):
 
    
 @decor_async
-def tm_get_all_accounts_listings():
+def tm_task_list():
     host = "http://182.61.49.48:5000/"
-    url = host + "/update_all_shop_performance"
-    requests.get(url, timeout=None)
-    url = host + "/update_all_accounts_listings"
-    requests.get(url, timeout=None)   
+    task_list = [ 
+    "/update_all_shop_performance",
+    "/update_all_accounts_listings",
+    "/listings_count",
+    "/get_cancellation_orders",
+    "/get_return_orders",
+    ]
+    for task in task_list:
+        url = host + task
+        requests.get(url, timeout=None)   
     return
     
 
@@ -251,7 +255,7 @@ def mytimer():
         h = time.localtime().tm_hour
         if h == 0:
             print(time.ctime(), "start updating listings")   
-            tm_get_all_accounts_listings()
+            tm_task_list()
         else:
             print("waiting...")
         time.sleep(60*60)

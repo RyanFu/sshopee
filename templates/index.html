@@ -21,8 +21,8 @@
 <a class="easyui-linkbutton" iconCls="icon-reload" id="format_item_ids"  >item_id格式转换</a>
 <a class="easyui-linkbutton" iconCls="icon-print" id="mass_download_sku"  >刊登资料下载</a>
 <a class="easyui-linkbutton admin" iconCls="icon-reload" id="update_listings_account"  >同步在线产品</a>
-<a class="easyui-linkbutton admin" iconCls="icon-reload" id="update_stock_account"  >更新在线库存</a>
-<a class="easyui-linkbutton admin" iconCls="icon-reload" id="update_promotion_account"  >更新活动价格</a>
+<a class="easyui-linkbutton admin" iconCls="icon-edit" id="update_stock_account"  >修改在线库存</a>
+<a class="easyui-linkbutton admin" iconCls="icon-edit" id="wait_promotion_account"  >修改活动价格</a>
 <a class="easyui-linkbutton admin" iconCls="icon-print" id="select_output"  >查询结果导出</a>
 <a class="easyui-linkbutton admin" iconCls="icon-search" id="get_recommend_category"  >推荐分类查询</a>
 <br><br>
@@ -71,7 +71,7 @@ $("#search")[0].onclick = shopee_search
 $("#mass_download_sku")[0].onclick = mass_download_sku
 $("#update_listings_account")[0].onclick = update_listings_account
 $("#update_stock_account")[0].onclick = update_stock_account
-$("#update_promotion_account")[0].onclick = update_promotion_account
+$("#wait_promotion_account")[0].onclick = wait_promotion_account
 $("#select_output")[0].onclick = select_output
 $("#get_recommend_category")[0].onclick = ai_recommend_category
 $(document).ready(function(){
@@ -382,10 +382,10 @@ function calculate_price(c, w, r = 0){
         }
     }
     //活动价格更新
-    function update_promotion_account(){
-        var rows = $("textarea")[0].value.split("\n").map(i=>i.split("\t"))
+    function wait_promotion_account(){
+        var rows = $("textarea")[0].value.split("\n").filter(i=>i.length>0).map(i=>i.split("\t"))
         var account = $("[name=account]")[0].value
-        var url = "/update_promotion_account"
+        var url = "/wait_promotion_account"
         var data = {"rows": rows, "account": account}
         $('#jsmessage')[0].textContent += account + '准备更新;'
         $.ajax({

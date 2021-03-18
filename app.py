@@ -60,6 +60,13 @@ def shopee_price(cost, weight, profit_rate = 0):
     }
     return sale_price
 
+@app.before_request
+def requests_log():
+    ip, path = request.remote_addr, request.path
+    json, args = request.json, request.args
+    msg = [snow(), ip, path]
+    print(msg)
+
 #登录权限检查
 def login_required(func):
 	@wraps(func)  # 保存原来函数的所有属性,包括文件名
@@ -142,6 +149,10 @@ def dashboardPage():
 @app.route('/shopee_orders', methods = ['GET'])
 def orderPage():
     return render_template("orders.html")
+
+@app.route('/shopee_wait', methods = ['GET'])
+def waitPage():
+    return render_template("wait.html")
 
 @app.route('/shopee_console', methods = ['GET'])
 @login_required
@@ -233,10 +244,12 @@ def export_by_account():
         '''.format(account=account)
         df = read_sql(sql, cc)
         t2 = time.time()
-        file_name = "./static/{account}.csv".format(account=account)
-        df.to_csv(file_name, index=False)
-        t3 = time.time()
-        print("读", t2-t1, "写", t3-t2)
+    cw = list(zip(df['cost'], df['weight']))
+    df['bprice'] = [shopee_price(float(i),int(j))[account[-2:]] for i, j in cw]
+    file_name = "./static/{account}.csv".format(account=account)
+    df.to_csv(file_name, index=False)
+    t3 = time.time()
+    print("读", t2-t1, "写", t3-t2)
     res_data = {"message": "success", "data": {}}
     res_data["data"]["file_name"] = account + ".csv"
     res_data = jsonify(res_data)
@@ -787,7 +800,7 @@ def update_stock_account():
     res_data = jsonify(res_data)
     return res_data
 
-#修改当前活动价格
+#确认当前活动价格
 @app.route('/update_promotion_account', methods=['POST'])
 @login_required
 def update_promotion_account():
@@ -796,6 +809,33 @@ def update_promotion_account():
     cookies = shopee_api.get_cookie_jar(account)
     values = [[account, cookies, *i] for i in rows]
     multiple_mission_pool(shopee_api.update_promotion_price, values)
+    sql = 'update wait set done = 1 where item_id = ? and model_id  =?'
+    values = [i[:2] for i in rows]
+    mydb(sql, values, True)
+    res_data = {"message": "success", "data": ""}
+    res_data = jsonify(res_data)
+    return res_data
+
+#提交当前活动价格
+@app.route('/wait_promotion_account', methods=['POST'])
+def wait_promotion_account():
+    account, rows = request.json["account"], request.json["rows"]
+    sqla = 'select parent_sku, model_sku from items where item_id = ? and model_id = ?'
+    sqlb = 'select cost, weight from zong where sku = ?'
+    data = []
+    for item_id, model_id, price, account in rows:
+        con = mydb(sqla, (item_id, model_id))
+        parent_sku, model_sku = con[0] if con else (0,0)
+        sku = model_sku if model_sku else parent_sku
+        con = mydb(sqlb, (sku,))
+        cost, weight = con[0] if con else (0, 0)
+        bprice = shopee_price(float(cost), float(weight))[account[-2:]]
+        profit = round(float(price) - bprice,2)
+        rate = round(profit / float(price), 2)
+        row = [item_id, model_id, price, account,sku,cost, weight,bprice,profit,rate,snow(),0]
+        data.append(row)
+    #print(data)
+    mydb('insert into wait values(?,?,?,?,?,?,?,?,?,?,?,?)', data, True)
     res_data = {"message": "success", "data": ""}
     res_data = jsonify(res_data)
     return res_data
