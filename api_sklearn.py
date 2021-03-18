@@ -10,11 +10,9 @@ from api_tools import mydb
 import time, numpy, joblib, os, csv
 
 def load_data(site):
-    #sql = "select name, category_id from (select distinct parent_sku, model_sku, category_id from items where account like '%{}' and category_id in (select category_id from items group by category_id having count(distinct item_id) > 50)) as temp inner join zong on temp.model_sku = zong.sku or temp.parent_sku = zong.sku;".format(site)
     sql = "select distinct name, category_id from items where account like '%{}' and category_id in (select category_id from items group by category_id having count(distinct item_id) > 50)".format(site)
-    #sql = "select name, cat from temp"
+    #sql = "select cname, category_id from items inner join zong on parent_sku = sku or model_sku = sku where account like '%{}' and category_id in (select category_id from items group by category_id having count(distinct item_id) > 50)".format(site)
     con = mydb(sql)
-    print('loaded ', len(con), time.ctime())
     x, y = [i[0] for i in con], [i[1].split(".")[-1] for i in con]
     return (x, y)
 
@@ -24,6 +22,8 @@ def pipe_train(x, y, pipe_name, debug=False):
         x_train, x_test, y_train, y_test = train_test_split(x, y, stratify=y, random_state=12)
     else:
         x_train,y_train = x, y
+    a, b = len(x_train), len(set(y_train))
+    print("{} samples for {} classes".format(a, b), time.ctime())
     pipe = Pipeline([
     ["vt", CountVectorizer(stop_words='english')],
     ["tf", TfidfTransformer()],
@@ -35,9 +35,9 @@ def pipe_train(x, y, pipe_name, debug=False):
 
     ])
     #MY e: NB 47 SGD 60 MLP 67  KNN 60
-    #my z:mlp 59
+    #th 72 id 64
     pipe.fit(x_train, y_train)
-    pipe_path = "d://shopee/static/{}_train.joblib".format(pipe_name)
+    pipe_path = "d://sshopee/static/{}_train_{}_{}_.joblib".format(pipe_name, a, b)
     joblib.dump(pipe, pipe_path)
     print('saved', time.ctime())
     if debug:
@@ -64,5 +64,5 @@ def temp_use(site):
     pass
 
 if __name__ == '__main__':
-    temp_train('my', True)
+    temp_train('my')
     pass

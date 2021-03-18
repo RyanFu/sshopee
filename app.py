@@ -667,7 +667,7 @@ def easyui(name, action):
     #未登录用户只允许访问白名单表, 权限为只查看
     black_list = ['password', 'cookies']
     if session.get('username', None) is None:
-        if action != 'get' or name in black_list_list:
+        if action != 'get' or name in black_list:
             flash('当前数据需要登录权限')
             return redirect('/shopee_login')
 
