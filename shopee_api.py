@@ -546,3 +546,52 @@ def update_promotion_price(account, cookies, itemid, modelid, price):
     }
     res = requests.put(url, json=data, cookies=cookies)
     print(itemid, modelid, res.json())
+
+def ad_account(account, report):
+    #check_cookie_jar(account)
+    cookies = get_cookie_jar(account)
+    url = host(account[-2:]) + '/api/marketing/v3/pas/report/shop_report_by_time/'
+    h, m, s = time.localtime().tm_hour, time.localtime().tm_min, time.localtime().tm_sec
+    end = int(time.time()) - (h * 60 + m) * 60 - s
+    start = end - 60 *60 *24 * 7
+    params = {
+    'start_time': start,
+    'end_time': end,
+    'placement_list': '[0,4]',
+    'agg_interval': 12,
+    'SPC_CDS_VER': 2,
+    'SPC_CDS': cookies['SPC_CDS']
+    }
+    mp = {'account': account}
+    mp['start'], mp['end'] = snow(start), snow(end)
+    rs = requests.get(url, params=params, cookies=cookies)
+    data = rs.json()
+    assert data['message'] == 'success', data['message']
+    keys = ['impression','click','cost','order','order_gmv']
+    for k in keys:
+        mp[k] = sum([float(i[k]) for i in data['data']])
+    #print(mp)
+
+    url = host(account[-2:]) + '/api/marketing/v3/pas/account/?SPC_CDS_VER=2&SPC_CDS=' + cookies['SPC_CDS']
+    rs = requests.get(url, cookies=cookies)
+    mp['balance'] = float(rs.json()['data']['balance'])
+    print(mp)
+    keys = ['start', 'end', 'account', 'balance', 'impression','click','cost','order','order_gmv']
+    rs = [mp[i] for i in keys]
+    report.append(rs)
+    return rs
+
+def ad_report():
+    con = mydb('select account from password')
+    account_list = [i[0] for i in con]
+    report = []
+    values = [[i, report] for i in account_list]
+    multiple_mission_pool(ad_account,  values)
+    print(report)
+    sql = 'insert into ad values(?,?,?,?,?,?,?,?,?)'
+    mydb('delete from ad')
+    mydb(sql, report, True)
+
+if __name__ == '__main__':
+    #ad_report()
+    pass

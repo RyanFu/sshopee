@@ -849,6 +849,15 @@ def ai_recommend_category():
     res_data = jsonify(res_data)
     return res_data
 
+#广告情况统计
+@app.route('/ad_report', methods=['GET'])
+def ad_report():
+    data = shopee_api.ad_report()
+    res_data = {"message": "success", "data": {}}
+    res_data = jsonify(res_data)
+    flash('广告统计已更新')
+    return res_data
+
 #调试模式运行
 if __name__ == "__main__":    
         app.debug = True

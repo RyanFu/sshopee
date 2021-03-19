@@ -88,5 +88,37 @@ def readcats(cats):
     t2 = snow()
     print(t1, t2)
 
+def ad_account(account):
+    host = host(account[-2:])
+    cookies = get_cookie_jar(account)
+    url = host + '/api/marketing/v3/pas/report/shop_report_by_time/'
+    h, m, s = time.localtime().tm_hour, time.localtime().tm_min, time.localtime().tm_sec
+    end = int(time.time()) - (h * 60 + m) * 60 - s
+    start = end - 60 *60 *24 * 7
+    params = {
+    'start_time': start,
+    'end_time': end,
+    'placement_list': '[0,4]',
+    'agg_interval': 12,
+    'SPC_CDS_VER': 2,
+    'SPC_CDS': cookies['SPC_CDS']
+    }
+    mp = {'account': account}
+    mp['start'], mp['end'] = snow(start), snow(end)
+    rs = requests.get(url, params=params, cookies=cookies)
+    data = rs.json()
+    assert data['message'] == 'success', data['message']
+    keys = ['impression','click','cost','order','order_gmv']
+    for k in keys:
+        mp[k] = sum([float(i[k]) for i in data['data']])
+    #print(mp)
 
+    url = host + '/api/marketing/v3/pas/account/?SPC_CDS_VER=2&SPC_CDS=' + cookies['SPC_CDS']
+    rs = requests.get(url, cookies=cookies)
+    mp['balance'] = float(rs.json()['data']['balance'])
+    print(mp)
+    keys = ['start', 'end', 'account', 'balance', 'impression','click','cost','order','order_gmv']
+    rs = [mp[i] for i in keys]
+    return rs
 
+print(ad_account('machinehome.ph'))

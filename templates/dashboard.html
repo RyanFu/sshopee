@@ -36,6 +36,7 @@
 <div id="toolbar_performance">
     <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="javascript:update_all_shop_performance()">全部更新</a>
 </div>
+
 <br><br>
 <table id="table_listings_count" title="刊登统计" style="width:95%;"
         toolbar="#toolbar_listings_count" pagination="true" idField="id"
@@ -58,6 +59,28 @@
     <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="listings_update()">在线产品更新</a>
 </div>
 
+<br><br>
+<table id="table_ad_report" title="刊登统计" style="width:95%;"
+        toolbar="#toolbar_ad_report" pagination="true" idField="id"
+        rownumbers="true" fitColumns="true" singleSelect="true">
+    <thead>
+        <tr>
+            <th field="start" width="80" editor="text">开始</th>
+            <th field="end" width="80" editor="text">截止</th>
+            <th field="account" width="60" editor="text">账号</th>
+            <th field="balance" width="50" editor="text">余额</th>
+            <th field="impression" width="40" editor="text">浏览</th>
+            <th field="click" width="40" editor="text">点击</th>
+            <th field="cost" width="50" editor="text">花费</th>
+            <th field="order" width="50" editor="text">订单</th>
+            <th field="order_gmv" width="50" editor="text">金额</th>
+        </tr>
+    </thead>
+</table>
+<div id="toolbar_ad_report">
+    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="ad_report()">全部重新统计</a>
+</div>
+
 
 <script type="text/javascript">
     //easyUI表单功能
@@ -68,8 +91,12 @@
         $('#table_listings_count').edatagrid({
             url: '/easyui/listings_count/get',
         });
+        $('#table_ad_report').edatagrid({
+            url: '/easyui/ad/get',
+        });
         $('#table_performance').edatagrid('disableEditing');
         $('#table_listings_count').edatagrid('disableEditing');
+        $('#table_ad_report').edatagrid('disableEditing');
     })
     //自定义功能
     //更新全部账号表现
