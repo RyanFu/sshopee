@@ -60,7 +60,7 @@
 </div>
 
 <br><br>
-<table id="table_ad_report" title="刊登统计" style="width:95%;"
+<table id="table_ad_report" title="广告统计" style="width:95%;"
         toolbar="#toolbar_ad_report" pagination="true" idField="id"
         rownumbers="true" fitColumns="true" singleSelect="true">
     <thead>
@@ -123,6 +123,10 @@
             $('#jsmessage')[0].textContent += row.account + '更新成功;'
             })
         }
+    }
+    function ad_report(){
+        var url = '/ad_report'
+        $.get(url, function(res){location.reload(true);console.log(res)})
     }
 </script>
 {% endblock %}

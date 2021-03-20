@@ -1,5 +1,4 @@
 #coding=utf-8 
-#from gevent import monkey;monkey.patch_socket()
 from flask import Flask, request, render_template, jsonify, redirect, session, flash
 from os import listdir, system
 from functools import wraps
@@ -27,7 +26,8 @@ def dict_factory(cursor, row):
 
 def shopee_price(cost, weight, profit_rate = 0):
     weight = math.ceil(weight/10)*10
-    cost_rate = 0.06 + 0.02 + 0.02 + 0.02 + 0.02
+    cost_rate = 0.06 + 0.02 + 0.02 + 0.04 + 0.01
+    #佣金6 手续2 售后2 损耗4 活动2 包装1
     exchange_rate = {
     "my": 1.6074,
     "id":  0.000463,
@@ -63,9 +63,10 @@ def shopee_price(cost, weight, profit_rate = 0):
 @app.before_request
 def requests_log():
     ip, path = request.remote_addr, request.path
-    json, args = request.json, request.args
-    msg = [snow(), ip, path]
-    print(msg)
+    if 'static' not in path:
+        json, args = request.json, request.args
+        msg = [snow(), ip, path]
+        print(msg)
 
 #登录权限检查
 def login_required(func):
@@ -246,12 +247,12 @@ def export_by_account():
         t2 = time.time()
     cw = list(zip(df['cost'], df['weight']))
     df['bprice'] = [shopee_price(float(i),int(j))[account[-2:]] for i, j in cw]
-    file_name = "./static/{account}.csv".format(account=account)
-    df.to_csv(file_name, index=False)
+    file_name = "./static/{account}.xlsx".format(account=account)
+    df.to_excel(file_name, index=False)
     t3 = time.time()
     print("读", t2-t1, "写", t3-t2)
     res_data = {"message": "success", "data": {}}
-    res_data["data"]["file_name"] = account + ".csv"
+    res_data["data"]["file_name"] = account + ".xlsx"
     res_data = jsonify(res_data)
     return res_data
 

@@ -23,7 +23,7 @@
 <a class="easyui-linkbutton admin" iconCls="icon-reload" id="update_listings_account"  >同步在线产品</a>
 <a class="easyui-linkbutton admin" iconCls="icon-edit" id="update_stock_account"  >修改在线库存</a>
 <a class="easyui-linkbutton" iconCls="icon-edit" id="wait_promotion_account"  >修改活动价格</a>
-<a class="easyui-linkbutton admin" iconCls="icon-print" id="select_output"  >查询结果导出</a>
+<a class="easyui-linkbutton admin" iconCls="icon-ok" id="select_output"  >在线执行SQL</a>
 <a class="easyui-linkbutton" iconCls="icon-search" id="get_recommend_category"  >推荐分类查询</a>
 <br><br>
 <!-- 搜索在线产品 -->
@@ -291,7 +291,7 @@ function calculate_price(c, w, r = 0){
     var sbr = Math.min(Math.max(5, w * 0.14 + 0.8), w * 0.09 + 5.8)
     var smx = Math.min(Math.max(20, w * 0.5 + 5), w * 0.4 + 55)
     var price = {}
-    var costrate = 0.06 + 0.02 + 0.02 + 0.02 + 0.02
+    var costrate = 0.06 + 0.02 + 0.02 + 0.04 + 0.02 + 0.01
     price.my = Math.ceil((c+smy*rmy)/(1-costrate-r)/rmy *10)/10
     price.id = Math.ceil((c+sid*rid)/(1-costrate-r)/rid /100)*100
     price.tw = Math.ceil((c+stw*rtw)/(1-costrate-r)/rtw /1)*1
