@@ -394,6 +394,7 @@ function calculate_price(c, w, r = 0){
             data:JSON.stringify(data),
             headers: {"Content-Type": "application/json"},
             success:function(res){
+                $("textarea")[0].value = "已提交"
                 $('#jsmessage')[0].textContent += account + '更新成功;'
                 console.log(res)     
             }
