@@ -585,11 +585,13 @@ def upload_file():
 def download_table():
     tb, tp = request.args["table"].split('.')
     if tp == 'table':
-        cm_output = 'sqlite3 -header -csv ../shopee.db "select * from {tb};" > ./static/{tb}.csv'.format(tb=tb)
+        key = '_table_giVr54AgM5FSdFf2OigqaYS3W'
+        tn = tb + key
+        cm_output = 'sqlite3 -header -csv ../shopee.db "select * from {tb};" > ./static/{tn}.csv'.format(tb=tb,tn=tn)
         cm_zip = 'zip -m -P redback12 ./static/{tb}.zip ./static/{tb}.csv'.format(tb=tb)
         system(cm_output)
-        system(cm_zip)
-        url = '/static/{tb}.zip'.format(tb=tb)
+        #system(cm_zip)
+        url = '/static/{tn}.csv'.format(tn=tn)
     else:
         url = '/static/{tb}.{tp}'.format(tb=tb, tp=tp)
     res_data = {"message": "success", "data":url}
