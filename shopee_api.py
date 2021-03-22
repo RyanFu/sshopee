@@ -385,8 +385,16 @@ def shopee_recommend_category(name_list, account):
 
 def recommend_category(name_list, account):
     site = account[-2:]
-    model_name = site
+    rare = ['br', 'mx']
+    model_name = 'my' if site in rare else site
     cat_id_ai = api_sklearn.pipe_predict(name_list, model_name)
+    if site in rare:
+        sql = 'select my, {} from cat_map'.format(site)
+        con = mydb(sql)
+        mp = {}
+        for r in con:
+            mp[r[0]] = r[1]
+        cat_id_ai = [mp.get(int(i), 0) for i in cat_id_ai]
     sql = 'select catid, cat1, cat2, cat3 from catname where site=?'
     con = mydb(sql, (site,))
     mp = {}
