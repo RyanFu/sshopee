@@ -18,12 +18,8 @@ headers = {'User-Agent': ua}
 #http://chromedriver.storage.googleapis.com/index.html
 
 def host(site):
-    if site == "mx":
-        url = "https://seller.shopee.com.mx"
-    else:
-        url = "https://seller.{}.shopee.cn".format(site)
+    url = "https://seller.{}.shopee.cn".format(site)
     return url
-
 
 
 #使用SELENIUM控制CHORME打开账号后台
