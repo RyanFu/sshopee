@@ -2,6 +2,7 @@
 import sqlite3, json, os, requests, time, csv, zipfile
 from api_tools import *
 from shopee_api import *
+from app import *
 from bs4 import BeautifulSoup
 
 def file_process():
@@ -88,3 +89,4 @@ def readcats(cats):
     t2 = snow()
     print(t1, t2)
 
+print(shopee_rate(9.9, 101, 11.7))
