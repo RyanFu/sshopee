@@ -381,7 +381,7 @@ def shopee_recommend_category(name_list, account):
 
 def recommend_category(name_list, account):
     site = account[-2:]
-    rare = ['br', 'mx']
+    rare = ['br', 'mx', 'sg']
     model_name = 'my' if site in rare else site
     cat_id_ai = api_sklearn.pipe_predict(name_list, model_name)
     if site in rare:

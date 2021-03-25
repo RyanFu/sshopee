@@ -33,6 +33,7 @@
     <a href="#" class="easyui-linkbutton" iconCls="icon-add"  onclick="javascript:$('#table_promotion_price').edatagrid('selectAll')">全部选中</a>
     <a href="#" class="easyui-linkbutton" iconCls="icon-remove"  onclick="javascript:$('#table_promotion_price').edatagrid('unselectAll')">全部取消</a>
     <a href="#" class="easyui-linkbutton" iconCls="icon-ok" onclick="javascript:approve_promotion_price()">确认修改</a>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-ok" onclick="javascript:approve_all()">全部确认</a>
 </div>
 <br><br>
 
@@ -63,6 +64,38 @@
                 $('#jsmessage')[0].textContent += account + '更新成功;'
                 console.log(res)     
             }
+        })
+    }
+    function approve_all(){
+        var url = '/easyui/wait/get'
+        var data = {'page':1, rows:5000}
+        $.post(url, data, function(res){
+            let  rows = res.rows
+            let mp = new Map()
+            rows.map(i=>{mp[i.account]=[]})
+            rows.map(i=>{
+                mp[i.account].push([i.item_id, i.model_id, i.price])
+            })
+            let datas = Object.keys(mp).map(i=>{let data = {'account':i, rows:mp[i]};return data;})
+            datas.map(cdata=>{
+
+                let account = cdata.account
+                let rows = cdata.rows
+                var url = "/update_promotion_account"
+                var data = {"rows": rows, "account": account}
+                $('#jsmessage')[0].textContent += account + '准备更新;'
+                $.ajax({
+                    type:"POST",
+                    url: url,
+                    data:JSON.stringify(data),
+                    headers: {"Content-Type": "application/json"},
+                    success:function(res){
+                        $('#jsmessage')[0].textContent += account + '更新成功;'
+                        console.log(res)
+                    }
+                })
+
+            })
         })
     }
 </script>
