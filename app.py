@@ -4,7 +4,7 @@ from os import listdir, system
 from functools import wraps
 from pandas import read_sql
 from datetime import timedelta
-import sqlite3, json, time, math, requests, csv, platform
+import sqlite3, json, time, math, requests, csv, platform, random
 import shopee_api
 from api_tools import mydb, snow, multiple_mission_pool
 
@@ -613,8 +613,8 @@ def upload_file():
 def download_table():
     tb, tp = request.args["table"].split('.')
     if tp == 'table':
-        key = '_table_giVr54AgM5FSdFf2OigqaYS3W'
-        tn = tb + key
+        key = ''.join([chr(random.randrange(65,90)) + chr(random.randrange(97,122)) for i in range(12)])
+        tn = tb + '_table_' + key
         cm_output = 'sqlite3 -header -csv ../shopee.db "select * from {tb};" > ./static/{tn}.csv'.format(tb=tb,tn=tn)
         cm_zip = 'zip -m -P redback12 ./static/{tb}.zip ./static/{tb}.csv'.format(tb=tb)
         system(cm_output)

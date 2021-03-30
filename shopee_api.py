@@ -238,6 +238,7 @@ def tm_task_list():
     "/listings_count",
     "/get_cancellation_orders",
     "/get_return_orders",
+    "/ad_report",
     ]
     for task in task_list:
         url = host + task
