@@ -382,7 +382,7 @@ def shopee_recommend_category(name_list, account):
 
 def recommend_category(name_list, account):
     site = account[-2:]
-    rare = ['br', 'mx', 'sg']
+    rare = ['br', 'mx', 'sg', 'vn','id']
     model_name = 'my' if site in rare else site
     cat_id_ai = api_sklearn.pipe_predict(name_list, model_name)
     if site in rare:
@@ -400,23 +400,6 @@ def recommend_category(name_list, account):
     #print(mp)
     cat_name_ai = [mp.get(int(i), []) for i in cat_id_ai]
     data = list(zip(name_list, cat_id_ai, cat_name_ai))
-    return data
-
-def recommend_category_backup(name_list, account):
-    site = account[-2:]
-    model_name = site
-    mp = shopee_recommend_category(name_list, account)
-    cat_id_ai = api_sklearn.pipe_predict(name_list, model_name)
-    cat_id_shopee = [mp[i] for i in name_list]
-    sql = 'select catid, cat1, cat2, cat3 from catname where site=?'
-    con = mydb(sql, (site,))
-    mp = {}
-    for r in con:
-        mp[r[0]] = '/'.join(r[1:])
-    #print(mp)
-    cat_name_ai = [mp.get(int(i), []) for i in cat_id_ai]
-    cat_name_shopee = [mp.get(int(i), []) for i in cat_id_shopee]
-    data = list(zip(name_list, cat_id_shopee, cat_name_shopee, cat_id_ai, cat_name_ai))
     return data
 
 def update_listing(account, cookies, item_id, model_id, stock):    
@@ -456,60 +439,6 @@ def update_listing(account, cookies, item_id, model_id, stock):
             if m['id'] == model_id:
                 udata['stock'] += stock - m['stock']
                 m['stock'] = stock
-            nm = {}
-            mks = ["id", "is_default","name", "sku", "stock","tier_index"]
-            for mk in mks:
-                nm[mk] = m[mk]
-            nms.append(nm)
-        udata['model_list'] = nms
-
-    updata = [udata,]
-    uurl = host(site) + "/api/v3/product/update_product"
-    params = "/?version=3.1.0&SPC_CDS_VER=2&SPC_CDS=" + cookies['SPC_CDS']
-    res = requests.post(uurl + params, json=updata, cookies=cookies)
-    #print(udata)
-    print(item_id, res.json(), res.status_code)
-    return res.json()
-   
-def update_listing_backup(account, cookies, item_id, model_id, stock):    
-    cookies = get_cookie_jar(account)
-    site = account[-2:]
-    url = host(site) + "/api/v3/product/get_product_detail"
-    params = "/?SPC_CDS_VER=2&product_id=" + str(item_id)
-    res = requests.get(url + params, cookies=cookies)
-    data = res.json()['data']
-    #print(data)
-    chs = {
-        "my": [{"size":0,"price":"5.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":28016,"sizeid":0}],
-        "id": [{"size":0,"price":"10000.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":88001,"sizeid":0}],
-        "th": [{"size":0,"price":"20","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":78004,"sizeid":0}],
-        "ph": [{"size":0,"price":"40","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":48002,"sizeid":0}],
-        "vn": [{"size":0,"price":"10000","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":58007,"sizeid":0}],
-        "sg": [{"size":0.02,"price":"0.00","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":18028,"sizeid":0}],
-        "br": [{"size":0,"price":"15","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":90001,"sizeid":0}],
-        "mx": [{"size":0,"price":"40","cover_shipping_fee":False,"enabled":True,"item_flag":"0","channelid":100001,"sizeid":0}],
-        }
-    udata = {"unlisted":False, "ds_cat_rcmd_id":""}
-    udata["logistics_channels"] = chs[site]
-    ks = ["id", "name", "brand", "images", "description", "model_list", 
-    "category_path", "attribute_model", "parent_sku", "wholesale_list", 
-    "installment_tenures", "weight", "dimension", "pre_order", 
-    "days_to_ship", "condition", "size_chart", "video_list", 
-    "video_task_id", "tier_variation", "add_on_deal", "price",
-    "stock", "category_recommend",]
-    for k in ks:
-        udata[k] = data[k]
-    
-    if len(udata['model_list']) == 0:
-        udata['stock'] = stock
-    else:
-        nms = [];
-        for  m in udata['model_list']:
-            if m['id'] == model_id:
-                udata['stock'] += stock - m['stock']
-                m['stock'] = stock
-            sku = mydb('select model_sku from items where model_id=?',[m["id"],])[0][0]
-            m["sku"] = sku
             nm = {}
             mks = ["id", "is_default","name", "sku", "stock","tier_index"]
             for mk in mks:

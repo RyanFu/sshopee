@@ -6,14 +6,37 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import SGDClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import classification_report
 from api_tools import mydb
 import time, numpy, joblib, os, csv
 
-def load_data(site):
-    sql = "select distinct name, category_id from items where account like '%{}' and category_id in (select category_id from items group by category_id having count(distinct item_id) > 50)".format(site)
-    #sql = "select cname, category_id from items inner join zong on parent_sku = sku or model_sku = sku where account like '%{}' and category_id in (select category_id from items group by category_id having count(distinct item_id) > 50)".format(site)
+def load_data(site, min_sample, max_sample, save=False):
+    sql = "select distinct name, category_id from items where account like '%{}' order by sold".format(site)
+    #sql = "select distinct cname, category_id from ((select distinct parent_sku, model_sku, category_id from items where account like '%{}' order by sold) inner join zong on model_sku = sku or parent_sku = sku)".format(site)
     con = mydb(sql)
-    x, y = [i[0] for i in con], [i[1].split(".")[-1] for i in con]
+    mp = {}
+    for name, cat in con:
+        cat = cat.split(".")[-1]
+        name_list = mp.get(cat, [])
+        name_list.append(name)
+        mp[cat] = name_list
+    data = []
+    max_length = max([len(i) for i in mp.values()])
+    for cat in mp.keys():
+        name_list = mp[cat]
+        length = len(name_list)
+        if length > min_sample:
+            num_cut = int((length - max_sample)/(max_length - max_sample) * 100) + max_sample
+            name_list = name_list[:num_cut]
+            for name in name_list:
+                data.append((name, cat))
+    x, y = [i[0] for i in data], [i[1] for i in data]
+    num_sample, num_class = len(x), len(set(y))
+    print(f"{num_sample} samples for {num_class} classes ")
+    if save:
+        mydb('delete from temp')
+        mydb('insert into temp values(?,?)', data, True)
+        assert 0, 'data saved to temp, stopping'
     return (x, y)
 
 def pipe_train(x, y, pipe_name, debug=False):
@@ -22,8 +45,7 @@ def pipe_train(x, y, pipe_name, debug=False):
         x_train, x_test, y_train, y_test = train_test_split(x, y, stratify=y, random_state=12)
     else:
         x_train,y_train = x, y
-    a, b = len(x_train), len(set(y_train))
-    print("{} samples for {} classes".format(a, b), time.ctime())
+    num_sample, num_class = len(x_train), len(set(y_train))
     pipe = Pipeline([
     ["vt", CountVectorizer(stop_words='english')],
     ["tf", TfidfTransformer()],
@@ -37,18 +59,14 @@ def pipe_train(x, y, pipe_name, debug=False):
     #MY e: NB 47 SGD 60 MLP 67  KNN 60
     #th 72 id 64
     pipe.fit(x_train, y_train)
-    pipe_path = "d://sshopee/static/{}_train_{}_{}_.joblib".format(pipe_name, a, b)
+    pipe_path = f"d:/sshopee/static/{site}_train_{num_sample}samples_{num_class}classes_{int(time.time())}.joblib"
     joblib.dump(pipe, pipe_path)
     print('saved', time.ctime())
     if debug:
         predicted = pipe.predict(x_test)
-        print('predicted', time.ctime())
-        print(numpy.mean(predicted == y_test))
-        values = list(zip(x_test, y_test, predicted))
-        with open('d://out.csv', 'w+', encoding='utf-8', newline='') as f:
-            w = csv.writer(f)
-            w.writerows(values)
-        print('writed')
+        report = classification_report(y_test, predicted)
+        print(report)
+
 
 def pipe_predict(x_test, model_name):
     model_path = "./static/{}.joblib".format(model_name)
@@ -56,13 +74,8 @@ def pipe_predict(x_test, model_name):
     predicted = model.predict(x_test)
     return predicted
 
-def temp_train(site, debug=False):
-    x, y = load_data(site)
-    pipe_train(x, y, site, debug)
-
-def temp_use(site):
-    pass
 
 if __name__ == '__main__':
-    temp_train('my')
-    pass
+    site = 'my'
+    x, y = load_data(site, 30, 200)
+    pipe_train(x, y, site)

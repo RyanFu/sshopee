@@ -49,7 +49,7 @@ def erp2zong_page(sku_list):
         
 def erp2zong():
     mydb("delete from song;")
-    con = mydb("select sku from stock where stock > 0 ")
+    con = mydb("select sku from zong ")
     sku_list = [i[0] for i in con]
     data = []
     for i in range(0, len(sku_list), 50):

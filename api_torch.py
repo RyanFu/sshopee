@@ -1,4 +1,4 @@
-import torch, time
+import torch, time, csv
 from sklearn.model_selection import train_test_split
 from torchtext.datasets import AG_NEWS
 from torchtext.data.utils import get_tokenizer
@@ -21,10 +21,9 @@ def mark_labels(ar):
     return (re, len(st))
 
 def load_data(site):
-    sql = "select distinct name, category_id from items where account like '%{}' and category_id in (select category_id from items group by category_id having count(distinct item_id) > 50)".format(site)
-    #sql = "select cname, category_id from items inner join zong on parent_sku = sku or model_sku = sku where account like '%{}' and category_id in (select category_id from items group by category_id having count(distinct item_id) > 50)".format(site)
+    sql = "select distinct name, cat from temp"
     con = mydb(sql)
-    x, y = [i[0] for i in con], [i[1].split(".")[-1] for i in con]
+    x, y = [i[0] for i in con], [i[1] for i in con]
     y, num_class = mark_labels(y)
     x_train, x_test, y_train, y_test = train_test_split(x, y, stratify=y, random_state=12, test_size=0.1)
     train, test = list(zip(y_train, x_train)), list(zip(y_test, x_test))
@@ -54,10 +53,9 @@ def collate_batch(batch):
     text_list = torch.cat(text_list)
     return label_list.to(device), text_list.to(device), offsets.to(device)    
 
-class TextClassificationModel(nn.Module):
-
+class Classifier1(nn.Module):
     def __init__(self, vocab_size, embed_dim, num_class):
-        super(TextClassificationModel, self).__init__()
+        super(Classifier1, self).__init__()
         self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, sparse=True)
         self.fc = nn.Linear(embed_dim, num_class)
         self.init_weights()
@@ -72,10 +70,27 @@ class TextClassificationModel(nn.Module):
         embedded = self.embedding(text, offsets)
         return self.fc(embedded)
 
+class RNN(nn.Module):
+    def __init__(self, vocab_size, embed_dim, num_class, hidden_size, num_layers):
+        self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, )
+        self.lstm = nn.LSTM(embed_dim, hidden_size, num_layers,
+            bidirectional=True, batch_first=True, dropout=0.1)
+        self.fc = nn.Linear(hidden_size * 2, num_class)
+    
+    def forward(self, x):
+        x, _  = x
+        out = self.embedding(x)
+        out, _ = self.lstm(out)
+        out = self.fc(out[:, -1, :])
+        return out
+
 num_class = len(set([label for (label, text) in train_iter]))
 vocab_size = len(vocab)
-emsize = 64
-model = TextClassificationModel(vocab_size, emsize, num_class).to(device)
+emsize = 128
+
+model = Classifier1(vocab_size, emsize, num_class).to(device)
+model = RNN(vocab_size, emsize, num_class, 64, 2).to(device)
+print(f'vocabulary_list_length is {vocab_size}, embeding size is {emsize}')
 print(model)
 
 def train(dataloader):
@@ -95,6 +110,7 @@ def train(dataloader):
         total_count += label.size(0)
         if idx % log_interval == 0 and idx > 0:
             elapsed = time.time() - start_time
+            print(label.size(), text.size(), offsets.size())
             print('epoch {:3d} {:5d}/{:5d} batches accuracy {:8.3f}'.format(epoch, 
                                         idx, len(dataloader),
                                         total_acc/total_count))
@@ -117,7 +133,7 @@ from torch.utils.data.dataset import random_split
 # Hyperparameters
 EPOCHS = 100 # epoch
 LR = 5  # learning rate
-BATCH_SIZE = 32 # batch size for training
+BATCH_SIZE = 8 # batch size for training
   
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=LR)
@@ -144,7 +160,7 @@ for epoch in range(1, EPOCHS + 1):
 
     if accu_val > best_acc + 0.0001:
         best_acc, best_ep = accu_val, epoch
-    elif epoch - best_ep >= 10:
+    elif epoch - best_ep >= 5:
         break
     print(f'Best score is {best_acc} at round {best_ep}\n')
 print('all done')
