@@ -258,7 +258,7 @@ def mytimer():
         time.sleep(60*60)
  
     
-#获取取消订单
+#获取账号取消订单
 def get_cancellations_by_account(account):
     site = account.split(".")[1]
     cookies = get_cookie_jar(account) 
@@ -287,13 +287,15 @@ def get_cancellations_by_account(account):
     mydb(sql, values, True)
     return
 
+#获取全部取消订单
 def get_all_cancellations():
     mydb('delete from cancellation')
     cu = mydb('select account from password')
     account_list = [i for i in cu]
     multiple_mission_pool(get_cancellations_by_account, account_list, 32)
     return
-      
+ 
+#取消申请处理 
 def cancellation_reject_accept(account, order_id, action):
     #account, order_id, action = 'jihuishi.my', 65371133466290, 'accept'
     site = account[-2:]
@@ -304,6 +306,7 @@ def cancellation_reject_accept(account, order_id, action):
     print(order_id, res.json(),res.status_code)
     return res.json()
 
+#获取账号退款申请
 def get_returns_by_account(account):
     site = account.split(".")[1]
     cookies = get_cookie_jar(account) 
@@ -331,6 +334,7 @@ def get_returns_by_account(account):
     reason, refund_end_date,refund_amount,update_time) values (?,?,?,?,?,?,?,?)'''
     mydb(sql, values, True)
 
+#获取全部退款申请
 def get_all_returns():
     cu = mydb('select account from password')
     account_list = [i for i in cu]
@@ -380,6 +384,7 @@ def shopee_recommend_category(name_list, account):
     multiple_mission_pool(get_recommend_category_one, values)
     return mp
 
+#智能预测分类
 def recommend_category(name_list, account):
     site = account[-2:]
     rare = ['br', 'mx', 'sg', 'vn','id']
@@ -402,6 +407,7 @@ def recommend_category(name_list, account):
     data = list(zip(name_list, cat_id_ai, cat_name_ai))
     return data
 
+#库存修改
 def update_listing(account, cookies, item_id, model_id, stock):    
     cookies = get_cookie_jar(account)
     site = account[-2:]
@@ -454,6 +460,7 @@ def update_listing(account, cookies, item_id, model_id, stock):
     print(item_id, res.json(), res.status_code)
     return res.json()
 
+#活动价格修改
 def update_promotion_price(account, cookies, itemid, modelid, price):
     site = account[-2:]
     itemid, modelid, price = int(itemid), int(modelid), float(price)
@@ -481,6 +488,7 @@ def update_promotion_price(account, cookies, itemid, modelid, price):
     res = requests.put(url, json=data, cookies=cookies)
     print(itemid, modelid, res.json())
 
+#单个账号广告效果
 def ad_account(account, report):
     #check_cookie_jar(account)
     cookies = get_cookie_jar(account)
@@ -515,6 +523,7 @@ def ad_account(account, report):
     report.append(rs)
     return rs
 
+#全部广告效果统计
 def ad_report():
     con = mydb('select account from password')
     account_list = [i[0] for i in con]

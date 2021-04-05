@@ -25,6 +25,8 @@
 <a class="easyui-linkbutton" iconCls="icon-edit" id="wait_promotion_account"  >修改活动价格</a>
 <a class="easyui-linkbutton admin" iconCls="icon-ok" id="select_output"  >在线执行SQL</a>
 <a class="easyui-linkbutton" iconCls="icon-search" id="get_recommend_category"  >推荐分类查询</a>
+<a class="easyui-linkbutton admin" iconCls="icon-print" id="stock2zero"  >库存调零</a>
+<a class="easyui-linkbutton admin" iconCls="icon-print" id="zero2stock"  >库存补充</a>
 <br><br>
 <!-- 搜索在线产品 -->
   <label >自定义SKU:</label>
@@ -74,6 +76,11 @@ $("#update_stock_account")[0].onclick = update_stock_account
 $("#wait_promotion_account")[0].onclick = wait_promotion_account
 $("#select_output")[0].onclick = select_output
 $("#get_recommend_category")[0].onclick = ai_recommend_category
+$("#stock2zero")[0].onclick = function(){$("textarea")[0].value = "with skus as (with t as (select * from stock where available = 0 ) select t.sku from t inner join zong on t.sku = zong.sku where zong.status = '暂时缺货' or zong.status = '停产') select * from items where model_stock > 0 and ((model_sku = '' and parent_sku in skus) or (model_sku <> '' and model_sku in skus));"}
+$("#zero2stock")[0].onclick = function(){$("textarea")[0].value = "with skus as (with temp as (select * from stock where available > 5 and ado > 1 ) select temp.sku from temp inner join zong on temp.sku = zong.sku where zong.status = '正常' or zong.status = '起批量') select * from items where model_stock = 0 and ((model_sku = '' and parent_sku in skus) or (model_sku <> '' and model_sku in skus));"}
+
+
+
 $(document).ready(function(){
 $('#layout_div').layout('collapse','west');
 });
@@ -426,6 +433,7 @@ function calculate_price(c, w, r = 0){
             }
         })
     }
+    //平台推荐分类
     function get_recommend_category(){
         var name_list = $("textarea")[0].value.split("\n").map(i=>i.trim())
         var account = $("[name=account]")[0].value
@@ -446,7 +454,7 @@ function calculate_price(c, w, r = 0){
             }
         })
     }
-    
+    //智能推荐分类
     function ai_recommend_category(){
         var name_list = $("textarea")[0].value.split("\n").map(i=>i.trim()).filter(i=>i.length>0).map(i=>i.trim())
         var account = $("[name=account]")[0].value
