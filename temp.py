@@ -89,4 +89,27 @@ def readcats(cats):
     t2 = snow()
     print(t1, t2)
 
-print(shopee_rate(9.9, 101, 11.7))
+def caaformate(site):
+    check_cookie_jar('elenxs.' + site)
+    step = 300
+    find = 0
+    for i in range(0, 150000, step):   
+        sql = "select distinct name, category_id from items where account like '%.{}' limit ? offset ?".format(site)
+        con = mydb(sql, (step, i))
+        names = [i[0] for i in con]
+        if len(names) == 0:
+            break
+        mp = shopee_recommend_category(names, 'elenxs.my')
+        data = [[mp[name], name, cat] for name, cat in con if int(mp[name]) > 0]
+        sql = "update items set model_name = ? where name = ? and category_id = ?"
+        mydb(sql, data, True)
+        find += len(data)
+        print(i + step, find, round(find/(i + step), 2))
+        if len(data) == 0:
+            print('over speed')
+            for i in range(5):
+                time.sleep(1)
+                print('waiting')
+    
+
+    

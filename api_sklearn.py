@@ -11,12 +11,20 @@ from api_tools import mydb
 import time, numpy, joblib, os, csv
 
 def load_data(site, min_sample, max_sample, save=False):
-    sql = "select distinct name, category_id from items where account like '%{}' order by sold".format(site)
+    if save == False:
+        sql = "select distinct name, cat from temp"
+        con = mydb(sql)
+        x, y = [i[0] for i in con], [i[1] for i in con]
+        num_sample, num_class = len(x), len(set(y))
+        print(f"{num_sample} samples for {num_class} classes loaded")
+        return (x, y)
+    sql = "select distinct name, category_id, model_name from items where account like '%{}' order by sold".format(site)
     #sql = "select distinct cname, category_id from ((select distinct parent_sku, model_sku, category_id from items where account like '%{}' order by sold) inner join zong on model_sku = sku or parent_sku = sku)".format(site)
     con = mydb(sql)
     mp = {}
-    for name, cat in con:
+    for name, cat, cat2 in con:
         cat = cat.split(".")[-1]
+        cat = cat2 if len(cat2) > 1 else cat 
         name_list = mp.get(cat, [])
         name_list.append(name)
         mp[cat] = name_list
@@ -32,11 +40,11 @@ def load_data(site, min_sample, max_sample, save=False):
                 data.append((name, cat))
     x, y = [i[0] for i in data], [i[1] for i in data]
     num_sample, num_class = len(x), len(set(y))
-    print(f"{num_sample} samples for {num_class} classes ")
-    if save:
-        mydb('delete from temp')
-        mydb('insert into temp values(?,?)', data, True)
-        assert 0, 'data saved to temp, stopping'
+    print(f"{num_sample} samples for {num_class} classes saved")
+
+    mydb('delete from temp')
+    mydb('insert into temp values(?,?)', data, True)
+    assert 0, 'data saved to temp, stopping'
     return (x, y)
 
 def pipe_train(x, y, pipe_name, debug=False):
@@ -52,12 +60,11 @@ def pipe_train(x, y, pipe_name, debug=False):
     ["sc", MaxAbsScaler()],
     #["clf", KNeighborsClassifier()],
     #["clf", MultinomialNB(),] 
-    #["clf", SGDClassifier(loss='hinge', penalty='l2',alpha=1e-3, random_state=42, max_iter=5, tol=None)],
+    #["clf", SGDClassifier(loss='hinge', penalty='l2',alpha=1e-3, random_state=42, max_iter=50, tol=None)],
     ["clf", MLPClassifier(random_state=1, max_iter=100, verbose=True, early_stopping=True)],
 
     ])
-    #MY e: NB 47 SGD 60 MLP 67  KNN 60
-    #th 72 id 64
+    #MY e: NB 47 SGD 60 MLP 72  KNN 60
     pipe.fit(x_train, y_train)
     pipe_path = f"d:/sshopee/static/{site}_train_{num_sample}samples_{num_class}classes_{int(time.time())}.joblib"
     joblib.dump(pipe, pipe_path)
@@ -72,10 +79,11 @@ def pipe_predict(x_test, model_name):
     model_path = "./static/{}.joblib".format(model_name)
     model = joblib.load(model_path)
     predicted = model.predict(x_test)
+    predicted = [str(i) for i in predicted]
     return predicted
 
 
 if __name__ == '__main__':
-    site = 'my'
-    x, y = load_data(site, 30, 200)
-    pipe_train(x, y, site)
+    site = 'ph'
+    x, y = load_data(site, 30, 200, False)
+    pipe_train(x, y, site, False)

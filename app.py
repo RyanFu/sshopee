@@ -877,6 +877,7 @@ def ai_recommend_category():
     account, name_list = request.json["account"], request.json["name_list"]   
     data = shopee_api.recommend_category(name_list, account)
     res_data = {"message": "success", "data": data}
+    #print(res_data)
     res_data = jsonify(res_data)
     return res_data
 

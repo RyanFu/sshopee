@@ -70,26 +70,12 @@ class Classifier1(nn.Module):
         embedded = self.embedding(text, offsets)
         return self.fc(embedded)
 
-class RNN(nn.Module):
-    def __init__(self, vocab_size, embed_dim, num_class, hidden_size, num_layers):
-        self.embedding = nn.EmbeddingBag(vocab_size, embed_dim, )
-        self.lstm = nn.LSTM(embed_dim, hidden_size, num_layers,
-            bidirectional=True, batch_first=True, dropout=0.1)
-        self.fc = nn.Linear(hidden_size * 2, num_class)
-    
-    def forward(self, x):
-        x, _  = x
-        out = self.embedding(x)
-        out, _ = self.lstm(out)
-        out = self.fc(out[:, -1, :])
-        return out
 
 num_class = len(set([label for (label, text) in train_iter]))
 vocab_size = len(vocab)
 emsize = 128
 
 model = Classifier1(vocab_size, emsize, num_class).to(device)
-model = RNN(vocab_size, emsize, num_class, 64, 2).to(device)
 print(f'vocabulary_list_length is {vocab_size}, embeding size is {emsize}')
 print(model)
 
@@ -110,7 +96,7 @@ def train(dataloader):
         total_count += label.size(0)
         if idx % log_interval == 0 and idx > 0:
             elapsed = time.time() - start_time
-            print(label.size(), text.size(), offsets.size())
+            #print(label.size(), text.size(), offsets.size())
             print('epoch {:3d} {:5d}/{:5d} batches accuracy {:8.3f}'.format(epoch, 
                                         idx, len(dataloader),
                                         total_acc/total_count))
