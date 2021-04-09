@@ -890,6 +890,20 @@ def ad_report():
     flash('广告统计已更新')
     return res_data
 
+#部分更新总表
+@app.route('/uzong_update', methods=['GET'])
+def uzong_update():
+    mydb("update uzong set status = '仅批量' where status  = '起批量'")
+    con =mydb('select uzong.status, uzong.sku from uzong inner join zong on uzong.sku = zong.sku and uzong.status <> zong.status')
+    data = [i for i in con]
+    num = len(data)
+    sql = "update zong set status = ? where sku = ?"
+    mydb(sql, data, True)
+    res_data = {"message": "success", "data": {}}
+    res_data = jsonify(res_data)
+    flash(f'总表已部分更新{num}个SKU状态')
+    return res_data
+    
 #调试模式运行
 if __name__ == "__main__":    
         app.debug = True

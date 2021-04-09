@@ -11,7 +11,8 @@
         <div id="command_div">
             <input id=table_name type=text>
             <a  href="#" class="easyui-linkbutton" iconCls="icon-print" id=table_export type=button>导出表格</a>
-            <a  href="#" class="easyui-linkbutton" iconCls="icon-reload" id=update_all_accounts_listings>更新全部在线产品</a>            
+            <a  href="#" class="easyui-linkbutton" iconCls="icon-reload" id=update_all_accounts_listings>同步全部账号在线产品</a>            
+            <a  href="#" class="easyui-linkbutton" iconCls="icon-ok" id=uzong_update>部分更新总表SKU状态</a> 
         <form id="upload_form" action="/upload_file" method="post" enctype="multipart/form-data">
             <input type="file" name="file">
             <input type="submit" value="提交文件到后台并更新数据">
@@ -81,9 +82,14 @@
         $("#command_div").delegate("#update_all_accounts_listings", "click", function(){
           if (! confirm("更新所有账号在线产品?")){return;}
           var url = `/update_all_accounts_listings`
-          $.get(url, function(res){})
+          $.get(url, function(res){location.reload(true)})
         })
-
+        //总表部分更新
+        $("#command_div").delegate("#uzong_update", "click", function(){
+          if (! confirm("部分更新总表SKU状态?")){return;}
+          var url = `/uzong_update`
+          $.get(url, function(res){location.reload(true)})
+        })
         //导出表格 导出静态文件
         $("#command_div").delegate("#table_export", "click", function(){
           var name = $("#table_name")[0].value
