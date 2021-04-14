@@ -266,7 +266,7 @@ def get_cancellations_by_account(account):
     params = {
     'SPC_CDS_VER':2,
     'source':'cancelled_to_respond',
-    'page_size':40,
+    'page_size':10,
     'page_number':1,
     'total':0,
     'is_massship':False
@@ -299,10 +299,10 @@ def get_all_cancellations():
 def cancellation_reject_accept(account, order_id, action):
     #account, order_id, action = 'jihuishi.my', 65371133466290, 'accept'
     site = account[-2:]
-    url = host(site) + '/api/v3/order/respond_cancel_request'
+    url = host(site) + '/api/v3/order/respond_cancel_request/?SPC_CDS_VER=2'
     data = {'order_id':order_id, 'action': action}
     cookies = get_cookie_jar(account)
-    res = requests.post(url, data=data, cookies=cookies)
+    res = requests.post(url, data=data, cookies=cookies, headers=headers)
     print(order_id, res.json(),res.status_code)
     return res.json()
 

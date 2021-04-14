@@ -1,5 +1,5 @@
 #coding=utf-8  
-import sqlite3, json, os, requests, time, csv, zipfile
+import sqlite3, json, os, requests, time, csv, zipfile, pprint
 from api_tools import *
 from shopee_api import *
 from app import *
@@ -89,7 +89,7 @@ def readcats(cats):
     t2 = snow()
     print(t1, t2)
 
-def caaformate(site):
+def catformate(site):
     check_cookie_jar('elenxs.' + site)
     step = 300
     find = 0
@@ -110,6 +110,45 @@ def caaformate(site):
             for i in range(5):
                 time.sleep(1)
                 print('waiting')
-    
 
-    
+#获取账号全部订单
+def get_orders_by_account(account):
+    site = account.split(".")[1]
+    cookies = get_cookie_jar(account) 
+    url = host(site) + '/api/v3/order/get_order_id_list'
+    params = {
+    'SPC_CDS_VER':2,
+    'sort_by':'create_date_desc',
+    'page_size':10,
+    'page_number':2,
+    'from_page_number':1,
+    'total':0,
+    'flip_direction':'ahead',
+    }
+    data = requests.get(url, params=params,cookies=cookies, headers=headers).json()
+    orders = data['data']['orders'] #shop_id,order_id
+    order_ids = [str(i['order_id']) for i in orders]
+    order_ids = ','.join(order_ids)
+    print(account, len(orders), order_ids)
+    url = host(site) + '/api/v3/order/get_compact_order_list_by_order_ids'
+    params = {'SPC_CDS_VER':2, 'order_ids':order_ids}
+    data = data = requests.get(url, params=params,cookies=cookies, headers=headers).json()
+    orders = data['data']['orders'] 
+    print(account, len(orders))
+    #assert 0
+    values = []
+    for r in orders:
+        order_sn = r['order_sn']
+        payby_date = snow(r['payby_date'])
+        print(len(r['order_items']))
+        for i in r['order_items']:
+            item_id = i['item_model']['item_id']
+            model_id = i['item_model']['model_id']
+            ctime = snow(i['item_model']['ctime'])
+            row = [account, order_sn, payby_date, item_id, model_id, ctime]
+            values.append(row)
+    sql = '''insert into orders values (?, ?, ?, ?, ?, ?)'''
+    mydb(sql, values, True)
+    return
+
+get_orders_by_account('machinehome.my')

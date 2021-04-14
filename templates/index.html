@@ -76,8 +76,8 @@ $("#update_stock_account")[0].onclick = update_stock_account
 $("#wait_promotion_account")[0].onclick = wait_promotion_account
 $("#select_output")[0].onclick = select_output
 $("#get_recommend_category")[0].onclick = ai_recommend_category
-$("#stock2zero")[0].onclick = function(){$("textarea")[0].value = "with skus as (with t as (select * from stock where available = 0 ) select t.sku from t inner join zong on t.sku = zong.sku where zong.status = '暂时缺货' or zong.status = '停产') select * from items where model_stock > 0 and ((model_sku = '' and parent_sku in skus) or (model_sku <> '' and model_sku in skus));"}
-$("#zero2stock")[0].onclick = function(){$("textarea")[0].value = "with skus as (with temp as (select * from stock where available > 5 and ado > 1 ) select temp.sku from temp inner join zong on temp.sku = zong.sku where zong.status = '正常' or zong.status = '起批量') select * from items where model_stock = 0 and ((model_sku = '' and parent_sku in skus) or (model_sku <> '' and model_sku in skus));"}
+$("#stock2zero")[0].onclick = function(){$("textarea")[0].value = "with skus as (with t as (select * from stock where available = 0 ) select t.sku from t inner join zong on t.sku = zong.sku where zong.status = '暂时缺货' or zong.status = '停产') select item_id, model_id, 0, account, parent_sku, model_sku, model_sold, model_stock from items where model_stock > 0 and ((model_sku = '' and parent_sku in skus) or (model_sku <> '' and model_sku in skus));"}
+$("#zero2stock")[0].onclick = function(){$("textarea")[0].value = "with skus as (with temp as (select * from stock where available > 5 and ado > 1 ) select temp.sku from temp inner join zong on temp.sku = zong.sku where zong.status = '正常' or zong.status = '起批量') select item_id, model_id, 100, account, parent_sku, model_sku, model_sold, model_stock from items where model_stock = 0 and ((model_sku = '' and parent_sku in skus) or (model_sku <> '' and model_sku in skus));"}
 
 
 

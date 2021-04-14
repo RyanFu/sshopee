@@ -67,6 +67,7 @@
         })
     }
     function approve_all(){
+        if (! confirm("确定同意修改所有已提交的价格修改?")){return;}
         var url = '/easyui/wait/get'
         var data = {'page':1, rows:5000}
         $.post(url, data, function(res){

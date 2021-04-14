@@ -27,6 +27,7 @@ def mydb(sql, values=(), many=False):
     return rv
 
 def snow(tsp=None):
+    tsp = int(tsp) if tsp else None
     t = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tsp))
     return t
 
