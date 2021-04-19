@@ -73,6 +73,7 @@
         $.post(url, data, function(res){
             let  rows = res.rows
             let mp = new Map()
+            rows = rows.filter(i=>Number(i.done)=0)
             rows.map(i=>{mp[i.account]=[]})
             rows.map(i=>{
                 mp[i.account].push([i.item_id, i.model_id, i.price])

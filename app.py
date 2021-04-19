@@ -903,6 +903,17 @@ def uzong_update():
     res_data = jsonify(res_data)
     flash(f'总表已部分更新{num}个SKU状态')
     return res_data
+
+@app.route('/name2detail', methods=['POST'])
+def name2detail():
+    account, name_list = request.json['account'], request.json['name_list']
+    data = [[account, name] for name in name_list]
+    sql = ''
+    con = mydb(sql, data, True)
+    res_data = {"message": "success", "data": {}}
+    res_data = jsonify(res_data)
+    flash(f'匹配成功')
+    return res_data
     
 #调试模式运行
 if __name__ == "__main__":    

@@ -495,7 +495,7 @@ def ad_account(account, report):
     url = host(account[-2:]) + '/api/marketing/v3/pas/report/shop_report_by_time/'
     h, m, s = time.localtime().tm_hour, time.localtime().tm_min, time.localtime().tm_sec
     end = int(time.time()) - (h * 60 + m) * 60 - s
-    start = end - 60 *60 *24 * 7
+    start = end - 60 *60 *24 * 15
     params = {
     'start_time': start,
     'end_time': end,
