@@ -58,6 +58,7 @@
         <a href="#" class="easyui-linkbutton" iconCls="icon-save" plain="true" onclick="javascript:$('#table_password').edatagrid('saveRow')">Save</a>
         <a href="#" class="easyui-linkbutton" iconCls="icon-undo" plain="true" onclick="javascript:$('#table_password').edatagrid('cancelRow')">Cancel</a>
         <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true" onclick="auto_login()">Login</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-reload" plain="true" onclick="auto_follow()">Follow</a>
     </div>
 
     <script type="text/javascript">
@@ -113,7 +114,12 @@
         var url = '/open_sellercenter?account=' + account
         $.get(url, function(res){})
         }
-
+        function auto_follow(){
+        var row = $('#table_password').datagrid('getSelected')
+        var account = row.account
+        var url = '/auto_follow?account=' + account
+        $.get(url, function(res){$("#jsmessage")[0].textContent+=account + "关注完成"})       
+        }
 
 
     </script>

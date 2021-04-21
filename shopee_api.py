@@ -535,6 +535,22 @@ def ad_report():
     mydb('delete from ad')
     mydb(sql, report, True)
 
+def follow_one(site, cookies, shop_id):
+    url = host(site) +  '/api/v3/settings/follow_shop/?SPC_CDS_VER=2&SPC_CDS=' + cookies['SPC_CDS']
+    data = {'is_follow': True, 'target_shop_id': shop_id}
+    re = requests.post(url, json=data, headers=headers, cookies=cookies)
+    #print(shop_id, re.text)
+
+def auto_follow(account):
+    site = account[-2:]
+    check_cookie_jar(account)
+    cookies = get_cookie_jar(account)
+    con = mydb('select shopid from shopids where site = ? order by used asc limit 300', [site,])
+    ids = [i[0] for i in con]
+    values = [[site, cookies, shop_id] for shop_id in ids]
+    multiple_mission_pool(follow_one, values)
+    mydb('update shopids set used = used + 1 where shopid = ?', con, True)
+
 if __name__ == '__main__':
     #ad_report()
     pass

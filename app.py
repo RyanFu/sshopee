@@ -907,13 +907,38 @@ def uzong_update():
 @app.route('/name2detail', methods=['POST'])
 def name2detail():
     account, name_list = request.json['account'], request.json['name_list']
-    data = [[account, name] for name in name_list]
-    sql = ''
-    con = mydb(sql, data, True)
-    res_data = {"message": "success", "data": {}}
+    mark_list = ', '.join(["'" + i +  "'" for i in name_list])
+    #print(mark_list)
+    sql = '''with temp as (select item_id, parent_sku, model_sku, name, 0, model_original_price, model_current_price, view, sold, like, rating_count, rating_star, images_count 
+    from items where account = ? and name in ({} )) 
+    select * from temp left join zong on 
+    (temp.parent_sku = zong.sku or temp.model_sku = zong.sku) 
+    left join stock on (temp.parent_sku = stock.sku or temp.model_sku = stock.sku)'''.format(mark_list)
+    con = mydb(sql, (account,))
+    rows = [con[i] for i in range(len(con)) if i == 0 or con[i][0] != con[i-1][0] ]
+    rows = [i[3:13] + (i[17], i[18], i[22], i[14], i[16], i[0]) for i in rows]
+    res_data = {"message": "success", "data": rows}
     res_data = jsonify(res_data)
     flash(f'匹配成功')
     return res_data
+    
+@app.route('/get_shopids', methods=['POST'])
+def get_shopids():
+    site, shopids = request.json['site'], request.json['shopids']
+    data = [[i, site, 0] for i in shopids]
+    sql = 'insert into shopids values(?,?,?)'
+    mydb(sql, data, True)
+    res_data = {"message": "success", "data": []}
+    res_data = jsonify(res_data)
+    return res_data    
+
+@app.route('/auto_follow', methods=['GET'])
+def auto_follow():
+    account = request.args['account']
+    shopee_api.auto_follow(account)
+    res_data = {"message": "success", "data": []}
+    res_data = jsonify(res_data)
+    return res_data 
     
 #调试模式运行
 if __name__ == "__main__":    

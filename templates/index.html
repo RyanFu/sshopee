@@ -27,6 +27,7 @@
 <a class="easyui-linkbutton" iconCls="icon-search" id="get_recommend_category"  >推荐分类查询</a>
 <a class="easyui-linkbutton admin" iconCls="icon-print" id="stock2zero"  >库存调零</a>
 <a class="easyui-linkbutton admin" iconCls="icon-print" id="zero2stock"  >库存补充</a>
+<a class="easyui-linkbutton admin" iconCls="icon-print" id="name2detail"  >标题查询</a>
 <br><br>
 <!-- 搜索在线产品 -->
   <label >自定义SKU:</label>
@@ -78,7 +79,7 @@ $("#select_output")[0].onclick = select_output
 $("#get_recommend_category")[0].onclick = ai_recommend_category
 $("#stock2zero")[0].onclick = function(){$("textarea")[0].value = "with skus as (with t as (select * from stock where available = 0 ) select t.sku from t inner join zong on t.sku = zong.sku where zong.status = '暂时缺货' or zong.status = '停产') select item_id, model_id, 0, account, parent_sku, model_sku, model_sold, model_stock from items where model_stock > 0 and ((model_sku = '' and parent_sku in skus) or (model_sku <> '' and model_sku in skus));"}
 $("#zero2stock")[0].onclick = function(){$("textarea")[0].value = "with skus as (with temp as (select * from stock where available > 5 and ado > 1 ) select temp.sku from temp inner join zong on temp.sku = zong.sku where zong.status = '正常' or zong.status = '起批量') select item_id, model_id, 100, account, parent_sku, model_sku, model_sold, model_stock from items where model_stock = 0 and ((model_sku = '' and parent_sku in skus) or (model_sku <> '' and model_sku in skus));"}
-
+$("#name2detail")[0].onclick = name2detail
 
 
 $(document).ready(function(){
@@ -86,7 +87,9 @@ $('#layout_div').layout('collapse','west');
 });
 //结果输出
 function show_data(data){
+    if (data.length == 0){$("textarea")[0].value = '无内容'}
     if (typeof(data[0]) == "object"){
+        console.log('matrix')
         for (var i = 0; i < data.length; i++) { data[i] = data[i].join("\t");}
     }
     var con = data.join("\n")
@@ -471,6 +474,24 @@ function calculate_price(c, w, r = 0){
                 $('#jsmessage')[0].textContent += account + '查询成功;'
                 console.log(res)
                 show_data(res.data)
+            }
+        })
+    }
+    function name2detail(){
+        var name_list = $("textarea")[0].value.split("\n").filter(i=>i.length>0).map(i=>i.trim())
+        var account = $("[name=account]")[0].value
+        var url = "/name2detail"
+        var data = {"name_list": name_list, "account": account}
+        $('#jsmessage')[0].textContent += account + '准备更新;'
+        $.ajax({
+            type:"POST",
+            url: url,
+            data:JSON.stringify(data),
+            headers: {"Content-Type": "application/json"},
+            success:function(res){
+                $("textarea")[0].value = "已提交"
+                $('#jsmessage')[0].textContent += account + '更新成功;'
+                show_data(res.data)     
             }
         })
     }
