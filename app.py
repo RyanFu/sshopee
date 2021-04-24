@@ -17,71 +17,11 @@ if env == "Windows":
 else:
     database_name = "/root/shopee.db"
 
-exchange_rate = {
-"my": 1.6074,
-"id":  0.000463,
-"tw":  0.2343,
-"ph":  0.1389,
-"vn":  0.00029,
-"th":  0.2146,
-"sg": 4.914,
-"br":  1.1675,
-"mx": 0.3118,
-}
-cost_rate = 0.06 + 0.02 + 0.02 + 0.04 + 0.02 + 0.01
-#佣金6 手续2 售后2 损耗4 活动2 包装1
-
 def dict_factory(cursor, row):
     d = {}
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
     return d
-
-def shopee_price(cost, weight, profit_rate = 0):
-    weight = math.ceil(weight/10)*10
-    shipping_fee = {
-    "my": weight*0.015,
-    "id": weight*120,
-    "th": weight*0.2,
-    "ph": max(weight*0.45+1, 23),
-    "vn": weight*90,
-    "sg": max(weight*0.011 + 0.05,0.6),
-    "br": min(max(5, weight * 0.14 + 0.8), weight * 0.09 + 5.8),
-    "mx": min(max(20, weight * 0.5 + 5), weight * 0.4 + 55)}
-    sale_price = { 
-    "my": math.ceil((cost+shipping_fee["my"]*exchange_rate["my"])/(1-cost_rate-profit_rate)/exchange_rate['my'] *10)/10,
-    "id": math.ceil((cost+shipping_fee["id"]*exchange_rate["id"])/(1-cost_rate-profit_rate)/exchange_rate['id'] /100)*100,
-    "th": math.ceil((cost+shipping_fee["th"]*exchange_rate["th"])/(1-cost_rate-profit_rate)/exchange_rate['th'] /1)*1,
-    "ph": math.ceil((cost+shipping_fee["ph"]*exchange_rate["ph"])/(1-cost_rate-profit_rate)/exchange_rate['ph'] /1)*1,
-    "vn": math.ceil((cost+shipping_fee["vn"]*exchange_rate["vn"])/(1-cost_rate-profit_rate)/exchange_rate['vn'] /100)*100,
-    "sg": math.ceil((cost+shipping_fee["sg"]*exchange_rate["sg"])/(1-cost_rate-profit_rate)/exchange_rate['sg'] * 10)/10,
-    "br": math.ceil((cost+shipping_fee["br"]*exchange_rate["br"])/(1-cost_rate-profit_rate)/exchange_rate['br'] * 10)/10,
-    "mx": math.ceil((cost+shipping_fee["mx"]*exchange_rate["mx"])/(1-cost_rate-profit_rate)/exchange_rate['mx'] * 10)/10,
-    }
-    return sale_price
-
-def shopee_rate(cost, weight, price):
-    weight = math.ceil(weight/10)*10
-    shipping_fee = {
-    "my": weight*0.015,
-    "id": weight*120,
-    "th": weight*0.2,
-    "ph": max(weight*0.45+1, 23),
-    "vn": weight*90,
-    "sg": max(weight*0.011 + 0.05,0.6),
-    "br": min(max(5, weight * 0.14 + 0.8), weight * 0.09 + 5.8),
-    "mx": min(max(20, weight * 0.5 + 5), weight * 0.4 + 55)}
-    sale_price = { 
-    "my": round((price*(1-cost_rate)-cost/exchange_rate["my"]-shipping_fee["my"])/price, 2),
-    "id": round((price*(1-cost_rate)-cost/exchange_rate["id"]-shipping_fee["id"])/price, 2),
-    "th": round((price*(1-cost_rate)-cost/exchange_rate["th"]-shipping_fee["th"])/price, 2),
-    "ph": round((price*(1-cost_rate)-cost/exchange_rate["ph"]-shipping_fee["ph"])/price, 2),
-    "vn": round((price*(1-cost_rate)-cost/exchange_rate["vn"]-shipping_fee["vn"])/price, 2),
-    "sg": round((price*(1-cost_rate)-cost/exchange_rate["sg"]-shipping_fee["sg"])/price, 2),
-    "br": round((price*(1-cost_rate)-cost/exchange_rate["br"]-shipping_fee["br"])/price, 2),
-    "mx": round((price*(1-cost_rate)-cost/exchange_rate["mx"]-shipping_fee["mx"])/price, 2),
-    }
-    return sale_price
 
 @app.before_request
 def requests_log():
@@ -183,6 +123,10 @@ def waitPage():
 def consolePage():
     return render_template("console.html")
 
+@app.route('/shopee_collection', methods = ['GET'])
+def collectionPage():
+    return render_template("collection.html")
+
 #前台初始化
 @app.route('/basic_info', methods = ['GET'])
 def basic_info():
@@ -269,11 +213,11 @@ def export_by_account():
         df = read_sql(sql, cc)
         t2 = time.time()
     cw = list(zip(df['cost'], df['weight'], df['current_price']))
-    df['0%price'] = [shopee_price(float(i),int(j),0)[account[-2:]] for i, j, k in cw]
-    df['5%price'] = [shopee_price(float(i),int(j),0.05)[account[-2:]] for i, j, k in cw]
-    df['10%price'] = [shopee_price(float(i),int(j),0.1)[account[-2:]] for i, j, k in cw]
-    df['15%price'] = [shopee_price(float(i),int(j),0.15)[account[-2:]] for i, j, k in cw]
-    df['20%price'] = [shopee_price(float(i),int(j),0.2)[account[-2:]] for i, j, k in cw]
+    df['0%price'] = [shopee_api.shopee_price(float(i),int(j),0)[account[-2:]] for i, j, k in cw]
+    df['5%price'] = [shopee_api.shopee_price(float(i),int(j),0.05)[account[-2:]] for i, j, k in cw]
+    df['10%price'] = [shopee_api.shopee_price(float(i),int(j),0.1)[account[-2:]] for i, j, k in cw]
+    df['15%price'] = [shopee_api.shopee_price(float(i),int(j),0.15)[account[-2:]] for i, j, k in cw]
+    df['20%price'] = [shopee_api.shopee_price(float(i),int(j),0.2)[account[-2:]] for i, j, k in cw]
     #df['profit_rate'] = [shopee_rate(float(i),int(j),float(k))[account[-2:]] for i, j, k in cw]
     file_name = "./static/{account}.xlsx".format(account=account)
     df.to_excel(file_name, index=False)
@@ -368,8 +312,8 @@ def wrong_price_by_account():
         cu = cc.execute(sql)
         data = []
         for row in cu:
-            price_min = shopee_price(row[5], row[6], 0.05)[site]
-            price_max = shopee_price(row[5], row[6], 0.25)[site]
+            price_min = shopee_api.shopee_price(row[5], row[6], 0.05)[site]
+            price_max = shopee_api.shopee_price(row[5], row[6], 0.25)[site]
             price_current = row[2]
             if price_current > price_max or price_current < price_min:
                 new_row = [i for i in row]
@@ -860,7 +804,7 @@ def wait_promotion_account():
         sku = model_sku if model_sku else parent_sku
         con = mydb(sqlb, (sku,))
         cost, weight = con[0] if con else (0, 0)
-        rate = shopee_rate(float(cost), float(weight), float(price))[account[-2:]]
+        rate = shopee_api.shopee_rate(float(cost), float(weight), float(price))[account[-2:]]
         profit = float(price) * rate
         bprice = float(price) - profit
         row = [item_id, model_id, price, account,sku,cost, weight,bprice,profit,rate,snow(),0]
@@ -939,7 +883,38 @@ def auto_follow():
     res_data = {"message": "success", "data": []}
     res_data = jsonify(res_data)
     return res_data 
-    
+
+@app.route('/save_collection', methods=['POST'])
+def save_collection():
+    row = [
+        request.json['user'],
+        snow(),
+        request.json['sku'],
+        request.json['cost'],
+        request.json['weight'],
+        request.json['name'],
+        request.json['des'],
+        '',
+        0,
+        request.json['images'],
+    ]
+    row[-1] = '\t'.join(row[-1])
+    data = []
+    request.json['colors'] = [i for i in request.json['colors'] if len(i) > 1]
+    if request.json['colors']:
+        for c in request.json['colors']:
+            nrow = [i for i in row]
+            nrow[7] = c
+            nrow[2] += '_' + c
+            data.append(nrow)
+    else:
+        data = [row,]
+    sql = 'insert into collections values(?,?,?,?,?,?,?,?,?,?)'
+    mydb(sql, data, True)
+    res_data = {"message": "success", "data": []}
+    res_data = jsonify(res_data)
+    return res_data 
+   
 #调试模式运行
 if __name__ == "__main__":    
         app.debug = True

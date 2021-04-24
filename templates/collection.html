@@ -1,0 +1,92 @@
+﻿{% extends "layout.html" %}
+{% block title %}标题{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+	<h2>产品采集</h2>
+	<p>Fill the form and submit it.</p>
+	<div style="margin:20px 0;"></div>
+	<div class="easyui-panel" title="添加" style="width:90%;padding:30px 60px;">
+		<form id="ff" method="post">
+			<div style="margin-bottom:20px;float:left;width:50%">
+				<input class="easyui-textbox" name="user" style="width:70%" data-options="label:'姓名:'">
+			</div>
+			<div style="margin-bottom:20px;float:left;width:50%">
+				<input class="easyui-textbox" name="sku" style="width:70%" data-options="label:'SKU:'">
+			</div>
+			<div style="margin-bottom:20px;float:left;width:50%">
+				<input class="easyui-textbox" name="cost" style="width:70%" data-options="label:'成本/元:'">
+			</div>
+			<div style="margin-bottom:20px;float:left;width:50%">
+				<input class="easyui-textbox" name="weight" style="width:70%" data-options="label:'重量/克:'">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="name" style="width:100%" data-options="label:'标题:'">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="des" style="width:100%;height:120px" data-options="label:'描述:',multiline:true">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="imgs" style="width:100%" data-options="label:'图片链接:'">
+			</div>
+			<div style="margin-bottom:20px">
+				<input class="easyui-textbox" name="colors" style="width:100%" data-options="label:'属性名称:'">
+			
+			</div>
+		</form>
+		<div style="margin-bottom:20px;text-align:center;padding:5px 0">
+            <a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm()" style="width:80px">清空内容</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="preview()" style="width:80px">图片预览</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="submitForm()" style="width:80px">确认提交</a>
+
+	</div></div><br>
+    <table style="margin-bottom:20px;" ><tr name="preview"></tr></table>
+
+	<script>
+        function clearForm(){
+            var user = $("[name=user]")[0].value
+            $('#ff').form('clear')
+        }
+		function submitForm(){
+            var data = {
+                'user' : $("[name=user]")[0].value,
+                'sku' : $("[name=sku]")[0].value,
+                'cost' : $("[name=cost]")[0].value,
+                'weight' : $("[name=weight]")[0].value,
+                'name' : $("[name=name]")[0].value,
+                'des' : $("[name=des]")[0].value,
+                'colors' : $("[name=colors]")[0].value.split(',').map(i=>i.trim()),
+                'images' : $('img',$("[name=preview]")[0]).toArray().map(i=>i.src),
+            }
+            var url = '/save_collection'
+            $.ajax({
+                type:"POST",
+                url: url,
+                data:JSON.stringify(data),
+                headers: {"Content-Type": "application/json"},
+                success:function(res){
+                    $('#jsmessage')[0].textContent += data.sku + '保存成功;'  
+            }
+        })
+            
+		}
+
+        function preview(){
+            $("[name=preview]")[0].innerHTML = ''
+            var imgs = $("[name=imgs]")[0].value.split(",").map(i=>i.trim())
+            for (let i of imgs){
+                let img = $("<img style='max-width:100%;max-height:200px;'>")[0]
+                img.src = i
+                $("[name=preview]")[0].append(img)
+            }
+            $("img").wrap("<td class='grid'><td>")
+        }
+        $("body").delegate(".grid","dblclick",function(e){
+            console.log(e.target.src);
+            e.target.remove();
+            //e.target.parentNode.removeChild(e.target);
+        });
+	</script>
+
+{% endblock %}

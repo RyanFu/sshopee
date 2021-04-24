@@ -157,3 +157,12 @@
         aLink.download = fileName + ".xlsx";
         aLink.click();
     }
+    function waitpost(url, data, feed){
+            $.ajax({
+                type:"POST",
+                url: url,
+                data:JSON.stringify(data),
+                headers: {"Content-Type": "application/json"},
+                success: feed,
+                })
+    }

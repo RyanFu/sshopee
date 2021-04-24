@@ -21,6 +21,67 @@ def host(site):
     url = "https://seller.{}.shopee.cn".format(site)
     return url
 
+cost_rate = 0.06 + 0.02 + 0.02 + 0.04 + 0.02 + 0.01
+#佣金6 手续2 售后2 损耗4 活动2 包装1
+
+exchange_rate = {
+"my": 1.6074,
+"id":  0.000463,
+"tw":  0.2343,
+"ph":  0.1389,
+"vn":  0.00029,
+"th":  0.2146,
+"sg": 4.914,
+"br":  1.1675,
+"mx": 0.3118,
+}
+
+def shopee_price(cost, weight, profit_rate = 0):
+    weight = math.ceil(weight/10)*10
+    shipping_fee = {
+    "my": weight*0.015,
+    "id": weight*120,
+    "th": weight*0.2,
+    "ph": max(weight*0.45+1, 23),
+    "vn": weight*90,
+    "sg": max(weight*0.011 + 0.05,0.6),
+    "br": min(max(5, weight * 0.14 + 0.8), weight * 0.09 + 5.8),
+    "mx": min(max(20, weight * 0.5 + 5), weight * 0.4 + 55)}
+    sale_price = { 
+    "my": math.ceil((cost+shipping_fee["my"]*exchange_rate["my"])/(1-cost_rate-profit_rate)/exchange_rate['my'] *10)/10,
+    "id": math.ceil((cost+shipping_fee["id"]*exchange_rate["id"])/(1-cost_rate-profit_rate)/exchange_rate['id'] /100)*100,
+    "th": math.ceil((cost+shipping_fee["th"]*exchange_rate["th"])/(1-cost_rate-profit_rate)/exchange_rate['th'] /1)*1,
+    "ph": math.ceil((cost+shipping_fee["ph"]*exchange_rate["ph"])/(1-cost_rate-profit_rate)/exchange_rate['ph'] /1)*1,
+    "vn": math.ceil((cost+shipping_fee["vn"]*exchange_rate["vn"])/(1-cost_rate-profit_rate)/exchange_rate['vn'] /100)*100,
+    "sg": math.ceil((cost+shipping_fee["sg"]*exchange_rate["sg"])/(1-cost_rate-profit_rate)/exchange_rate['sg'] * 10)/10,
+    "br": math.ceil((cost+shipping_fee["br"]*exchange_rate["br"])/(1-cost_rate-profit_rate)/exchange_rate['br'] * 10)/10,
+    "mx": math.ceil((cost+shipping_fee["mx"]*exchange_rate["mx"])/(1-cost_rate-profit_rate)/exchange_rate['mx'] * 10)/10,
+    }
+    return sale_price
+
+def shopee_rate(cost, weight, price):
+    weight = math.ceil(weight/10)*10
+    shipping_fee = {
+    "my": weight*0.015,
+    "id": weight*120,
+    "th": weight*0.2,
+    "ph": max(weight*0.45+1, 23),
+    "vn": weight*90,
+    "sg": max(weight*0.011 + 0.05,0.6),
+    "br": min(max(5, weight * 0.14 + 0.8), weight * 0.09 + 5.8),
+    "mx": min(max(20, weight * 0.5 + 5), weight * 0.4 + 55)}
+    sale_price = { 
+    "my": round((price*(1-cost_rate)-cost/exchange_rate["my"]-shipping_fee["my"])/price, 2),
+    "id": round((price*(1-cost_rate)-cost/exchange_rate["id"]-shipping_fee["id"])/price, 2),
+    "th": round((price*(1-cost_rate)-cost/exchange_rate["th"]-shipping_fee["th"])/price, 2),
+    "ph": round((price*(1-cost_rate)-cost/exchange_rate["ph"]-shipping_fee["ph"])/price, 2),
+    "vn": round((price*(1-cost_rate)-cost/exchange_rate["vn"]-shipping_fee["vn"])/price, 2),
+    "sg": round((price*(1-cost_rate)-cost/exchange_rate["sg"]-shipping_fee["sg"])/price, 2),
+    "br": round((price*(1-cost_rate)-cost/exchange_rate["br"]-shipping_fee["br"])/price, 2),
+    "mx": round((price*(1-cost_rate)-cost/exchange_rate["mx"]-shipping_fee["mx"])/price, 2),
+    }
+    return sale_price
+
 
 #使用SELENIUM控制CHORME打开账号后台
 def open_sellercenter(account, password, cookie_only=True):
