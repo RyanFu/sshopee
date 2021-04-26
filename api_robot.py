@@ -73,7 +73,7 @@ def mp2row(mp, sufix, acsi):
     cut = {"my":0.1, "id":100, "th":1, "ph":1, "vn":100, "br":0.1, "sg": 0.1, "mx":0.1}
     price = round(price / 0.6 / cut[site]) * cut[site]
     sku = mp['ClientSKU']
-    nrow = [''] * 30
+    nrow = [''] * 29
     nrow[0] = mp['cat']
     nrow[1:3] = [name, des]
     nrow[10:12] = [price, 300]
@@ -110,7 +110,9 @@ def sku_info_excel(user_name,user_password, sku_list, acsi):
     hd[26] = channel_map[acsi[-2:]]
     sql = 'select name, description, image from sufix where account = ?'
     sufix = mydb(sql, [acsi[:-3],])[0]
-    data = read_sku_info(user_name,user_password, sku_list)
+    data = []
+    for i in range(0, len(sku_list), 49):      
+        data += read_sku_info(user_name,user_password, sku_list[i: i+49])
     name_list = [r['ProductName'] for r in data]
     cat_res = recommend_category(name_list, acsi)
     cat_list = [i[1] for i in cat_res]
