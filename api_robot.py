@@ -77,7 +77,7 @@ def mp2row(mp, sufix, acsi):
     nrow[0] = mp['cat']
     nrow[1:3] = [name, des]
     nrow[10:12] = [price, 300]
-    nrow[12:22] = images[:9]
+    nrow[13:22] = images[:9]
     nrow[22], nrow[26] = weight, '开启'
     if '-00' in sku or '-' not in sku:
         nrow[3] = sku
@@ -123,4 +123,16 @@ def sku_info_excel(user_name,user_password, sku_list, acsi):
     name = make_excel(sheet, acsi)
     return name
 
- 
+def read_collections():
+    sql = 'select sku, cost, weight, name, des, color, images from collections'
+    con = mydb(sql)
+    data = []
+    for r in con:
+        mp = {}
+        mp['ClientSKU'], mp['LastSupplierPrice'], mp['GrossWeight'], mp['ProductName'],mp['ProductDescription'], mp['color'], mp['images'] = r
+        mp['images'] = mp['images'].split('\t')
+        mp['ProductNameCN'] = ''
+        data.append(mp)
+    return data
+
+print(read_collections())
