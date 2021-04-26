@@ -4,9 +4,10 @@ from os import listdir, system
 from functools import wraps
 from pandas import read_sql
 from datetime import timedelta
-import sqlite3, json, time, math, requests, csv, platform, random
+import sqlite3, json, time, requests, csv, platform, random
 import shopee_api
 from api_tools import mydb, snow, multiple_mission_pool
+from api_robot import sku_info_excel
 
 app = Flask(__name__)   
 app.secret_key = '9dsm8G9OSYlJy64mig9KeXJmp' 
@@ -515,6 +516,16 @@ def redirect_to_erp():
     res = requests.post(url, data=data, headers=headers)
     data = res.text
     return data
+
+#
+@app.route('/sku_info_excel', methods=['POST'])
+def sku_info_excel_view():
+    user_name,user_password = request.json['user_name'], request.json['user_password']
+    sku_list, acsi = request.json['sku_list'], request.json['acsi']
+    name = sku_info_excel(user_name,user_password, sku_list, acsi)
+    res_data = {"message": "success", "name":name}
+    res_data = jsonify(res_data)
+    return res_data
 
 #接收文件
 @app.route('/upload_file', methods=['POST'])

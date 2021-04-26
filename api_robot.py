@@ -1,7 +1,7 @@
 import requests, random, pandas
 from bs4 import BeautifulSoup as sp
 from api_tools import mydb
-from shopee_api import shopee_price
+from shopee_api import shopee_price, recommend_category
 
 channel_map = {"my": "channel_id_28016", "id": "channel_id_88001",
                "th": "channel_id_78004", "ph": "channel_id_48002",
@@ -55,7 +55,10 @@ def read_sku_info(user_name,user_password, sku_list):
 def mp2row(mp, sufix, acsi):
     account, site = acsi.split('.')
     name = mp['ProductName'].split(',')[0] + ' ' + sufix[0]
-    ps = [('<br/>', '\n'), ('<br/>\n', '\n'), ('Specif', '\nSpecif'), ('Note', '\nNote'), ('Package', '\nPackage'),('\n\n\n', '\n\n'),]
+    ps = [('<br/>', '\n'), ('<br/>\n', '\n'), 
+    ('<br />', '\n'), ('<br />\n', '\n'),('\n\n', '\n'), 
+    ('Specif', '\nSpecif'), ('Note', '\nNote'), 
+    ('Package', '\nPackage'),('\n\n\n', '\n\n'),]
     for oritxt, newtxt in ps:
         mp['ProductDescription'] = mp['ProductDescription'].replace(oritxt, newtxt)
     des = mp['ProductDescription'] + '\n\n' + sufix[1]
@@ -63,13 +66,15 @@ def mp2row(mp, sufix, acsi):
     pos = random.choice(["nw", "sw", "ne", "se"])
     sfimg = '?x-oss-process=image/watermark,size_80,color_FFFFFF,t_5,shadow_5,g_{},text_{}'.format(pos, bs)
     images = [i + sfimg for i in mp['images']] + [''] * 9
-    cost, weight = float(mp['LastSupplierPrice']),float(mp['GrossWeight'])
+    cost, weight = float(mp['LastSupplierPrice']),round(float(mp['GrossWeight']) + 5, -1)
     pr = 0.1 if site in ['mx', 'br'] else 0.15
     price = shopee_price(cost, weight, pr)[site]
+    weight = weight if site == 'vn' else weight / 1000
     cut = {"my":0.1, "id":100, "th":1, "ph":1, "vn":100, "br":0.1, "sg": 0.1, "mx":0.1}
     price = round(price / 0.6 / cut[site]) * cut[site]
     sku = mp['ClientSKU']
     nrow = [''] * 30
+    nrow[0] = mp['cat']
     nrow[1:3] = [name, des]
     nrow[10:12] = [price, 300]
     nrow[12:22] = images[:9]
@@ -78,33 +83,44 @@ def mp2row(mp, sufix, acsi):
         nrow[3] = sku
     else:
         psku, num = sku.split("-")
-        nrow[3:8] = [psku, psku, 'color', 'No.' + num, images[0]]
+        nrow[3:8] = [psku, psku, 'color', 'No.' + num[:2], images[0]]
         nrow[12] = sku
     nrow[28] = mp['ProductNameCN']
     return nrow
 
-def make_excel(data, acsi):
+def make_excel(data, acsi): 
     df1 = pandas.DataFrame([['内容在第2页']], columns=None)
     data2 = [[],[],[],[],] + data
     df2 = pandas.DataFrame(data2, columns=hd)
+    #df2['ps_category'] = [''] * 4 + cat_list
     data3 = [["mass_new_basic", '', ''], ["Category name", "Category ID", "Category Pre-order DTS range"]]
     df3 = pandas.DataFrame(data3, columns=None)
     df4 = pandas.DataFrame([['']], columns=None)
-    name = '4new_' + acsi + '.xlsx'
-    with pandas.ExcelWriter('4new.xlsx') as writer:
+    name = './static/4new_' + acsi + '.xlsx'
+    with pandas.ExcelWriter(name) as writer:
         df1.to_excel(writer, sheet_name='Guidance', index=False, header=None)
         df2.to_excel(writer, sheet_name='Template', index=False)
         df3.to_excel(writer, sheet_name='Pre-order DTS Range', index=False, header=None)
         df4.to_excel(writer, sheet_name='Upload Sample', index=False, header=None)
     print(name + ' saved')
+    name = name.replace('./static/', '')
+    return name
  
 def sku_info_excel(user_name,user_password, sku_list, acsi):
+    hd[26] = channel_map[acsi[-2:]]
     sql = 'select name, description, image from sufix where account = ?'
     sufix = mydb(sql, [acsi[:-3],])[0]
     data = read_sku_info(user_name,user_password, sku_list)
+    name_list = [r['ProductName'] for r in data]
+    cat_res = recommend_category(name_list, acsi)
+    cat_list = [i[1] for i in cat_res]
+    cat_name_list = [i[2] for i in cat_res]
+    for i in range(len(data)):
+        data[i]['cat'] = cat_list[i]
+        data[i]['ProductNameCN'] += cat_name_list[i]
+    data.sort(key=lambda x: x['ClientSKU'])
     sheet = [mp2row(mp, sufix, acsi) for mp in data]
-    make_excel(sheet)
+    name = make_excel(sheet, acsi)
+    return name
 
-user_name,user_password = 'guoliang', 'gl23r42'
-sku_list, acsi = ['HA005226-02B', 'HA005226-01B'], 'elenxs.th'
-sku_info_excel(user_name,user_password, sku_list, acsi) 
+ 

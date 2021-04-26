@@ -1,5 +1,5 @@
 #coding=utf-8  
-import api_sklearn
+import api_sklearn, math
 import json, requests, time, platform
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -464,7 +464,7 @@ def recommend_category(name_list, account):
     for r in con:
         mp[r[0]] = '/'.join(r[1:])
     #print(mp)
-    cat_name_ai = [mp.get(int(i), []) for i in cat_id_ai]
+    cat_name_ai = [mp.get(int(i), '') for i in cat_id_ai]
     data = list(zip(name_list, cat_id_ai, cat_name_ai))
     return data
 

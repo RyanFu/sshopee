@@ -71,7 +71,7 @@ $("#wrong_sku")[0].onclick = wrong_sku
 $("#duplicate_sku_by_account")[0].onclick = duplicate_sku_by_account
 $("#format_item_ids")[0].onclick = format_item_ids
 $("#search")[0].onclick = shopee_search
-$("#mass_download_sku")[0].onclick = mass_download_sku
+$("#mass_download_sku")[0].onclick = mass_download_sku_v2
 $("#update_listings_account")[0].onclick = update_listings_account
 $("#update_stock_account")[0].onclick = update_stock_account
 $("#wait_promotion_account")[0].onclick = wait_promotion_account
@@ -363,6 +363,34 @@ function calculate_price(c, w, r = 0){
             mass_read_sku_info(current_list, acsi, user_name, user_password)
             flag.sku_list_count += 1
         }
+
+    }
+    //批量下载刊登资料V2
+    function mass_download_sku_v2(){
+        var acsi = $("[name=account]")[0].value.trim()
+        var user_name = $("[id=user_name]")[0].value.trim()
+        var user_password = $("[id=user_password]")[0].value.trim()        
+        var sku_list = $("textarea")[0].value.split("\n").filter(i=>i.length>5).map(i=>i.trim())
+        for (let e of [acsi, user_name, user_password, sku_list]){
+          if (e == ""){alert("用户名/密码/账号/SKU输入错误");return;}
+        }
+        var data = {'acsi': acsi,
+            'user_name': user_name,
+            'user_password': user_password,
+            'sku_list': sku_list}
+        var url = '/sku_info_excel'
+        $.ajax({
+            type:"POST",
+            url: url,
+            data:JSON.stringify(data),
+            headers: {"Content-Type": "application/json"},
+            success:function(res){
+                var name = res.name
+                file_link(name)
+                console.log(res)     
+            }
+        })
+
 
     }
     //在线库存更新
