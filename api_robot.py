@@ -134,5 +134,3 @@ def read_collections():
         mp['ProductNameCN'] = ''
         data.append(mp)
     return data
-
-print(read_collections())
