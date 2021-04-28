@@ -62,7 +62,7 @@ def decor_retry(func):
     return wrapped_function
 
 #多任务并发, 线程版
-def multiple_mission(func, args_list, max_number=32):
+def multiple_mission(func, args_list, max_number=16):
     num = len(args_list)
     print('total mission number is ', num)
     for i in range(num):
@@ -76,7 +76,7 @@ def multiple_mission(func, args_list, max_number=32):
     return
 
 #多任务并发, 线程版, 加线程池
-def multiple_mission_pool(func, args_list, max_workers=32, debug=False):
+def multiple_mission_pool(func, args_list, max_workers=16, debug=False):
     if debug:
         arg = args_list[0]
         func(*arg)

@@ -1,5 +1,6 @@
 #coding=utf-8 
 from flask import Flask, request, render_template, jsonify, redirect, session, flash
+from logging.config import dictConfig
 from os import listdir, system
 from functools import wraps
 from pandas import read_sql
@@ -8,6 +9,26 @@ import sqlite3, json, time, requests, csv, platform, random
 import shopee_api
 from api_tools import mydb, snow, multiple_mission_pool
 from api_robot import sku_info_excel
+
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://flask.logging.wsgi_errors_stream',
+        'formatter': 'default'
+    }, 'file':{
+    "class": "logging.FileHandler",
+    "filename": "./static/log.txt",
+    'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi', 'file']
+    }
+})
 
 app = Flask(__name__)   
 app.secret_key = '9dsm8G9OSYlJy64mig9KeXJmp' 
@@ -30,7 +51,7 @@ def requests_log():
     if 'static' not in path:
         json, args = request.json, request.args
         msg = [snow(), ip, path]
-        print(msg)
+        #print(msg)
 
 #登录权限检查
 def login_required(func):

@@ -90,7 +90,8 @@ def readcats(cats):
     print(t1, t2)
 
 def catformate(site):
-    check_cookie_jar('elenxs.' + site)
+    acc = 'elenxs.' + site
+    check_cookie_jar(acc)
     step = 300
     find = 0
     for i in range(0, 150000, step):   
@@ -99,7 +100,7 @@ def catformate(site):
         names = [i[0] for i in con]
         if len(names) == 0:
             break
-        mp = shopee_recommend_category(names, 'elenxs.my')
+        mp = shopee_recommend_category(names, acc)
         data = [[mp[name], name, cat] for name, cat in con if int(mp[name]) > 0]
         sql = "update items set model_name = ? where name = ? and category_id = ?"
         mydb(sql, data, True)
@@ -167,5 +168,4 @@ def auto_follow(account):
     multiple_mission_pool(follow_one, values)
     mydb('update shopids set used = used + 1 where shopid = ?', con, True)
 
-account = 'bigbighouse.my'
-auto_follow(account)
+catformate('ph')

@@ -8,23 +8,16 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report
 from api_tools import mydb
-import time, numpy, joblib, os, csv
+import time, numpy, joblib, os, csv, pandas
 
-def load_data(site, min_sample, max_sample, save=False):
-    if save == False:
-        sql = "select distinct name, cat from temp"
-        con = mydb(sql)
-        x, y = [i[0] for i in con], [i[1] for i in con]
-        num_sample, num_class = len(x), len(set(y))
-        print(f"{num_sample} samples for {num_class} classes loaded")
-        return (x, y)
+def save_data(site, min_sample, max_sample):
     sql = "select distinct name, category_id, model_name from items where account like '%{}' order by sold".format(site)
     #sql = "select distinct cname, category_id from ((select distinct parent_sku, model_sku, category_id from items where account like '%{}' order by sold) inner join zong on model_sku = sku or parent_sku = sku)".format(site)
     con = mydb(sql)
     mp = {}
     for name, cat, cat2 in con:
         cat = cat.split(".")[-1]
-        cat = cat2 if len(cat2) > 1 else cat 
+        cat = cat2 if len(cat2) > 1 and cat2.isdigit() else cat 
         name_list = mp.get(cat, [])
         name_list.append(name)
         mp[cat] = name_list
@@ -41,12 +34,20 @@ def load_data(site, min_sample, max_sample, save=False):
     x, y = [i[0] for i in data], [i[1] for i in data]
     num_sample, num_class = len(x), len(set(y))
     print(f"{num_sample} samples for {num_class} classes saved")
+    
+    df = pandas.DataFrame(data, columns=['name', 'cat'])
+    file = 'd:/train_' + site + '.csv'
+    df.to_csv(file, index=False)
+    print('train file saved')
 
-    mydb('delete from temp')
-    mydb('insert into temp values(?,?)', data, True)
-    assert 0, 'data saved to temp, stopping'
-    return (x, y)
-
+def load_data(site):
+    file = 'd:/train_' + site + '.csv'
+    df = pandas.read_csv(file)
+    x, y = df['name'], df['cat']
+    x, y = list(x), list(y)
+    data = (x, y)
+    return data
+    
 def pipe_train(x, y, pipe_name, debug=False):
     #y = [int(i) for i in y]
     if debug:
@@ -85,5 +86,6 @@ def pipe_predict(x_test, model_name):
 
 if __name__ == '__main__':
     site = 'ph'
-    x, y = load_data(site, 30, 200, False)
-    pipe_train(x, y, site, False)
+    save_data(site, 50,  200)
+    x, y = load_data(site)
+    pipe_train(x, y, site, True)
