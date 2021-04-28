@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 *.pyc
 *.joblib
-./static/log.txt
+*.txt
 
 # C extensions
 *.so

@@ -284,7 +284,7 @@ def get_all_page(account):
     total_page = total_count // 48 + 1
     mydb('delete from items where account = ?', (account,))
     num_list = [[account, cookies, i] for i in range(1, total_page + 1)]
-    multiple_mission_pool(get_single_page, num_list)
+    multiple_mission_pool(get_single_page, num_list, max_workers=4)
     mydb('delete from items where status > 3')
     mydb('update items set model_current_price = model_original_price where model_current_price  = 0')
     return

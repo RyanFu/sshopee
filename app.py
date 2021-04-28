@@ -13,7 +13,7 @@ from api_robot import sku_info_excel
 dictConfig({
     'version': 1,
     'formatters': {'default': {
-        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s  \n',
     }},
     'handlers': {'wsgi': {
         'class': 'logging.StreamHandler',
