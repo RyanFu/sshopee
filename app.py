@@ -30,7 +30,7 @@ def requests_log():
     ip, path = request.remote_addr, request.path
     if 'static' not in path:
         json, args = request.json, request.args
-        args = [(e, args(e)) for e in args]
+        args = [(e, args[e]) for e in args]
         json, args = str(json), str(args)
         row = [snow(), ip, path, json, args]
         log['data'].append(row)

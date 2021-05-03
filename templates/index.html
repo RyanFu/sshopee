@@ -388,6 +388,9 @@ function calculate_price(c, w, r = 0){
                 var name = res.name
                 file_link(name)
                 console.log(res)     
+            },
+            error: function(xhr, msg, err){
+            alert(err);
             }
         })
 
