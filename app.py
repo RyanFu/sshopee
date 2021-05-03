@@ -1,6 +1,5 @@
 #coding=utf-8 
 from flask import Flask, request, render_template, jsonify, redirect, session, flash
-from logging.config import dictConfig
 from os import listdir, system
 from functools import wraps
 from pandas import read_sql
@@ -10,26 +9,7 @@ import shopee_api
 from api_tools import mydb, snow, multiple_mission_pool
 from api_robot import sku_info_excel
 
-dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s  \n',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://flask.logging.wsgi_errors_stream',
-        'formatter': 'default'
-    }, 'file':{
-    "class": "logging.FileHandler",
-    "filename": "./static/log.txt",
-    'formatter': 'default'
-    }},
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi', 'file']
-    }
-})
-
+log = {'data':[], 'time':time.time()}
 app = Flask(__name__)   
 app.secret_key = '9dsm8G9OSYlJy64mig9KeXJmp' 
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=1)
@@ -50,8 +30,16 @@ def requests_log():
     ip, path = request.remote_addr, request.path
     if 'static' not in path:
         json, args = request.json, request.args
-        msg = [snow(), ip, path]
-        #print(msg)
+        args = [(e, args(e)) for e in args]
+        json, args = str(json), str(args)
+        row = [snow(), ip, path, json, args]
+        log['data'].append(row)
+        if len(log['data']) > 10 or time.time() - log['time'] > 60:
+            log['time'] = time.time()
+            sql = 'insert into request_logs values(?,?,?,?,?)'
+            mydb(sql, log['data'], True)
+            log['data'] = []
+        #print(row)
 
 #登录权限检查
 def login_required(func):

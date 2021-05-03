@@ -1,5 +1,5 @@
 #coding=utf-8  
-import sqlite3, json, os, requests, time, csv, zipfile, pprint
+import sqlite3, json, os, requests, time, csv, zipfile, pprint, pandas
 from api_tools import *
 from shopee_api import *
 from app import *
@@ -168,4 +168,53 @@ def auto_follow(account):
     multiple_mission_pool(follow_one, values)
     mydb('update shopids set used = used + 1 where shopid = ?', con, True)
 
-catformate('ph')
+def output_collection():
+    site = 'ph'
+    sql = 'select sku, cost, weight, name, des, images, color from collections'
+    con = mydb(sql)
+    rows, data= [], []
+    for i in range(len(con)):
+        sku, urls = con[i][0], con[i][5].split('\t')
+        name, des = con[i][3], con[i][4]
+        cost, weight = float(con[i][1]), round(float(con[i][2])+5,0)
+        price = shopee_price(cost, weight, 0.05)[site] / 0.6
+        cut = {"my":0.1, "id":100, "th":1, "ph":1, "vn":100, "br":0.1, "sg": 0.1, "mx":0.1}
+        price = round(price / 0.6 / cut[site]) * cut[site]
+        color = con[i][6]
+        r = [''] * 28
+        r[1:3] = [name, des]
+        r[10:12] = [price, 300]
+        r[22], r[26] = weight/1000, '开启'
+        if color:
+            psk = sku.split('_')[0]
+            r[3:7] = [psk, psk, 'color', color]
+            r[12] = sku
+        else:
+            r[3] = sku
+        for j in range(len(urls)):
+            name = sku + str(j) + '.jpg'
+            nurl = 'https://shopeepic.gz.bcebos.com/' + name
+            ourl = urls[j]
+            dr = [name, ourl, 'STANDARD']
+            data.append(dr)
+            r[13+j] = ourl
+        rows.append(r)
+    #name_list = [i[3] for i in con]
+    #res = recommend_category(name_list, site)
+    #cat = [i[1] for i in res]
+    df = pandas.DataFrame(rows, columns=None)
+    #df[0] = cat
+    df.to_excel('d:/collections.xlsx', index=False, header=None)
+    print('all done')
+
+url = "/IrobotBox/Order/OrderInfoListV2.aspx/"
+params = {
+    "OrderTimeType": 7,
+    "StartTime": s,
+    "EndTime":   e,
+    "PageSize": 100,
+    "Page":pageNum
+    }
+
+ url = "/ASHX/IrobotBox/RB_OrderInfoHandler.ashx?ActionType=CalculationOrderProfit"
+ data = {"IDs": ids.join(",")}
