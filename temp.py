@@ -6,7 +6,7 @@ from app import *
 from bs4 import BeautifulSoup
 
 def file_process():
-    root_path = r"C:\Users\guoliang\Downloads\2月"
+    root_path = r"C:\Users\guoliang\Downloads\4月"
     for fo in os.listdir(root_path):
         fop = "\\".join([root_path, fo])
         for f in os.listdir(fop):
@@ -207,14 +207,32 @@ def output_collection():
     df.to_excel('d:/collections.xlsx', index=False, header=None)
     print('all done')
 
-url = "/IrobotBox/Order/OrderInfoListV2.aspx/"
-params = {
-    "OrderTimeType": 7,
-    "StartTime": s,
-    "EndTime":   e,
-    "PageSize": 100,
-    "Page":pageNum
-    }
+def rep(s, e):
+    url = "/IrobotBox/Order/OrderInfoListV2.aspx/"
+    params = {
+        "OrderTimeType": 7,
+        "StartTime": s,
+        "EndTime":   e,
+        "PageSize": 100,
+        "Page":pageNum
+        }
 
- url = "/ASHX/IrobotBox/RB_OrderInfoHandler.ashx?ActionType=CalculationOrderProfit"
- data = {"IDs": ids.join(",")}
+    url = "/ASHX/IrobotBox/RB_OrderInfoHandler.ashx?ActionType=CalculationOrderProfit"
+    data = {"IDs": ids.join(",")}
+
+def duplicate():
+    sql = 'select distinct item_id, account, name from items'
+    con = mydb(sql)
+    data = [i[1] + '\t' + i[2] for i in con]
+    from collections import Counter
+    cc = Counter(data)
+    rs = [[k.split('\t')[0], k.split('\t')[1]] for k, v in cc.items() if v >= 2]
+    sql = 'select distinct account, name, original_price,item_id, parent_sku, model_sku from items where account = ? and name = ?'
+    dfdata = []
+    for r in rs:
+        con = mydb(sql, r)
+        dfdata += list(con)
+    dfdata.sort()
+    df = pandas.DataFrame(dfdata, columns=None)
+    df.to_excel('d:/out.xlsx', index=False)
+    print(len(rs))
