@@ -137,6 +137,10 @@ def consolePage():
 def collectionPage():
     return render_template("collection.html")
 
+@app.route('/steps', methods = ['GET'])
+def stepPage():
+    return render_template("step.html")
+
 #前台初始化
 @app.route('/basic_info', methods = ['GET'])
 def basic_info():

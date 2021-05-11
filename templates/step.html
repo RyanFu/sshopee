@@ -1,0 +1,70 @@
+﻿{% extends "layout.html" %}
+{% block title %}标题{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+
+<div style="padding:20px">
+    <p>记录</p>
+    <p id=msg></p>
+    <br>
+    <p>操作<p>
+    <p><a href="#" class="easyui-linkbutton" style="width:100%" onclick='mark()'>打卡</a></p>
+    <p><a href="#" class="easyui-linkbutton" style="width:100%" onclick='reset()'>清除</a></p>
+</div>
+
+<script>
+    setInterval(function(){keep()}, 100)
+    function keep(){
+        var t = new Date()
+        var t1 = new Date(Number(localStorage.t1))
+        var t0 = new Date(Number(localStorage.t0))
+        var ts = snow(t)
+        var t1s = snow(t1)
+        var t0s = snow(t0)
+
+        var d1 = Math.floor((t - t1) / (1000 * 60 * 60 * 24))
+        var h1 = Math.floor((t - t1) % (1000 * 60 * 60 * 24) / (1000 * 60 * 60))
+        var m1 = Math.floor((t - t1) % (1000 * 60 * 60) / (1000 * 60))
+        var s1 = (t - t1) % (1000 * 60) / 1000
+
+        var d0 = Math.floor((t - t0) / (1000 * 60 * 60 * 24))
+        var h0 = Math.floor((t - t0) % (1000 * 60 * 60 * 24) / (1000 * 60 * 60))
+        var m0 = Math.floor((t - t0) % (1000 * 60 * 60) / (1000 * 60))
+        var s0 = (t - t0) % (1000 * 60) / 1000
+
+        var msg = `现在时间是：${ts},
+
+                    上次打卡时间：${t1s},
+                    又坚持了：${d1}天${h1}时${m1}分${s1}秒,
+
+                    最早打卡时间：${t0s},
+                    总共坚持了：${d0}天${h0}时${m0}分${s0}秒,
+
+                    加油！`
+        $('#msg')[0].innerText = msg
+        //console.log(msg)
+    }
+
+    function mark(){
+        localStorage.t1 = new Date().getTime();
+        if (localStorage.t0 == 0){localStorage.t0 = localStorage.t1;}
+        console.log('marked')
+    }
+
+    function reset(){
+        localStorage.t0 = 0;
+        localStorage.t1 = 0;
+        console.log('cleared')
+    }
+
+    function snow(t){
+        var ds = t.toLocaleDateString()
+        var ts = `${t.getHours()}:${t.getMinutes()}:${t.getSeconds()}`
+        var s = ds + " " + ts
+        return s
+    }
+</script>
+
+{% endblock %}
