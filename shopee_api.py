@@ -41,7 +41,7 @@ def shopee_price(cost, weight, profit_rate = 0):
     shipping_fee = {
     "my": weight*0.015,
     "id": weight*120,
-    "th": weight*0.2,
+    "th": weight*0.1,
     "ph": max(weight*0.45+1, 23),
     "vn": weight*90,
     "sg": max(weight*0.011 + 0.05,0.6),

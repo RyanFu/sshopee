@@ -236,3 +236,4 @@ def duplicate():
     df = pandas.DataFrame(dfdata, columns=None)
     df.to_excel('d:/out.xlsx', index=False)
     print(len(rs))
+

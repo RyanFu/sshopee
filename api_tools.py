@@ -31,6 +31,11 @@ def snow(tsp=None):
     t = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(tsp))
     return t
 
+def unsnow(s):
+    st = time.strptime(s,"%Y-%m-%d %H:%M:%S")
+    tp = time.mktime(st)
+    return tp
+
 def data2book(data, name):
     path = './static/{}.xlsx'.format(name)
     book = pandas.ExcelWriter(path)
