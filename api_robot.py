@@ -92,7 +92,8 @@ def make_excel(data, acsi):
     df1 = pandas.DataFrame([['内容在第2页']], columns=None)
     data2 = [[],[],[],[],] + data
     df2 = pandas.DataFrame(data2, columns=hd)
-    #df2['ps_category'] = [''] * 4 + cat_list
+    if '.my' in acsi:
+        df2.insert(27, 'channel_id_28052', '开启')
     data3 = [["mass_new_basic", '', ''], ["Category name", "Category ID", "Category Pre-order DTS range"]]
     df3 = pandas.DataFrame(data3, columns=None)
     df4 = pandas.DataFrame([['']], columns=None)
@@ -100,8 +101,8 @@ def make_excel(data, acsi):
     with pandas.ExcelWriter(name) as writer:
         df1.to_excel(writer, sheet_name='Guidance', index=False, header=None)
         df2.to_excel(writer, sheet_name='Template', index=False)
-        df3.to_excel(writer, sheet_name='Pre-order DTS Range', index=False, header=None)
         df4.to_excel(writer, sheet_name='Upload Sample', index=False, header=None)
+        df3.to_excel(writer, sheet_name='Pre-order DTS Range', index=False, header=None)
     print(name + ' saved')
     name = name.replace('./static/', '')
     return name
@@ -113,6 +114,7 @@ def sku_info_excel(user_name,user_password, sku_list, acsi):
     data = []
     for i in range(0, len(sku_list), 49):      
         data += read_sku_info(user_name,user_password, sku_list[i: i+49])
+    data = [i for i in data if i['ProductName'] and i['ProductDescription']]
     name_list = [r['ProductName'] for r in data]
     cat_res = recommend_category(name_list, acsi)
     cat_list = [i[1] for i in cat_res]

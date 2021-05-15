@@ -237,3 +237,11 @@ def duplicate():
     df.to_excel('d:/out.xlsx', index=False)
     print(len(rs))
 
+def error_price():
+    sql = 'select items.account, items.item_id, items.model_id, items.model_original_price, items.model_current_price, zong.sku, zong.cost, zong.weight from items inner join zong on items.model_sku = zong.sku'
+    con = mydb(sql)
+    df = pandas.DataFrame(con, columns=['account', 'item_id', 'model_id', 'original_price', 'current_price', 'sku', 'cost', 'weight'])
+    df['0%'] = [shopee_price(c, w, 0)[a[-2:]] for a, c, w in df[['account', 'cost', 'weight']].values]
+    df['20%'] = [shopee_price(c, w, 0.2)[a[-2:]] for a, c, w in df[['account', 'cost', 'weight']].values]
+    df.to_excel('error.xlsx', index=False)
+    print('saved')
