@@ -36,14 +36,9 @@
   <input type="text" name="account" class="search_value">
   <label >评分大于:</label>
   <input type="number" name="rating" class="search_value">
+    <br><br>
   <label >日均售出大于:</label>
   <input type="number" name="ado" class="search_value">
-
-<br><br>
-  <label >ERP用户名:</label>
-  <input type="text" id="user_name" class="search_value">
-  <label >用户密码:</label>
-  <input type="password" id="user_password" class="search_value">
   <label >售出数量:</label>
   <input type="number" name="sold" class="search_value">
     <label >包含多属性 : </label>
@@ -348,12 +343,10 @@ function calculate_price(c, w, r = 0){
     }
     //批量下载刊登资料
     function mass_download_sku(){
-        var acsi = $("[name=account]")[0].value.trim()
-        var user_name = $("[id=user_name]")[0].value.trim()
-        var user_password = $("[id=user_password]")[0].value.trim()        
+        var acsi = $("[name=account]")[0].value.trim()     
         var sku_list = $("textarea")[0].value.split("\n").filter(i=>i.length>5).map(i=>i.trim())
-        for (let e of [acsi, user_name, user_password, sku_list]){
-          if (e == ""){alert("用户名/密码/账号/SKU输入错误");return;}
+        for (let e of [acsi, sku_list]){
+          if (e == ""){alert("账号/SKU输入错误");return;}
         }
         let step = 50
         flag.data = []
@@ -367,16 +360,12 @@ function calculate_price(c, w, r = 0){
     }
     //批量下载刊登资料V2
     function mass_download_sku_v2(){
-        var acsi = $("[name=account]")[0].value.trim()
-        var user_name = $("[id=user_name]")[0].value.trim()
-        var user_password = $("[id=user_password]")[0].value.trim()        
+        var acsi = $("[name=account]")[0].value.trim()   
         var sku_list = $("textarea")[0].value.split("\n").filter(i=>i.length>5).map(i=>i.trim())
-        for (let e of [acsi, user_name, user_password, sku_list]){
-          if (e == ""){alert("用户名/密码/账号/SKU输入错误");return;}
+        for (let e of [acsi, sku_list]){
+          if (e == ""){alert("账号/SKU输入错误");return;}
         }
         var data = {'acsi': acsi,
-            'user_name': user_name,
-            'user_password': user_password,
             'sku_list': sku_list}
         var url = '/sku_info_excel'
         $.ajax({

@@ -7,7 +7,7 @@ from datetime import timedelta
 import sqlite3, json, time, requests, csv, platform, random
 import shopee_api
 from api_tools import mydb, snow, multiple_mission_pool
-from api_robot import sku_info_excel
+from api_robot import sku_info_excel, login_check
 
 log = {'data':[], 'time':time.time()}
 app = Flask(__name__)   
@@ -28,6 +28,7 @@ def dict_factory(cursor, row):
 @app.before_request
 def requests_log():
     ip, path = request.remote_addr, request.path
+    ip = session.get("username") if session.get("username") else ip
     if 'static' not in path:
         json, args = request.json, request.args
         args = [(e, args[e]) for e in args]
@@ -41,16 +42,27 @@ def requests_log():
             log['data'] = []
         #print(row)
 
-#登录权限检查
+#管理员登录权限检查
 def login_required(func):
-	@wraps(func)  # 保存原来函数的所有属性,包括文件名
-	def inner(*args, **kwargs):
-		if session.get("username"):
-			ret = func(*args, **kwargs)
-			return ret
-		else:
-			return redirect("/shopee_login")
-	return inner
+    @wraps(func)  # 保存原来函数的所有属性,包括文件名
+    def inner(*args, **kwargs):
+        if session.get("username") and session.get("username") == 'guoliang':
+            ret = func(*args, **kwargs)
+            return ret
+        else:
+            return redirect("/shopee_login")
+    return inner
+
+#普通用户登录权限检查
+def user_required(func):
+    @wraps(func)  # 保存原来函数的所有属性,包括文件名
+    def inner(*args, **kwargs):
+        if session.get("username"):
+            ret = func(*args, **kwargs)
+            return ret
+        else:
+            return redirect("/shopee_login")
+    return inner
 
 #登录页面  
 @app.route('/shopee_login', methods=['GET', 'POST'])
@@ -59,18 +71,19 @@ def login():
         username = session.get('username', None)
         if username:
             flash(username + '已经登录') 
-            return redirect('/shopee_admin')
+            return redirect('/shopee_index')
         else:
             return render_template("login.html")
     if request.method == 'POST':
         username = request.form['Username']
         password = request.form['Password']
         print(request.form)
-        if username == "guoliang" and password == "gl23r42":
+        if login_check(username,password):
             session['username'] = username
+            session['password'] = password
             session.permanent = True
             flash(username + '登录成功') 
-            return redirect('/shopee_admin')
+            return redirect('/shopee_index')
         else:
             flash(username + '登录失败') 
             return redirect('/shopee_login')
@@ -97,17 +110,14 @@ def login_status():
 #常用基础页面
 @app.route('/', methods = ['GET'])
 def defaultPage_a():
-    return redirect("/shopee_listing")
+    return redirect("/shopee_index")
 
 @app.route('/home', methods = ['GET'])
 def defaultPage_b():
-    return redirect("/shopee_listing")
-
-@app.route('/shopee_listing', methods = ['GET'])
-def homePage():
-    return render_template("home.html")
+    return redirect("/shopee_index")
 
 @app.route('/shopee_index', methods = ['GET'])
+@user_required
 def indexPage():
     return render_template("index.html")
 
@@ -117,14 +127,17 @@ def adminPage():
     return render_template('admin.html')
     
 @app.route('/shopee_dashboard', methods = ['GET'])
+@user_required
 def dashboardPage():
     return render_template("dashboard.html")
 
 @app.route('/shopee_orders', methods = ['GET'])
+@user_required
 def orderPage():
     return render_template("orders.html")
 
 @app.route('/shopee_wait', methods = ['GET'])
+@user_required
 def waitPage():
     return render_template("wait.html")
 
@@ -136,7 +149,6 @@ def consolePage():
 @app.route('/shopee_collection', methods = ['GET'])
 def collectionPage():
     return render_template("collection.html")
-
 
 #前台初始化
 @app.route('/basic_info', methods = ['GET'])
@@ -156,7 +168,7 @@ def basic_info():
     res_data = jsonify(res_data)
     return res_data
 
-#产品更新接口
+#产品同步更新接口
 @app.route('/shopee_add_items', methods = ['POST'])
 def shopee_add_items():
     account = request.json["account"]    
@@ -527,10 +539,10 @@ def redirect_to_erp():
     data = res.text
     return data
 
-#
+#刊登资料下载
 @app.route('/sku_info_excel', methods=['POST'])
 def sku_info_excel_view():
-    user_name,user_password = request.json['user_name'], request.json['user_password']
+    user_name,user_password = session['username'], session['password']
     sku_list, acsi = request.json['sku_list'], request.json['acsi']
     name = sku_info_excel(user_name,user_password, sku_list, acsi)
     res_data = {"message": "success", "name":name}
@@ -853,6 +865,15 @@ def ad_report():
     res_data = {"message": "success", "data": {}}
     res_data = jsonify(res_data)
     flash('广告统计已更新')
+    return res_data
+
+#流量况统计
+@app.route('/trafic_report', methods=['GET'])
+def trafic_report():
+    data = shopee_api.trafic_report_all()
+    res_data = {"message": "success", "data": {}}
+    res_data = jsonify(res_data)
+    flash('流量统计已更新')
     return res_data
 
 #部分更新总表

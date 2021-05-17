@@ -61,6 +61,25 @@
         <a href="#" class="easyui-linkbutton" iconCls="icon-reload" plain="true" onclick="auto_follow()">Follow</a>
     </div>
 
+<br><br>
+<table id="request_logs" title="操作日志" style="width:95%;"
+        toolbar="#toolbar_performance" pagination="true" idField="id"
+        rownumbers="true" fitColumns="true" singleSelect="true">
+    <thead>
+        <tr>
+            <th field="update_time" width="80" editor="text">时间</th>
+            <th field="ip" width="50" editor="text">账号</th>
+            <th field="path" width="50" editor="text">链接</th>
+            <th field="data" width="150" editor="text">参数</th>
+            <th field="args" width="80" editor="text">参数</th>
+
+        </tr>
+    </thead>
+</table>
+<div id="toolbar_request_logs">
+    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="">操作记录</a>
+</div>
+
     <script type="text/javascript">
         //easyUI表单功能
         $(function(){
@@ -77,6 +96,10 @@
                 updateUrl: '/easyui/password/update',
                 destroyUrl: '/easyui/password/delete'
             });
+            $('#request_logs').edatagrid({
+            url: '/easyui/request_logs/get',
+            });
+            $('#request_logs').edatagrid('disableEditing');
         });
 
         //更新全部在线产品

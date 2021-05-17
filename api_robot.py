@@ -16,6 +16,30 @@ hd = ["ps_category","ps_product_name","ps_product_description","ps_sku_parent_sh
       "ps_item_image_6","ps_item_image_7","ps_item_image_8",
       "ps_weight","ps_length","ps_width","ps_height","channel_id_78004","ps_product_pre_order_dts", ""]
 
+def login_check(user_name,user_password):
+    sku_list = ['HA003327-00',]
+    sku_list = ",".join(sku_list)
+    ev = '''<?xml version="1.0" encoding="utf-8"?>
+            <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Body>
+            <GetProducts xmlns="http://tempuri.org/">
+            <productRequest>
+            <CustomerID>1551</CustomerID>
+            <UserName>{}</UserName>
+            <Password>{}</Password>
+            <ClientSKUs>{}</ClientSKUs>
+            </productRequest>
+            </GetProducts>
+            </soap:Body>
+            </soap:Envelope>'''.format(user_name,user_password, sku_list)
+    headers = {"content-type" : "text/xml; charset=utf-8"}
+    url = "http://runbu.irobotbox.com/Api/API_ProductInfoManage.asmx"
+    res = requests.post(url, data=ev, headers=headers)
+    if 'UserNamePassWordError' in res.text:
+        return False
+    else:
+        return True
+
 def read_sku_info(user_name,user_password, sku_list):
     sku_list = ",".join(sku_list)
     ev = '''<?xml version="1.0" encoding="utf-8"?>

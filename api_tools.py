@@ -33,7 +33,7 @@ def snow(tsp=None):
 
 def unsnow(s):
     st = time.strptime(s,"%Y-%m-%d %H:%M:%S")
-    tp = time.mktime(st)
+    tp = int(time.mktime(st))
     return tp
 
 def data2book(data, name):

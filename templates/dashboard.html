@@ -82,6 +82,26 @@
 </div>
 
 
+<br><br>
+<table id="table_trafic_report" title="流量统计" style="width:95%;"
+        toolbar="#toolbar_trafic_report" pagination="true" idField="id"
+        rownumbers="true" fitColumns="true" singleSelect="true">
+    <thead>
+        <tr>
+            <th field="start" width="80" editor="text">开始</th>
+            <th field="end" width="80" editor="text">截止</th>
+            <th field="account" width="60" editor="text">账号</th>
+            <th field="uv" width="50" editor="text">访客数</th>
+            <th field="pv" width="40" editor="text">页面数</th>
+            <th field="gmv" width="40" editor="text">金额(原币种)</th>
+            <th field="order_num" width="50" editor="text">订单数</th>
+        </tr>
+    </thead>
+</table>
+<div id="toolbar_trafic_report">
+    <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="trafic_report()">全部更新</a>
+</div>
+
 <script type="text/javascript">
     //easyUI表单功能
     $(function(){
@@ -97,6 +117,10 @@
         $('#table_performance').edatagrid('disableEditing');
         $('#table_listings_count').edatagrid('disableEditing');
         $('#table_ad_report').edatagrid('disableEditing');
+        
+        $('#table_trafic_report').edatagrid({
+            url: '/easyui/trafic/get',
+        });
     })
     //自定义功能
     //更新全部账号表现
@@ -126,6 +150,10 @@
     }
     function ad_report(){
         var url = '/ad_report'
+        $.get(url, function(res){location.reload(true);console.log(res)})
+    }
+    function trafic_report(){
+        var url = '/trafic_report'
         $.get(url, function(res){location.reload(true);console.log(res)})
     }
 </script>

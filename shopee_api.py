@@ -4,7 +4,7 @@ import json, requests, time, platform
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
-from api_tools import multiple_mission_pool, decor_retry, decor_async, snow, mydb
+from api_tools import multiple_mission_pool, decor_retry, decor_async, snow, unsnow, mydb
 
 if platform.system() == "Windows":
     database_name = "D:/shopee.db"
@@ -612,6 +612,40 @@ def auto_follow(account):
     multiple_mission_pool(follow_one, values)
     mydb('update shopids set used = used + 1 where shopid = ?', con, True)
 
-if __name__ == '__main__':
-    #ad_report()
-    pass
+@decor_retry
+def trafic_report_one(account, s, e, rows):
+    site = account[-2:]
+    cookies = get_cookie_jar(account)
+    url = 'https://seller.site.shopee.cn/api/mydata/v3/dashboard/key-metrics/'.replace('site', site)
+    params = {
+        'SPC_CDS': cookies['SPC_CDS'],
+        'SPC_CDS_VER': 2,
+        'start_time': s,
+        'end_time': e,
+        'period': 'past7days', #'yesterday', ‘real_time’, ‘past7days’， ‘day'
+        'fetag': 'fetag'
+    }
+    re = requests.get(url, params, cookies=cookies)
+    data = re.json()['result']
+    ks = ["shop_uv",  "shop_pv", "paid_gmv", "paid_orders"]
+    data = [data[k]['value'] for k in ks]
+    data = [account, snow(s), snow(e)] + data
+    rows.append(data)
+
+    print(data)
+    return data
+
+def trafic_report_all():
+    mydb('delete from trafic')
+    con = mydb('select account from password')
+    acs = [i[0] for i in con]
+    rows = []
+    last7s = unsnow(snow()[:10] + ' 00:00:00') - 60 * 60 * 24 * 7
+    last7e = unsnow(snow()[:10] + ' 00:00:00') - 60 * 60 * 24 * 0
+    vs = [[ac, last7s, last7e, rows] for ac in acs]
+    multiple_mission_pool(trafic_report_one, vs, debug=False)
+    sql = 'insert into trafic values(?,?,?,?,?,?,?)'
+    mydb(sql, rows, True)
+    #df = pandas.DataFrame(rows,columns=['account', 'start', 'end', 'uv', 'pv', 'gmv', 'order'])
+    #df.to_excel('../uv.xlsx', index=False)
+
