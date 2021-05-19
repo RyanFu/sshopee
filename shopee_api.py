@@ -622,7 +622,7 @@ def trafic_report_one(account, s, e, rows):
         'SPC_CDS_VER': 2,
         'start_time': s,
         'end_time': e,
-        'period': 'past7days', #'yesterday', ‘real_time’, ‘past7days’， ‘day'
+        'period': 'past7days', #'yesterday', ‘real_time’, ‘past7days’， ‘day', 'week'
         'fetag': 'fetag'
     }
     re = requests.get(url, params, cookies=cookies)
@@ -635,13 +635,13 @@ def trafic_report_one(account, s, e, rows):
     print(data)
     return data
 
-def trafic_report_all():
+def trafic_report_all(os=0):
     mydb('delete from trafic')
     con = mydb('select account from password')
     acs = [i[0] for i in con]
     rows = []
-    last7s = unsnow(snow()[:10] + ' 00:00:00') - 60 * 60 * 24 * 7
-    last7e = unsnow(snow()[:10] + ' 00:00:00') - 60 * 60 * 24 * 0
+    last7s = unsnow(snow()[:10] + ' 00:00:00') - 60 * 60 * 24 * (7 + os)
+    last7e = unsnow(snow()[:10] + ' 00:00:00') - 60 * 60 * 24 * (0 + os)
     vs = [[ac, last7s, last7e, rows] for ac in acs]
     multiple_mission_pool(trafic_report_one, vs, debug=False)
     sql = 'insert into trafic values(?,?,?,?,?,?,?)'

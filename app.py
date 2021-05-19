@@ -35,7 +35,7 @@ def requests_log():
         json, args = str(json), str(args)
         row = [snow(), ip, path, json, args]
         log['data'].append(row)
-        if len(log['data']) > 10 or time.time() - log['time'] > 60:
+        if len(log['data']) > 20 or time.time() - log['time'] > 60:
             log['time'] = time.time()
             sql = 'insert into request_logs values(?,?,?,?,?)'
             mydb(sql, log['data'], True)
@@ -168,8 +168,8 @@ def basic_info():
     res_data = jsonify(res_data)
     return res_data
 
-#产品同步更新接口
-@app.route('/shopee_add_items', methods = ['POST'])
+#产品同步更新接口 停止使用
+@app.route('/shopee_add_items_invalid', methods = ['POST'])
 def shopee_add_items():
     account = request.json["account"]    
     rows = request.json["rows"][1:]
@@ -620,51 +620,35 @@ def get_sufix():
 #在线数量分析
 @app.route('/listings_count', methods=['GET'])
 def listings_count():
-    day10 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() - 60*60*24*7))
+    day7 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() - 60*60*24*7))
     day30 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() - 60*60*24*30))
     day60 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time() - 60*60*24*60))
-    sql = '''select account from password order by account'''
-    sqla = '''select account, count( distinct item_id) from items 
-    where create_time > ?  
-    group by account '''
-    sqlc = '''select account, count( distinct item_id) from items 
-    where create_time > ? and  create_time < ? 
-    group by account '''
-    sqld = '''select account, count( distinct item_id) from items 
-    where create_time > ? and  create_time < ? and sold >= 1 
-    group by account '''
-    sqle = '''select account, count( distinct item_id) from items group by account'''
-    sqlf = 'select account, max(create_time) from items group by account'
-    sqlg = 'select account, min(update_time) from items group by account'
-    sql_up = '''insert into listings_count 
-    values (?,?,?,?,?,?,?,?) '''
 
-    cu0 = mydb(sql)
-    cu1 = mydb(sqla, (day10,))   
-    cu2 = mydb(sqla, (day30,))
-    cu3 = mydb(sqlc, (day60, day30))
-    cu4 = mydb(sqld, (day60, day30))
-    cu5 = mydb(sqle)
-    cu6 = mydb(sqlf)
-    cu7 = mydb(sqlg)
+    sql = 'select distinct item_id, view, create_time, account from items'
+    con = mydb(sql)
 
-    mp = {}
-    for i in cu0:
-        account = i[0]
-        mp[account] = [account,0,0,0,0,0,0,0]
-    cus = [cu0, cu1, cu2, cu3, cu4, cu5,cu6,cu7]
-    for i in range(1, len(cus)):
-        cu = cus[i]
-        for j in cu:
-            account, num = j
-            mp[account][i] = num
-
-    values = [i for i in mp.values()]
+    data = {}
+    for item_id, view, create_time, account in con:
+        vs = data.get(account, [account, 0,0, 0,0, 0,0, 0, '1990-05-01 18:15:05', snow()])
+        if create_time > day7:
+            vs[1] += 1
+            vs[2] += view
+        if create_time > day30:
+            vs[3] += 1
+            vs[4] += view
+        elif create_time > day60:
+            vs[5] += 1
+            vs[6] += view
+        vs[7] += 1
+        vs[8] = create_time if create_time > vs[8] else vs[8]
+        data[account] = vs
+    rows = sorted(list(data.values()))
     mydb('delete from listings_count')
-    mydb(sql_up, values, True)
+    sql_up = 'insert into listings_count values (?,?,?,?,?,?,?,?,?,?)'
+    mydb(sql_up, rows, True)
 
     flash("刊登统计已更新")
-    res_data = {"message": "success", "data":values}
+    res_data = {"message": "success", "data":rows}
     res_data = jsonify(res_data)
     return res_data
 
