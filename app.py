@@ -4,16 +4,22 @@ from os import listdir, system
 from functools import wraps
 from pandas import read_sql
 from datetime import timedelta
-import sqlite3, json, time, requests, csv, platform, random
+import sqlite3, json, time, requests, csv, platform, random, logging
 import shopee_api
 from api_tools import mydb, snow, multiple_mission_pool
 from api_robot import sku_info_excel, login_check
 
-log = {'data':[], 'time':time.time()}
 app = Flask(__name__)   
 app.secret_key = '9dsm8G9OSYlJy64mig9KeXJmp' 
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=1)
 env = platform.system()
+
+formatter = logging.Formatter('%(asctime)s - %(module)s - %(funcName)s - %(levelname)s - %(message)s')
+handler = logging.FileHandler("flask.log")
+handler.setFormatter(formatter) 
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.DEBUG)
+
 if env == "Windows":
     database_name = "D:/shopee.db" 
 else:
@@ -33,14 +39,16 @@ def requests_log():
         json, args = request.json, request.args
         args = [(e, args[e]) for e in args]
         json, args = str(json), str(args)
-        row = [snow(), ip, path, json, args]
-        log['data'].append(row)
-        if len(log['data']) > 20 or time.time() - log['time'] > 60:
-            log['time'] = time.time()
-            sql = 'insert into request_logs values(?,?,?,?,?)'
-            mydb(sql, log['data'], True)
-            log['data'] = []
-        #print(row)
+        row = [ip, path, json, args]
+        msg = ip + ' visited ' + path
+        app.logger.info(msg)
+
+@app.errorhandler(500)
+def err_500(err):
+    app.logger.error(err)
+    res_data = {"message": "内部错误已记录稍后重试", "data": {}}
+    res_data = jsonify(res_data)
+    return res_data
 
 #管理员登录权限检查
 def login_required(func):
