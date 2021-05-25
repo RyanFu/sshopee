@@ -365,6 +365,7 @@ function calculate_price(c, w, r = 0){
         for (let e of [acsi, sku_list]){
           if (e == ""){alert("账号/SKU输入错误");return;}
         }
+        $("textarea")[0].value = "处理中"
         var data = {'acsi': acsi,
             'sku_list': sku_list}
         var url = '/sku_info_excel'
