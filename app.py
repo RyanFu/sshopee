@@ -421,22 +421,17 @@ def wrong_sku():
     res_data = jsonify(res_data)
     return res_data
 
-#前台 刊登前排除重复SKU
+#前台 刊登前排除重复SKU和违禁品
 @app.route('/duplicate_sku_by_account', methods=['POST'])
 def duplicate_sku_by_account():
     data = request.json
     account = data["account"]
     sku_list = [i for i in data["sku_list"] if i !=""]
-    sql = '''select * from items 
-    where (parent_sku = ? or model_sku = ?) and account = ? limit 1'''
-    exsit = []
-    with  sqlite3.connect(database_name) as cc:
-        for sku in sku_list:
-            cu = cc.execute(sql, [sku, sku, account])
-            con = cu.fetchone()
-            if con != None:          
-                exsit.append(sku)            
-    non_exist = list(set(sku_list) - set(exsit))
+    con = mydb('select parent_sku, model_sku from items where account  = ?', (account,))
+    psku, sku = [i[0] for i in con], [i[1] for i in con]
+    con = mydb('select sku from black')
+    black = [i[0] for i in con]
+    non_exist = list(set(sku_list) - set(psku) - set(sku) - set(black))
     res_data = {"message": "success", "data": {"skus":non_exist}}
     res_data = jsonify(res_data)
     return res_data         
@@ -586,6 +581,8 @@ def upload_file():
         print("table updated", time.ctime())
         if tb in ['stock', 'zong']:
             sql = 'delete from {} where sku = ""'.format(tb)
+            mydb(sql)
+            sql = 'update zong set status = "停产" where sku in (select sku from black)'
             mydb(sql)
         msg += ' as table'
 
