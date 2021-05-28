@@ -234,7 +234,7 @@ def duplicate():
         dfdata += list(con)
     dfdata.sort()
     df = pandas.DataFrame(dfdata, columns=None)
-    df.to_excel('d:/out.xlsx', index=False)
+    df.to_excel('./static/out.xlsx', index=False)
     print(len(rs))
 
 def error_price():

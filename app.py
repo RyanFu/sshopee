@@ -15,7 +15,7 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=1)
 env = platform.system()
 
 formatter = logging.Formatter('%(asctime)s - %(module)s - %(funcName)s - %(levelname)s - %(message)s')
-handler = logging.FileHandler("flask.log")
+handler = logging.FileHandler("./static/flask.log")
 handler.setFormatter(formatter) 
 app.logger.addHandler(handler)
 app.logger.setLevel(logging.DEBUG)
@@ -407,17 +407,21 @@ def shopee_cookies():
 #批量排查违禁品SKU
 @app.route('/wrong_sku', methods=['POST'])
 def wrong_sku():
+    con = mydb('select account, shop_id from password')
+    mp = dict(con)    
     data = request.json
     sku_list = [i for i in data["sku_list"] if i !=""]
+    sku_list = str(tuple(sku_list))
     sql = '''select item_id, model_id,account, model_sold, 
-    parent_sku, model_sku, update_time from items 
-    where parent_sku = ? or model_sku = ? '''
-    res_data = {"message": "success", "data": {"rows":[]}}
-    with  sqlite3.connect(database_name) as cc:
-        for sku in sku_list:
-            cu = cc.execute(sql, [sku, sku])
-            [res_data["data"]["rows"].append(i) for i in cu]
-    
+        parent_sku, model_sku, update_time, create_time from items 
+        where parent_sku in {} or model_sku in {}'''.format(sku_list, sku_list)
+    con = mydb(sql)
+    data = [list(i) for i in con]
+    for r in data:
+        ac, iid, sid = r[2], r[0], mp[r[2]]
+        url = '{}.xiapibuy.com/product/{}/{}'.format(ac[-2:], sid, iid)
+        r.append(url)
+    res_data = {'data':data, 'message': 'success'}
     res_data = jsonify(res_data)
     return res_data
 

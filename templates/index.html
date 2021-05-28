@@ -223,7 +223,7 @@ function wrong_sku(){
     data:JSON.stringify(data),
     headers: {"Content-Type": "application/json"},
     success:function(res){
-        var rows = res.data.rows
+        var rows = res.data
         show_data(rows)        
     }
 })
