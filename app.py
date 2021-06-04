@@ -412,7 +412,7 @@ def wrong_sku():
     data = request.json
     sku_list = [i for i in data["sku_list"] if i !=""]
     sku_list = str(tuple(sku_list))
-    sql = '''select item_id, model_id,account, model_sold, 
+    sql = '''select item_id, model_id,account, view, sold,  
         parent_sku, model_sku, update_time, create_time from items 
         where parent_sku in {} or model_sku in {}'''.format(sku_list, sku_list)
     con = mydb(sql)
@@ -421,6 +421,8 @@ def wrong_sku():
         ac, iid, sid = r[2], r[0], mp[r[2]]
         url = '{}.xiapibuy.com/product/{}/{}'.format(ac[-2:], sid, iid)
         r.append(url)
+    hd = ['item_id',	'model_id',	'account',	'view',	'sold',	'parent_sku',	'model_sku',	'update_time',	'create_time',	'link']
+    data.insert(0, hd)
     res_data = {'data':data, 'message': 'success'}
     res_data = jsonify(res_data)
     return res_data

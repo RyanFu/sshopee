@@ -245,3 +245,49 @@ def error_price():
     df['20%'] = [shopee_price(c, w, 0.2)[a[-2:]] for a, c, w in df[['account', 'cost', 'weight']].values]
     df.to_excel('error.xlsx', index=False)
     print('saved')
+
+def cat_one(mp, uid, cat, cookies, site):
+    data = {"unpublished_id":uid,"attributes":mp[str(cat)]}
+    url = host(site) + '/api/tool/mass_product/update_unpublished_product/?SPC_CDS_VER=2&SPC_CDS=' + cookies['SPC_CDS']
+    res = requests.post(url, json=data, cookies=cookies)
+    if 'success' not in res.json()['message']:
+        print(uid, res.json())
+    return
+
+def cat_page(account, num):
+    site = account[-2:]
+    cookies = get_cookie_jar(account)
+    print('reading listings')
+    url = host(site) + '/api/tool/mass_product/get_unpublished_product_list/'
+    params = {'page_number':num,'page_size':50,'version':'1.0.1'}
+    res = requests.get(url, params=params, cookies=cookies)
+    ids = [i['unpublished_product_id'] for i in res.json()['data']['list']]
+    cats = [i['category_path'][-1] for i in res.json()['data']['list']]
+    total = res.json()['data']['page_info']['total']
+
+    print('reading attributes tree')
+    cats_ = list(set([str(i) for i in cats]))
+    url = host(site) + '/api/v3/category/get_attribute_tree/'
+    params = {'category_ids': ','.join(cats_), 'SPC_CDS_VER':2}
+    res = requests.get(url, params=params, cookies=cookies)
+
+    mp = {}
+    for cat, t in zip(cats_, res.json()['data']['list']):
+        atrs = []
+        for a in  t['attribute_tree']:
+            aid = a['attribute_id']
+            if a['mandatory']:
+                value = 'No Brand' if a['display_name'] == 'Brand' else 'other'
+                atr = {"attribute_id":aid,"custom_value":{"raw_value":value,"unit":""}}
+                atrs.append(atr)
+        mp[cat] = atrs
+    
+    print('updating attributes')
+    datas = [(mp, uid, cat, cookies, site) for uid, cat in zip(ids, cats)]
+    multiple_mission_pool(cat_one, datas)
+    print(num, 'page done')
+    if num * 50 < total:
+        cat_page(account, num + 1)
+    else:
+        print('all page done')
+    return
