@@ -649,3 +649,70 @@ def trafic_report_all(os=0):
     #df = pandas.DataFrame(rows,columns=['account', 'start', 'end', 'uv', 'pv', 'gmv', 'order'])
     #df.to_excel('../uv.xlsx', index=False)
 
+#发送单个属性修改请求
+def auto_attribute_one(mp, uid, cat, cookies, site):
+    data = {"unpublished_id":uid,"attributes":mp[str(cat)]}
+    url = host(site) + '/api/tool/mass_product/update_unpublished_product/?SPC_CDS_VER=2&SPC_CDS=' + cookies['SPC_CDS']
+    res = requests.post(url, json=data, cookies=cookies)
+    if 'success' not in res.json()['message']:
+        print(uid, res.json())
+    return
+
+#单个账号全部待刊登属性修改
+def auto_attribute(account):
+    ps = 48
+    site = account[-2:]
+    cookies = get_cookie_jar(account)
+    print('reading listings')
+    url = host(site) + '/api/tool/mass_product/get_unpublished_product_list/'
+    params = {'page_number':1,'page_size':ps,'version':'1.0.1', 'lack_status': 'lack_basic_info'}
+    res = requests.get(url, params=params, cookies=cookies)
+    ids = [i['unpublished_product_id'] for i in res.json()['data']['list'] ]
+    cats = [i['category_path'][-1] for i in res.json()['data']['list'] ]
+    total = res.json()['data']['page_info']['total']
+
+    print('reading attributes tree')
+    con = mydb('select cat, atrs from tree where site = ?', (site,))
+    con = [[str(r[0]), json.loads(r[1])] for r in con]
+    mp = dict(con)
+
+    disname = {
+    'vn':['Thương hiệu', 'No brand'],
+    'id':['Merek', ' Tidak Ada Merek'], 
+    'th':['ยี่ห้อ', 'No Brand(ไม่มียี่ห้อ)'], 
+    'my':['Brand', 'No Brand'],
+    'ph':['Brand', 'No Brand'],
+    'sg':['Brand', 'No Brand'],
+    }
+    
+    cats_ = list(set([str(i) for i in cats if str(i) not in mp.keys()]))
+    if len(cats_) > 0:
+        print(len(cats_), 'to search online')
+        url = host(site) + '/api/v3/category/get_attribute_tree/'
+        params = {'category_ids': ','.join(cats_), 'SPC_CDS_VER':2}
+        res = requests.get(url, params=params, cookies=cookies)
+
+        values = []
+        k, v = disname[site]
+        for cat, t in zip(cats_, res.json()['data']['list']):
+            atrs = []
+            for a in  t['attribute_tree']:
+                aid = a['attribute_id']
+                if a['mandatory']:
+                    value = v if a['display_name'] == k else 'other'
+                    atr = {"attribute_id":aid,"custom_value":{"raw_value":value,"unit":""}}
+                    atrs.append(atr)
+            mp[cat] = atrs
+            values.append([site, cat, json.dumps(atrs)])
+        sql = 'insert into tree values (?, ?, ?)'
+        mydb(sql, values, True)
+    
+    print('updating attributes')
+    datas = [(mp, uid, cat, cookies, site) for uid, cat in zip(ids, cats)]
+    multiple_mission_pool(auto_attribute_one, datas)
+    print(total - ps, ' unfinished')
+    if ps < total:
+        auto_attribute(account)
+    else:
+        print('all page done')
+    return

@@ -63,20 +63,23 @@
     </div>
 
 <br><br>
-<table id="request_logs" title="操作日志" style="width:95%;"
-        toolbar="" pagination="true" idField="id"
+<table id="table_black" title="违禁品黑名单" style="width:95%;"
+        toolbar="#toolbar_black" pagination="true" idField="sku"
         rownumbers="true" fitColumns="true" singleSelect="true">
     <thead>
         <tr>
-            <th field="update_time" width="80" editor="text">时间</th>
-            <th field="ip" width="50" editor="text">账号</th>
-            <th field="path" width="50" editor="text">链接</th>
-            <th field="data" width="150" editor="text">参数</th>
-            <th field="args" width="80" editor="text">参数</th>
-
+            <th field="sku" width="50" editor="text">SKU</th>
+            <th field="name" width="150" editor="text">品名</th>
         </tr>
     </thead>
 </table>
+    <div id="toolbar_black">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add"  onclick="javascript:$('#table_black').edatagrid('addRow')">New</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove"  onclick="javascript:$('#table_black').edatagrid('destroyRow')">Destroy</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-save"  onclick="javascript:$('#table_black').edatagrid('saveRow')">Save</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-undo"  onclick="javascript:$('#table_black').edatagrid('cancelRow')">Cancel</a>
+
+    </div>
 
     <script type="text/javascript">
         //easyUI表单功能
@@ -94,10 +97,10 @@
                 updateUrl: '/easyui/password/update',
                 destroyUrl: '/easyui/password/delete'
             });
-            $('#request_logs').edatagrid({
-            url: '/easyui/request_logs/get',
+            $('#table_black').edatagrid({
+            url: '/easyui/black/get',
             });
-            $('#request_logs').edatagrid('disableEditing');
+            
         });
 
         //更新全部在线产品

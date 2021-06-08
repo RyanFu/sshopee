@@ -20,6 +20,7 @@
 <a class="easyui-linkbutton" iconCls="icon-search" id="duplicate_sku_by_account"  >上架前查重复</a>
 <a class="easyui-linkbutton" iconCls="icon-reload" id="format_item_ids"  >item_id格式转换</a>
 <a class="easyui-linkbutton" iconCls="icon-print" id="mass_download_sku"  >刊登资料下载</a>
+<a class="easyui-linkbutton" iconCls="icon-edit" id="auto_attribute"  >品牌属性填写</a>
 <a class="easyui-linkbutton admin" iconCls="icon-reload" id="update_listings_account"  >同步在线产品</a>
 <a class="easyui-linkbutton admin" iconCls="icon-edit" id="update_stock_account"  >修改在线库存</a>
 <a class="easyui-linkbutton" iconCls="icon-edit" id="wait_promotion_account"  >修改活动价格</a>
@@ -67,6 +68,7 @@ $("#duplicate_sku_by_account")[0].onclick = duplicate_sku_by_account
 $("#format_item_ids")[0].onclick = format_item_ids
 $("#search")[0].onclick = shopee_search
 $("#mass_download_sku")[0].onclick = mass_download_sku_v2
+$("#auto_attribute")[0].onclick = auto_attribute
 $("#update_listings_account")[0].onclick = update_listings_account
 $("#update_stock_account")[0].onclick = update_stock_account
 $("#wait_promotion_account")[0].onclick = wait_promotion_account
@@ -233,6 +235,7 @@ function wrong_sku(){
 function duplicate_sku_by_account(){
   var account = $("[name=account]")[0].value.trim()
   var sku_list = $("textarea")[0].value.split("\n").map(i=>i.trim())
+  $("textarea")[0].value = "处理中" 
   var url = "/duplicate_sku_by_account"
   data = {"sku_list": sku_list, "account":account}
   $.ajax({
@@ -244,7 +247,7 @@ function duplicate_sku_by_account(){
         var rows = res.data.skus
         show_data(rows)        
     }
-})
+});
 }
 //item_id格式转换
 function format_item_ids(){
@@ -515,6 +518,18 @@ function calculate_price(c, w, r = 0){
                 show_data(res.data)     
             }
         })
+    }
+
+    //处理待刊登产品属性
+    function auto_attribute(){
+      $("textarea")[0].value = "处理中"
+      var account = $("[name=account]")[0].value.trim()
+      if (account.indexOf(".") < 0){alert("账号名称错误");return;}
+      var url = "/auto_attribute"
+      var params = {"account": account}
+      $.get(url, params, function(res){
+          $("textarea")[0].value = "已完成"
+      })
     }
 </script>
 

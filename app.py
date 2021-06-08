@@ -951,7 +951,26 @@ def save_collection():
     res_data = {"message": "success", "data": []}
     res_data = jsonify(res_data)
     return res_data 
-   
+
+@app.route('/auto_attribute', methods=['GET'])
+def auto_attribute():
+    account = request.args['account']
+    shopee_api.check_cookie_jar(account)
+    shopee_api.auto_attribute(account)
+    res_data = {"message": "success", "data": []}
+    res_data = jsonify(res_data)
+    return res_data 
+
+@app.route('/auto_attribute_all', methods=['GET'])
+def auto_attribute_all():
+    con = mydb('select account, password from password')
+    for account, _ in con:
+        shopee_api.check_cookie_jar(account)
+        shopee_api.auto_attribute(account)
+    res_data = {"message": "success", "data": []}
+    res_data = jsonify(res_data)
+    return res_data 
+
 #调试模式运行
 if __name__ == "__main__":    
         app.debug = True
