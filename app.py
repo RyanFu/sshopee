@@ -8,6 +8,7 @@ import sqlite3, json, time, requests, csv, platform, random, logging
 import shopee_api
 from api_tools import mydb, snow, multiple_mission_pool
 from api_robot import sku_info_excel, login_check
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)   
 app.secret_key = '9dsm8G9OSYlJy64mig9KeXJmp' 
@@ -157,6 +158,10 @@ def consolePage():
 @app.route('/shopee_collection', methods = ['GET'])
 def collectionPage():
     return render_template("collection.html")
+
+@app.route('/shopee_temp', methods=['GET'])
+def temp_func():
+    return render_template("temp.html")
 
 #前台初始化
 @app.route('/basic_info', methods = ['GET'])
@@ -970,6 +975,37 @@ def auto_attribute_all():
     res_data = {"message": "success", "data": []}
     res_data = jsonify(res_data)
     return res_data 
+
+@app.route('/shopee_files', methods=['GET'])
+def shopee_files():
+    con = mydb('select account, password from password')
+    for account, _ in con:
+        shopee_api.check_cookie_jar(account)
+        shopee_api.auto_attribute(account)
+    res_data = {"message": "success", "data": []}
+    res_data = jsonify(res_data)
+    return res_data
+
+@app.route('/num2sn', methods=['GET'])
+def num2sn():
+    num = request.args['num']
+    cookies = {"_ati":"6346220218911",
+               "irobotbox_cookie_language":"zh_CN",
+               "irobotbox_session_id":"8xIQn8vqqkS7tZZVGx5iFA%3d%3d",
+               "irobotbox_cookie_time":"2021-06-15+13%3a51%3a52"}
+    url = 'http://runbu.irobotbox.com/IrobotBox/Order/OrderInfoListV2.aspx?CodeType=101&OrderCode=' + num
+    res = requests.get(url, cookies=cookies)
+    html = BeautifulSoup(res.text, 'lxml')
+    dv = html.find_all(attrs={'name':'spanClientOrderCode'})
+    try:
+        sn = dv[0]['clientordercode']
+    except:
+        print(html)
+        sn = ''
+    res_data = {"message": "success", "sn": sn}
+    res_data = jsonify(res_data)
+    return res_data
+    
 
 #调试模式运行
 if __name__ == "__main__":    

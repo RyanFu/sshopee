@@ -6,6 +6,7 @@ __pycache__/
 *.joblib
 *.txt
 *.ipynb
+static/PDF/
 
 # C extensions
 *.so

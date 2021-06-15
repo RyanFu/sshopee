@@ -1,0 +1,76 @@
+﻿{% extends "layout.html" %}
+{% block title %}产品{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+{% block content %}
+
+<!-- 功能按键 -->
+<h2>在线产品筛查</h2>
+<div class="demo-info">
+    <div class="demo-tip icon-tip">&nbsp;</div>
+</div>
+<div class="command_div">
+<a class="easyui-linkbutton" iconCls="icon-search" id="search_by_sn" >平台单号搜索</a>
+<a class="easyui-linkbutton" iconCls="icon-reload" id="search_by_num" >包裹单号搜索</a>
+<a class="easyui-linkbutton" iconCls="icon-save" id="download_all" >全部下载</a>
+
+<br><br>
+</div>
+<!-- 输入输出框 -->
+<div class="textarea_div">
+<textarea rows=20></textarea>
+</div>
+<br><br>
+
+<div class="show_div">
+
+</div>
+<!-- 更新时间备注 -->
+<div class="des"> 
+</div>
+
+
+<script>
+  var flag = {}
+$("#search_by_sn")[0].onclick = search_by_sn
+$("#search_by_num")[0].onclick = search_by_num
+$("#download_all")[0].onclick = download_all
+
+
+$(document).ready(function(){
+$('#layout_div').layout('collapse','west');
+});
+//结果输出
+function search_by_sn(){
+    var sns = $("textarea")[0].value.split("\n").filter(i=>i.length>0).map(i=>i.trim())
+    sns.map(sn=>{
+        let url = `/static/PDF/${sn}.pdf`
+        let a = $(`<a download class='mydownload'>平台号${sn} 下载</a>`)[0]
+        a.href = url
+        $(".show_div")[0].append(a)
+        $(".show_div")[0].append($("<br>")[0])
+    })
+}
+function search_by_num(){
+    var nums = $("textarea")[0].value.split("\n").filter(i=>i.length>0).map(i=>i.trim())
+    nums.map(num=>{
+        let url = '/num2sn?num=' + num
+        $.get(url, function(res){
+            let sn = res.sn
+            let url = `/static/PDF/${sn}.pdf`
+            let a = $(`<a download class='mydownload'>平台号${sn} 包裹号${num} 下载</a>`)[0]
+            a.href = url
+            $(".show_div")[0].append(a)
+            $(".show_div")[0].append($("<br>")[0])
+        })
+    })
+}
+//文件下载链接
+function download_all(){
+    $(".mydownload").toArray().map(i=>i.click())
+}
+
+</script>
+
+{% endblock %}
