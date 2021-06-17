@@ -62,12 +62,12 @@ def pipe_train(x, y, pipe_name, debug=False):
     #["clf", KNeighborsClassifier()],
     #["clf", MultinomialNB(),] 
     #["clf", SGDClassifier(loss='hinge', penalty='l2',alpha=1e-3, random_state=42, max_iter=50, tol=None)],
-    ["clf", MLPClassifier(random_state=1, max_iter=100, verbose=True, early_stopping=True)],
+    ["clf", MLPClassifier(random_state=1, max_iter=15, verbose=True, early_stopping=True)],
 
     ])
     #MY e: NB 47 SGD 60 MLP 72  KNN 60
     pipe.fit(x_train, y_train)
-    pipe_path = f"d:/sshopee/static/{site}_train_{num_sample}samples_{num_class}classes_{int(time.time())}.joblib"
+    pipe_path = f"d:/sshopee/static/{pipe_name}_train_{num_sample}samples_{num_class}classes_{int(time.time())}.joblib"
     joblib.dump(pipe, pipe_path)
     print('saved', time.ctime())
     if debug:
@@ -86,6 +86,6 @@ def pipe_predict(x_test, model_name):
 
 if __name__ == '__main__':
     site = 'ph'
-    save_data(site, 50,  200)
+    save_data(site, 50,  300)
     x, y = load_data(site)
-    pipe_train(x, y, site, True)
+    pipe_train(x, y, site, False)
