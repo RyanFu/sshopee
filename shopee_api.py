@@ -451,7 +451,7 @@ def recommend_category(name_list, account):
     rare = ['br', 'mx', 'id', 'th']
     glob = ['sg', 'ph', 'vn']
     model_name = 'my' if site in rare else site
-    model_name = 'gb' if site in glob else site
+    model_name = 'gb' if model_name in glob else model_name
     cat_id_ai = api_sklearn.pipe_predict(name_list, model_name)
     
     if site in rare:
