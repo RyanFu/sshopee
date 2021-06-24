@@ -565,7 +565,7 @@ def sku_info_excel_view():
 
 #接收文件
 @app.route('/upload_file', methods=['POST'])
-@login_required
+@user_required
 def upload_file():
     file = request.files.get('file')
     file_path = './static/' + file.filename
