@@ -53,8 +53,13 @@
 </div>
 <!-- 更新时间备注 -->
 <div class="des"> 
-</div>
 
+</div>
+<form id="upload_form" action="/upload_file" method="post" enctype="multipart/form-data">
+    <input type="file" name="file">
+    <input type="submit" value="提交文件到后台并更新数据">
+   
+</form>
 
 <script>
   var flag = {}
